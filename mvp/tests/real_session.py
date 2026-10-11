@@ -777,14 +777,16 @@ class Session:
         self.submit(again, 'recipe-vram@0.1.0', gray=250, retry_of=big, product=big_final['product_id'])
         again_final = self.wait_state(again, TERMINAL, 120)
         tlog = self.sh('docker', 'logs', '--since', '10m', TRITON, check=False)
-        oom_logged = 'AllocateRawInternal' in (tlog.stdout + tlog.stderr) or 'out of memory' in (tlog.stdout + tlog.stderr).lower()
+        tl = (tlog.stdout + tlog.stderr).lower()
+        oom_logged = any(k in tl for k in ('allocaterawinternal', 'out of memory', 'failed to allocate', 'cuda_error_out_of_memory'))
         ok = big_final['state'] == 'FAILED' and big_final['decision'] is None and small_final['state'] == 'COMPLETED' \
             and active == 'recipe-vram@0.1.0' and rz == 200 and same_pid and again_final['state'] == 'COMPLETED' and oom_logged
         self.step('G6 GPU OOM in the middle of an inference (warmed-up model): that request FAILED without a decision, '
                   'the model keeps serving, no restart', ok, hog=hog, vram_after_load=vram_loaded,
                   big_image_under_pressure=f"{big_final['state']}/{big_final.get('reason')}", decision=big_final['decision'],
                   small_image_under_pressure=small_final['state'], active_after=active, readyz=rz, triton_same_pid=same_pid,
-                  same_image_after_vram_freed=again_final['state'], oom_in_triton_log=oom_logged, vram_end=self._gpu())
+                  same_image_after_vram_freed=again_final['state'], oom_in_triton_log=oom_logged, vram_end=self._gpu(),
+                  triton_error_lines=[l[-260:] for l in (tlog.stdout + tlog.stderr).splitlines() if 'rror' in l][-3:])
         self.activate('recipe-a')
 
     def g5_oom_when_two_models_coexist(self):

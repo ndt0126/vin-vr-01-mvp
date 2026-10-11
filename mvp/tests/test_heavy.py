@@ -198,6 +198,32 @@ class TestVramProbeFixture(unittest.TestCase):
 
 
 @unittest.skipUnless(HAVE_ORT, 'onnxruntime not installed')
+class TestVramProbeEndToEnd(HeavyBase):
+    """Duong di cua bai G6 tren stack that (API + backend chay ONNX), tru phan het VRAM chi GPU moi co."""
+
+    def setUp(self):
+        Base.setUp(self)
+        self.info = mh.make_preset(self.examples, 'tiny')
+        self.probe = mh.make_vram_probe(self.examples, 'nvidia-gpu')   # dung device ma phien GPU dung
+        self.server.close()
+        self.backend = None
+        self.start(backend=self.make_backend())
+
+    def test_recipe_vram_activates_and_serves_light_and_heavier_images(self):
+        act = self.activate('recipe-vram')
+        self.assertEqual(act.status, 200, act.body)
+        self.assertTrue(act.body['golden']['passed'])
+        self.assertAlmostEqual(act.body['golden']['actual'], mh.VRAM_PROBE['expected'], delta=0.002)
+        for gray in (0, 6):                                             # 16 MiB va 112 MiB tren CPU
+            rid = f'vram-{gray}'
+            body = submit_body(rid, product=f'PCB1-SN-V{gray}', recipe='recipe-vram@0.1.0', image=color_png((gray,) * 3))
+            self.assertEqual(self.submit(body).status, 202)
+            self.assertEqual(self.wait_terminal(rid).body['state'], 'COMPLETED')
+            self.assertEqual(self.result(rid).body['lineage']['model']['name'], 'model-vram')
+        self.assertEqual(self.activate('recipe-a').status, 200)          # buoc G6 ket thuc bang viec quay ve recipe-a
+
+
+@unittest.skipUnless(HAVE_ORT, 'onnxruntime not installed')
 class TestHeavyOverKServeBinary(HeavyBase):
     def make_backend(self):
         params = {n: json.loads((self.examples / 'packages' / n / 'model.json').read_text()) for n in ('model-a', 'model-b')}

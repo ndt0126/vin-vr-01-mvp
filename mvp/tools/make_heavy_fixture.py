@@ -106,11 +106,11 @@ def sha(b):
     return hashlib.sha256(b).hexdigest()
 
 
-def make(examples, name='model-heavy', layers=24, channels=64, size=512, device='cpu', expected=None):
+def make(examples, name='model-heavy', layers=24, channels=64, size=512, device='cpu', expected=None, seed=20261011):
     examples = Path(examples)
     d = examples / 'packages' / name
     d.mkdir(parents=True, exist_ok=True)
-    onnx_bytes = conv_score_onnx(layers, channels, size)
+    onnx_bytes = conv_score_onnx(layers, channels, size, seed)
     png = golden_png()
     if expected is None:
         expected = round(run_onnx(onnx_bytes, rgb_chw_uint8(png, size), size), 6)
@@ -161,9 +161,32 @@ def make(examples, name='model-heavy', layers=24, channels=64, size=512, device=
             'onnx_bytes': len(onnx_bytes), 'onnx_sha256': sha(onnx_bytes), 'parameters': params, 'golden_expected': expected}
 
 
+# Model nang THU HAI (cung kien truc, seed khac -> trong so va diem khac): de bai chuyen model dung hai model that.
+SEED_B = 20261012
+PRESETS_B = {
+    "tiny": {
+        "expected": 0.55614,
+        "onnx_sha256": "d89ca68cb871b1ed68447a2efa508308a20081b715abb59f028cdcfc2a2e7b2f"
+    },
+    "cpu": {
+        "expected": 0.563869,
+        "onnx_sha256": "aeaed305ea9cb3d5c705365de323185d65317838ca44c79f9f4d0222212afde7"
+    },
+    "gpu": {
+        "expected": 0.426981,
+        "onnx_sha256": "d2d3d3f3fca2625e44e8e376717c77a9c8ce2cb8dad684693895ce08ae8667f6"
+    },
+    "gpu-xl": {
+        "expected": 0.443069,
+        "onnx_sha256": "f7de9fc2d4ec90b7a2085729c77675e3e25bae4c6662d69f29904fc1f4b508d9"
+    }
+}
+
+
 def make_preset(examples, preset, device='cpu', name='model-heavy'):
-    p = PRESETS[preset]
-    info = make(examples, name, p['layers'], p['channels'], p['size'], device, p['expected'])
+    p = dict(PRESETS[preset], **(PRESETS_B[preset] if name.endswith('-b') else {}))
+    info = make(examples, name, p['layers'], p['channels'], p['size'], device, p['expected'],
+                SEED_B if name.endswith('-b') else 20261011)
     if info['onnx_sha256'] != p['onnx_sha256']:
         raise SystemExit(f"generated model differs from the pinned SHA-256 for preset {preset}: {info['onnx_sha256']}")
     return dict(info, preset=preset)

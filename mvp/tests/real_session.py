@@ -408,7 +408,7 @@ class Session:
                 time.sleep(2)
             return None
 
-        self.sh('make', 'obs-start', 'SLOW=1')
+        self.sh('make', 'obs-start', 'SLOW=1', *os.environ.get('VR01_MAKE_FLAGS', '').split())
         self.wait_ready()
         up = wait(lambda: {x['labels']['job']: x['health'] for x in json.load(urllib.request.urlopen(
             f'{prom}/api/v1/targets', timeout=10))['data']['activeTargets']} == {'vr01-api': 'up', 'triton': 'up'}, 90)
@@ -623,6 +623,159 @@ class Session:
                   model=self.c.call('GET', f'/v1/stations/{STATION}/active-recipe', 'viewer')[1]['model'])
         self.activate('recipe-a')
 
+    # ---------- GPU (chua chay thu lan nao; viet 11/10/2026)
+    def _triton_metrics(self):
+        return self.sh('docker', 'exec', API, 'python', '-c',
+                       "import urllib.request as u;print(u.urlopen('http://triton:8002/metrics',timeout=5).read().decode())",
+                       check=False).stdout
+
+    def _gpu(self):
+        out = self.sh('nvidia-smi', '--query-gpu=name,memory.used,memory.total,driver_version', '--format=csv,noheader,nounits',
+                      check=False).stdout.strip().splitlines()
+        name, used, total, driver = [x.strip() for x in out[0].split(',')]
+        return {'name': name, 'used_mib': float(used), 'total_mib': float(total), 'driver': driver}
+
+    def g1_gpu_execution(self):
+        """Chung minh model chay tren GPU, khong lang le roi ve CPU."""
+        before = self._gpu()
+        self.activate('recipe-heavy')
+        rid = self.rid('gpu')
+        self.submit(rid, 'recipe-heavy@0.1.0', gray=120)
+        self.wait_state(rid, TERMINAL, 180)
+        res = self.result(rid)
+        after = self._gpu()
+        apps = self.sh('nvidia-smi', '--query-compute-apps=process_name,used_memory', '--format=csv,noheader', check=False).stdout
+        cfg = (self.run / 'triton-repo' / 'model-heavy' / 'config.pbtxt').read_text()
+        tm = self._triton_metrics()
+        gpu_mem_metric = [float(l.rsplit(' ', 1)[1]) for l in tm.splitlines() if l.startswith('nv_gpu_memory_used_bytes')]
+        ok_count = [l for l in tm.splitlines() if l.startswith('nv_inference_request_success') and 'model-heavy' in l]
+        log = self.sh('docker', 'logs', TRITON, check=False)
+        log_text = log.stdout + log.stderr
+        on_gpu_log = any('model-heavy' in l and 'GPU' in l for l in log_text.splitlines())
+        ok = res['state'] == 'COMPLETED' and 'KIND_GPU' in cfg and 'tritonserver' in apps and bool(gpu_mem_metric) \
+            and gpu_mem_metric[0] > 0 and after['used_mib'] > 200
+        self.step('G1 the heavy model executes on the GPU (no silent CPU fallback)', ok, gpu=after, vram_before_mib=before['used_mib'],
+                  config_instance_kind='KIND_GPU' if 'KIND_GPU' in cfg else 'NOT KIND_GPU', compute_apps=apps.strip().splitlines(),
+                  triton_gpu_mem_used_bytes=gpu_mem_metric[:1], triton_success_counter=ok_count[:1],
+                  triton_log_mentions_gpu_instance=on_gpu_log, inference_ms=res['timing_ms']['inference'], score=res['score'],
+                  note='KIND_GPU khong co GPU thi Triton tu choi nap model, nen nap duoc + tritonserver co trong compute-apps la bang chung chinh')
+
+    def g2_calibrate_heavy(self):
+        """Chon muc do nang de mot lan suy luan ~1-2 s (yeu cau workload cua mentor); ghi lai so do."""
+        times = []
+        for _ in range(5):
+            rid = self.rid('cal')
+            self.submit(rid, 'recipe-heavy@0.1.0', gray=90)
+            self.wait_state(rid, TERMINAL, 180)
+            times.append(self.result(rid)['timing_ms']['inference'])
+        opts = json.loads((self.run / 'init-options.json').read_text())
+        med = sorted(times)[len(times) // 2]
+        chosen = opts.get('heavy')
+        if med < 700 and chosen == 'gpu':
+            self.activate('recipe-a')
+            time.sleep(3)
+            subprocess.run(['make', 'start', 'GPU=1', 'SLOW=1', 'HEAVY=gpu-xl'], cwd=ROOT, capture_output=True, text=True, check=True)
+            self.wait_ready()
+            self.activate('recipe-heavy')
+            times2 = []
+            for _ in range(5):
+                rid = self.rid('cal')
+                self.submit(rid, 'recipe-heavy@0.1.0', gray=90)
+                self.wait_state(rid, TERMINAL, 300)
+                times2.append(self.result(rid)['timing_ms']['inference'])
+            chosen, med2 = 'gpu-xl', sorted(times2)[len(times2) // 2]
+            self.step('G2 calibrate heavy model on this GPU', True, preset_gpu_ms=times, preset_gpu_xl_ms=times2,
+                      chosen=chosen, median_inference_ms=med2, vram=self._gpu())
+            self.heavy_ms = med2
+        else:
+            self.step('G2 calibrate heavy model on this GPU', True, preset=chosen, inference_ms=times, median_inference_ms=med,
+                      chosen=chosen, vram=self._gpu())
+            self.heavy_ms = med
+        (self.run / 'session-heavy-ms.txt').write_text(str(self.heavy_ms))
+
+    def g3_heavy_cutover_under_load(self):
+        """Chuyen qua lai hai model nang (cung nam tren VRAM luc chuyen) khi client gui lien tuc."""
+        ms = float((self.run / 'session-heavy-ms.txt').read_text())
+        rate = round(min(5.0, 0.5 / (ms / 1000)), 3)   # ~50% nang luc 1 worker
+        rc, last = self.tool('load_cutover.py', '--rate', str(rate), '--duration', '300', '--cutover-every', '30',
+                             '--recipes', 'recipe-heavy,recipe-heavy-b', '--output', str(self.run / 'session-gpu-cutover.json'))
+        r = json.loads((self.run / 'session-gpu-cutover.json').read_text())
+        self.step('G3 cutover between two heavy models on GPU under continuous load (5 min)', rc == 0, rate_per_s=rate,
+                  sent=r['requests']['sent'], wrong=r['requests']['missing_or_wrong'], duplicates=r['requests']['duplicate_or_extra_products'],
+                  cutovers=f"{r['cutovers']['succeeded']}/{r['cutovers']['requested']}", max_gap_s=r['cutovers']['max_gap_s'],
+                  latency_ms=r['latency_total_ms'], vram_after=self._gpu())
+
+    def _hog(self, leave_mib):
+        image = next(l.split('=', 1)[1] for l in (ROOT / 'deploy' / '.env').read_text().splitlines() if l.startswith('TRITON_IMAGE='))
+        self.sh('docker', 'rm', '-f', 'vr01-hog', check=False)
+        self.sh('docker', 'run', '-d', '--gpus', 'all', '--name', 'vr01-hog', '-v', f'{HERE}:/t:ro', '--entrypoint', 'python3',
+                image, '/t/vram_hog.py', '--leave-free-mib', str(leave_mib))
+        for _ in range(60):
+            out = self.sh('docker', 'logs', 'vr01-hog', check=False).stdout.strip()
+            if out.startswith('{'):
+                return json.loads(out.splitlines()[0])
+            time.sleep(1)
+        raise AssertionError('vram hog did not report: ' + self.sh('docker', 'logs', 'vr01-hog', check=False).stderr[-300:])
+
+    def _unhog(self):
+        self.sh('docker', 'rm', '-f', 'vr01-hog', check=False)
+        time.sleep(2)
+
+    def _wait_unloaded(self, model, timeout=60):
+        t0 = time.time()
+        while time.time() - t0 < timeout:
+            if any(e['event'] == 'lifecycle.unloaded' and e['model']['name'] == model and e['at'] > self._mark for e in self.trace()):
+                return True
+            time.sleep(0.5)
+        return False
+
+    def g4_oom_at_model_load(self):
+        """OOM luc nap model: VRAM bi chiem gan het -> kich hoat model nang phai bi tu choi, recipe cu van phuc vu."""
+        self._mark = time.strftime('%Y-%m-%dT%H:%M:%S', time.gmtime())
+        self.activate('recipe-a')
+        self._wait_unloaded('model-heavy')
+        self._wait_unloaded('model-heavy-b', 5)
+        hog = self._hog(200)
+        try:
+            s, b = self.c.call('POST', f'/v1/admin/stations/{STATION}/activation', 'admin',
+                               {'recipe_name': 'recipe-heavy', 'recipe_version': '0.1.0', 'reason': 'OOM at load drill'}, 'management')
+            active, rz = self.active(), self.c.call('GET', '/readyz')[0]
+            rid = self.rid('oomload')
+            self.submit(rid, 'recipe-a@0.1.0')
+            still = self.wait_state(rid, TERMINAL, 60)['state']
+        finally:
+            self._unhog()
+        s2, _ = self.c.call('POST', f'/v1/admin/stations/{STATION}/activation', 'admin',
+                            {'recipe_name': 'recipe-heavy', 'recipe_version': '0.1.0', 'reason': 'after OOM drill'}, 'management')
+        ok = s == 422 and active == 'recipe-a@0.1.0' and rz == 200 and still == 'COMPLETED' and s2 == 200
+        self.step('G4 GPU OOM at model load/warm-up: activation refused, old recipe keeps serving, no restart needed', ok,
+                  hog=hog, activation_http=s, code=(b or {}).get('code'), active_after=active, readyz=rz,
+                  request_on_old_recipe=still, activation_after_vram_freed=s2)
+
+    def g5_oom_when_two_models_coexist(self):
+        """OOM khi hai model cung ton tai: model A nang dang phuc vu, VRAM con lai khong du cho model B."""
+        self._mark = time.strftime('%Y-%m-%dT%H:%M:%S', time.gmtime())
+        self.activate('recipe-heavy')
+        time.sleep(5)
+        hog = self._hog(200)
+        try:
+            s, b = self.c.call('POST', f'/v1/admin/stations/{STATION}/activation', 'admin',
+                               {'recipe_name': 'recipe-heavy-b', 'recipe_version': '0.1.0', 'reason': 'OOM coexist drill'}, 'management')
+            active = self.active()
+            rid = self.rid('oomco')
+            self.submit(rid, 'recipe-heavy@0.1.0', gray=77)
+            final = self.wait_state(rid, TERMINAL, 180)
+        finally:
+            self._unhog()
+        s2, _ = self.c.call('POST', f'/v1/admin/stations/{STATION}/activation', 'admin',
+                            {'recipe_name': 'recipe-heavy-b', 'recipe_version': '0.1.0', 'reason': 'after OOM drill'}, 'management')
+        ok = s == 422 and active == 'recipe-heavy@0.1.0' and final['state'] == 'COMPLETED' and s2 == 200
+        self.step('G5 GPU OOM when a second model is loaded next to the active one: refused, active model unaffected', ok,
+                  hog=hog, activation_http=s, code=(b or {}).get('code'), active_after=active,
+                  request_on_active_model=final['state'], activation_after_vram_freed=s2,
+                  note='OOM giua luc suy luan khong tai hien duoc voi model kich thuoc co dinh da warm-up: bo nho da duoc cap tu lan golden')
+        self.activate('recipe-a')
+
     def p10_state_for_reboot(self):
         probe = self.rid('reboot')
         self.submit(probe, self.active())
@@ -649,7 +802,7 @@ class Session:
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--phase', choices=['main', 'post-reboot', 'extra', 'obs', 'w4', 'rerun'], required=True)
+    ap.add_argument('--phase', choices=['main', 'post-reboot', 'extra', 'obs', 'w4', 'rerun', 'gpu'], required=True)
     ap.add_argument('--run-dir', type=Path, default=ROOT / 'run')
     ap.add_argument('--host', default='127.0.0.1')
     ap.add_argument('--inference-port', type=int, default=8443)
@@ -670,6 +823,13 @@ def main():
         s.report_path = s.run / 'session-rerun-report.json'
         s.steps = []
         for fn in (s.p13_observability, s.p18_heavy_image_model):
+            s.guarded(fn.__name__, fn)
+    elif args.phase == 'gpu':
+        s.report_path = s.run / 'session-gpu-report.json'
+        s.steps = []
+        for fn in (s.p1_smoke, s.g1_gpu_execution, s.g2_calibrate_heavy, s.p18_heavy_image_model, s.g3_heavy_cutover_under_load,
+                   s.g4_oom_at_model_load, s.g5_oom_when_two_models_coexist, s.p13_observability, s.p14_auto_rollback,
+                   s.p7_kill_api, s.p8_kill_triton_under_load):
             s.guarded(fn.__name__, fn)
     elif args.phase == 'w4':
         s.report_path = s.run / 'session-w4-report.json'

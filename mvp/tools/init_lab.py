@@ -93,9 +93,10 @@ def main():
         print('examples: added TEST FIXTURES model-slow / recipe-slow, model-bad / recipe-bad')
     if args.with_heavy_fixture:
         import make_heavy_fixture
-        info = make_heavy_fixture.make_preset(examples, args.with_heavy_fixture,
-                                              'nvidia-gpu' if args.instance_kind == 'KIND_GPU' else 'cpu')
-        print(f"examples: added TEST FIXTURE model-heavy ({info['preset']}: {info['layers']} lop, {info['channels']} kenh, "
+        dev = 'nvidia-gpu' if args.instance_kind == 'KIND_GPU' else 'cpu'
+        info = make_heavy_fixture.make_preset(examples, args.with_heavy_fixture, dev)
+        make_heavy_fixture.make_preset(examples, args.with_heavy_fixture, dev, 'model-heavy-b')
+        print(f"examples: added TEST FIXTURES model-heavy + model-heavy-b ({info['preset']}: {info['layers']} lop, {info['channels']} kenh, "
               f"anh {info['size']}x{info['size']}, {info['onnx_bytes'] // 1024} KiB, device {info['device']})")
     accepted, rejected = build_triton_repo.build(examples / 'packages', run / 'triton-repo', args.instance_kind)
     opt_file.write_text(json.dumps({'slow': bool(args.with_slow_fixture), 'heavy': args.with_heavy_fixture}))

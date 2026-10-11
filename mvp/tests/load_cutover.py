@@ -77,6 +77,9 @@ def main():
     ap.add_argument('--allow-technical', action='store_true',
                     help='dung khi co chu y gay su co: FAILED/TIMEOUT/INDETERMINATE va request bi tu choi duoc DEM, '
                          'khong tinh la loi; van bat buoc khong thieu/trung/sai lineage')
+    ap.add_argument('--recipes', default='recipe-a,recipe-b', help='hai recipe de chuyen qua lai (cai dau duoc kich hoat luc bat dau)')
+    ap.add_argument('--journal', type=Path, help='ghi tung request da gui ra JSONL ngay khi gui (cho luot chay dai: client chet van con bang chung)')
+    ap.add_argument('--progress', type=Path, help='file JSON trang thai, cap nhat moi 30 giay (cho watcher)')
     ap.add_argument('--client-timeout', type=float, default=30, help='timeout moi HTTP call cua client (giay)')
     ap.add_argument('--output', type=Path)
     args = ap.parse_args()
@@ -86,22 +89,27 @@ def main():
                args.run_dir / 'tls' / 'ca.crt')
     c.timeout = args.client_timeout
     pk = HERE.parent / 'packages' / 'examples'
-    params = {d.name: json.loads((d / 'model.json').read_text()) for d in (pk / 'packages').iterdir() if d.is_dir()}
+    if (args.run_dir / 'examples' / 'packages').is_dir():
+        pk = args.run_dir / 'examples'   # kho package luc chay (co ca fixture)
+    params = {d.name: json.loads((d / 'model.json').read_text()) for d in (pk / 'packages').iterdir()
+              if (d / 'model.json').is_file()}   # model ONNX khong co model.json: khong tinh lai diem o client
     recipes = {}
     for f in (pk / 'recipes').glob('*.json'):
         r = json.loads(f.read_text())
         recipes[f"{r['name']}@{r['version']}"] = {'model': r['package']['name'], 'threshold': r['decision']['threshold']}
     run_id = time.strftime('%Y%m%dT%H%M%S')
+    first, second = args.recipes.split(',')
     st, act = c.call('POST', f'/v1/admin/stations/{STATION}/activation', 'admin',
-                     {'recipe_name': 'recipe-a', 'recipe_version': '0.1.0', 'reason': f'load {run_id} start'}, 'management')
+                     {'recipe_name': first, 'recipe_version': '0.1.0', 'reason': f'load {run_id} start'}, 'management')
     if st != 200:
-        raise SystemExit(f'cannot activate recipe-a: {st} {act}')
-    current = {'recipe': 'recipe-a@0.1.0'}
+        raise SystemExit(f'cannot activate {first}: {st} {act}')
+    current = {'recipe': f'{first}@0.1.0'}
+    journal = open(args.journal, 'a', buffering=1) if args.journal else None
     sent, cutovers, stop = [], [], threading.Event()
     counters = {'recipe_refresh_409': 0, 'queue_full_429': 0, 'not_ready_503': 0, 'send_errors': 0}
 
     def switcher():
-        target = 'recipe-b'
+        target = second
         while not stop.wait(args.cutover_every):
             t0 = time.time()
             s, a = c.call('POST', f'/v1/admin/stations/{STATION}/activation', 'admin',
@@ -110,8 +118,10 @@ def main():
             cutovers.append({'to': f'{target}@0.1.0', 'status': s, 'changed': a and a.get('changed'),
                              'requested_at': t0, 'returned_at': time.time(),
                              'golden_passed': a and (a.get('golden') or {}).get('passed')})
+            if journal:
+                journal.write(json.dumps({'cutover': cutovers[-1]}) + '\n')
             if s == 200:
-                target = 'recipe-a' if target == 'recipe-b' else 'recipe-b'
+                target = first if target == second else second
 
     th = threading.Thread(target=switcher, daemon=True)
     th.start()
@@ -153,6 +163,13 @@ def main():
                 rec['submit_status'], rec['error'] = s, b
                 break
         sent.append(rec)
+        if journal:
+            journal.write(json.dumps({'sent': rec, 'at': time.time()}) + '\n')
+        if args.progress and i % max(1, int(args.rate * 30)) == 0:
+            args.progress.write_text(json.dumps({'run_id': run_id, 'elapsed_s': round(time.time() - t_start, 1),
+                                                 'planned_s': args.duration, 'sent': len(sent), 'cutovers': len(cutovers),
+                                                 'cutovers_failed': sum(1 for x in cutovers if x['status'] != 200),
+                                                 'client_counters': counters, 'updated_at': time.time()}))
         i += 1
     stop.set()
     th.join()
@@ -181,8 +198,8 @@ def main():
         results[rec['rid']] = res
         lin = res['lineage']
         want = recipes[rec['accepted_recipe']]
-        p = params[want['model']]
-        score = round(min(1.0, max(0.0, p['gain'] * round(rec['gray'] / 255.0, 6) + p['bias'])), 6)
+        p = params.get(want['model'])
+        score = None if p is None else round(min(1.0, max(0.0, p['gain'] * round(rec['gray'] / 255.0, 6) + p['bias'])), 6)
         checks = {
             'state COMPLETED': res['state'] == 'COMPLETED',
             'request_id': res['request_id'] == rec['rid'],
@@ -190,7 +207,7 @@ def main():
             'input_sha256': lin['input_sha256'] == rec['sha'],
             'recipe = recipe accepted with': f"{lin['recipe']['name']}@{lin['recipe']['version']}" == rec['accepted_recipe'],
             'model of that recipe': lin['model']['name'] == want['model'],
-            'score of that model': res['score'] is not None and abs(res['score'] - score) <= 1e-5,
+            'score of that model': res['score'] is not None and (score is None or abs(res['score'] - score) <= 1e-5),
         }
         if args.allow_technical and res['state'] != 'COMPLETED':
             technical[res['state']] = technical.get(res['state'], 0) + 1
@@ -217,7 +234,7 @@ def main():
     # completion gap quanh moi lan chuyen: ket qua cuoi cua recipe cu -> ket qua dau cua recipe moi
     done = sorted(((ts(r['finished_at']), f"{r['lineage']['recipe']['name']}@{r['lineage']['recipe']['version']}")
                    for r in results.values() if r['state'] == 'COMPLETED'))
-    gaps, prev = [], 'recipe-a@0.1.0'
+    gaps, prev = [], f'{first}@0.1.0'
     for cut in [x for x in cutovers if x['status'] == 200 and x['changed']]:
         new = cut['to']
         first_new = next((t for t, rcp in done if rcp == new and t >= cut['requested_at'] - 0.001), None)
@@ -237,8 +254,10 @@ def main():
     else:
         verdict = not problems and not dup and len(ok_cut) == len(cutovers) and len(cutovers) >= 1 \
             and len(results) == len(sent)
+    scored = sum(1 for r in sent if r['accepted_recipe'] and params.get(recipes[r['accepted_recipe']]['model']) is not None)
     report = {
-        'verdict': 'PASS' if verdict else 'FAIL', 'run_id': run_id,
+        'verdict': 'PASS' if verdict else 'FAIL', 'run_id': run_id, 'recipes': [first, second],
+        'score_recomputed_by_client_for': scored,
         'config': {'rate_per_s': args.rate, 'duration_s': args.duration, 'cutover_every_s': args.cutover_every,
                    'send_period_s': round(period, 4)},
         'requests': {'sent': len(sent), 'with_terminal_result': len(results),

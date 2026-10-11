@@ -67,6 +67,16 @@ Trên một VPS mới 4 vCPU / 8 GB, Triton thật, model chạy CPU. Chi tiết
 - **Model ảnh thật** (`triton-onnx-v1`): golden qua Triton đạt, khoảng 104 ms/lần; quét tải bão hòa ở khoảng 8 request/giây với 1 worker.
 - Lượt chính có 4 bước hỏng, đều do script kiểm của tác giả (2 bước) hoặc bước cắt mạng chưa chặn IPv6 (2 bước); đã sửa và chạy lại đạt. **Chưa chạy GPU; kubeadm cài có Internet; gói offline chưa ký.**
 
+## Phiên GPU (W4-04, W4-03 trên GPU) — đã chuẩn bị, CHƯA chạy
+
+Mọi thứ dưới đây đã viết nhưng **chưa chạy trên GPU lần nào**; lần chạy đầu có thể phải sửa script.
+
+- `make start` trên máy GPU: đặt `TRITON_INSTANCE_KIND=KIND_GPU` và `VR01_GPU=1` trong `deploy/.env`.
+- `tests/real_session.py --phase gpu`: chứng minh model chạy trên GPU (không rơi về CPU), chọn mức model nặng để mỗi lần suy luận khoảng 1–2 giây, chuyển qua lại **hai model nặng** dưới tải, OOM lúc nạp model, OOM khi hai model cùng tồn tại (dùng `tests/vram_hog.py` chiếm VRAM), observability, tự rollback, kill API, kill Triton.
+- Soak 8 giờ không restart định kỳ: `tests/load_cutover.py` (ghi journal từng request), `tests/sampler.py` (RAM, VRAM, GPU mỗi 30 giây), `tests/soak_report.py` (xu hướng theo giờ, so giờ đầu với giờ cuối).
+- Kubernetes có GPU: `deploy/k8s/lab-kubeadm-gpu.sh` (kubeadm + NVIDIA device plugin) và overlay `lab-gpu`.
+- OOM giữa lúc suy luận **không tái hiện được** với model kích thước cố định đã warm-up (bộ nhớ đã được cấp từ lần golden); hai kịch bản OOM còn lại xảy ra lúc nạp/kích hoạt.
+
 ## Observability (W4-01, W4-02)
 
 ```bash

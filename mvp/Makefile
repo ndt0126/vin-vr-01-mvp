@@ -24,8 +24,8 @@ start: init         ## bat Triton + API, cho toi khi healthy
 stop:               ## dung, giu du lieu trong run/
 	$(COMPOSE) stop
 
-down:               ## go container va mang, giu du lieu trong run/
-	$(COMPOSE) down
+down:               ## go container va mang (ca Prometheus/Grafana neu da bat), giu du lieu trong run/
+	$(COMPOSE) --profile obs --profile tools down --remove-orphans
 
 logs:
 	$(COMPOSE) logs --tail=100

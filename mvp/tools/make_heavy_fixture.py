@@ -75,6 +75,41 @@ def conv_score_onnx(layers, channels, size, seed=20261011):
     return _int(1, 7) + _bytes(2, 'vr01-mvp') + _bytes(7, graph) + _bytes(8, _bytes(1, '') + _int(2, 13))
 
 
+def _raw_int64(name, values):
+    return _int(1, len(values)) + _int(2, INT64) + _bytes(8, name) + _bytes(9, struct.pack(f'<{len(values)}q', *values))
+
+
+VRAM_PROBE_SIZE, VRAM_PROBE_ROWS, VRAM_PROBE_WIDTH = 64, 2048, 1024
+
+
+def vram_probe_onnx(size=VRAM_PROBE_SIZE, unit_rows=VRAM_PROBE_ROWS, width=VRAM_PROBE_WIDTH, expose_rows=False):
+    """Fixture tiem loi 'bo nho cap LUC SUY LUAN': bo nho can dung phu thuoc vao ANH, khong phai vao model.
+
+    SCORE = sigmoid(mean(anh/255) - 0.5) nhu thuong, nhung model con cap hai tensor float [rows, width] voi
+    rows = (pixel NHO NHAT cua anh + 1) * unit_rows. Anh golden co pixel 0 -> 1 muc (mac dinh 2 x 8 MiB);
+    anh xam deu 250 -> 251 muc (~4 GiB). Nho vay tai tao duoc OOM GIUA LUC SUY LUAN tren model da warm-up,
+    dieu ma model kich thuoc co dinh khong lam duoc. Hai tensor toan so 0 nen khong doi diem."""
+    nodes = [_node('Cast', ['IMAGE'], ['img_f'], _attr_int('to', FLOAT)), _node('Mul', ['img_f', 'inv255'], ['x0']),
+             _node('ReduceMean', ['x0'], ['m'], _attr_ints('axes', [1, 2, 3]) + _attr_int('keepdims', 0)),
+             _node('ReduceMin', ['img_f'], ['mn4'], _attr_int('keepdims', 1)),
+             _node('Reshape', ['mn4', 'shape1'], ['mn']), _node('Add', ['mn', 'one_f'], ['level']),
+             _node('Mul', ['level', 'unit_f'], ['rows_f']), _node('Cast', ['rows_f'], ['ROWS' if expose_rows else 'rows'], _attr_int('to', INT64)),
+             _node('Concat', ['ROWS' if expose_rows else 'rows', 'width_i'], ['shp'], _attr_int('axis', 0)),
+             _node('Expand', ['zero_row', 'shp'], ['big']), _node('Relu', ['big'], ['big2']),
+             _node('ReduceMax', ['big2'], ['bm2'], _attr_int('keepdims', 1)), _node('Reshape', ['bm2', 'shape1'], ['bm']),
+             _node('Sub', ['m', 'center'], ['centered']), _node('Add', ['centered', 'bm'], ['logit']),
+             _node('Sigmoid', ['logit'], ['sig']), _node('Reshape', ['sig', 'shape1'], ['SCORE'])]
+    inits = [_bytes(5, _raw_tensor('inv255', [1], [1.0 / 255.0])), _bytes(5, _raw_tensor('one_f', [1], [1.0])),
+             _bytes(5, _raw_tensor('unit_f', [1], [float(unit_rows)])), _bytes(5, _raw_tensor('center', [1], [0.5])),
+             _bytes(5, _raw_tensor('zero_row', [1, width], [0.0] * width)),
+             _bytes(5, _raw_int64('shape1', [1])), _bytes(5, _raw_int64('width_i', [width]))]
+    graph = b''.join(_bytes(1, n) for n in nodes) + _bytes(2, 'vr01_vram_probe') + b''.join(inits)
+    graph += _bytes(11, _vi('IMAGE', UINT8, [1, 3, size, size])) + _bytes(12, _vi('SCORE', FLOAT, [1]))
+    if expose_rows:
+        graph += _bytes(12, _vi('ROWS', INT64, [1]))
+    return _int(1, 7) + _bytes(2, 'vr01-mvp') + _bytes(7, graph) + _bytes(8, _bytes(1, '') + _int(2, 13))
+
+
 def golden_png(size=64):
     """Anh mau tat dinh (gradient RGB), PNG."""
     from PIL import Image
@@ -106,11 +141,12 @@ def sha(b):
     return hashlib.sha256(b).hexdigest()
 
 
-def make(examples, name='model-heavy', layers=24, channels=64, size=512, device='cpu', expected=None, seed=20261011):
+def make(examples, name='model-heavy', layers=24, channels=64, size=512, device='cpu', expected=None, seed=20261011,
+         onnx_bytes=None):
     examples = Path(examples)
     d = examples / 'packages' / name
     d.mkdir(parents=True, exist_ok=True)
-    onnx_bytes = conv_score_onnx(layers, channels, size, seed)
+    onnx_bytes = onnx_bytes or conv_score_onnx(layers, channels, size, seed)
     png = golden_png()
     if expected is None:
         expected = round(run_onnx(onnx_bytes, rgb_chw_uint8(png, size), size), 6)
@@ -190,6 +226,17 @@ def make_preset(examples, preset, device='cpu', name='model-heavy'):
     if info['onnx_sha256'] != p['onnx_sha256']:
         raise SystemExit(f"generated model differs from the pinned SHA-256 for preset {preset}: {info['onnx_sha256']}")
     return dict(info, preset=preset)
+
+
+VRAM_PROBE = {'expected': 0.499534, 'onnx_sha256': '5bfc82e7a3d641a73c90996eafb62a36e3a072a182cf6d5749ede62f63498b5d'}
+
+
+def make_vram_probe(examples, device='cpu'):
+    """model-vram/recipe-vram: fixture tiem loi OOM giua luc suy luan (xem vram_probe_onnx). Chi dung cho bai G6."""
+    info = make(examples, 'model-vram', 0, 1, VRAM_PROBE_SIZE, device, VRAM_PROBE['expected'], onnx_bytes=vram_probe_onnx())
+    if info['onnx_sha256'] != VRAM_PROBE['onnx_sha256']:
+        raise SystemExit(f"generated vram probe differs from the pinned SHA-256: {info['onnx_sha256']}")
+    return dict(info, mib_per_level=2 * VRAM_PROBE_ROWS * VRAM_PROBE_WIDTH * 4 // 2 ** 20)
 
 
 def main():

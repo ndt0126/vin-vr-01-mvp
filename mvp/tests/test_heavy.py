@@ -160,6 +160,43 @@ class TestHeavyEndToEnd(HeavyBase):
         self.assertEqual(self.result('mix-h').body['state'], 'COMPLETED')
 
 
+class TestVramProbeFixture(unittest.TestCase):
+    """model-vram: fixture tiem loi cho bai G6 (OOM giua luc suy luan). Bo nho cap theo ANH, diem khong doi."""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = Path(tempfile.mkdtemp(prefix='vram-'))
+        self.examples = self.tmp / 'examples'
+        shutil.copytree(btr.PACKAGES_ROOT / 'examples', self.examples)
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_pinned_and_accepted_as_a_standard_package(self):
+        info = mh.make_vram_probe(self.examples, 'nvidia-gpu')
+        self.assertEqual(info['onnx_sha256'], mh.VRAM_PROBE['onnx_sha256'])
+        self.assertEqual(info['mib_per_level'], 16)
+        out = self.tmp / 'repo'
+        accepted, rejected = btr.build(self.examples / 'packages', out, 'KIND_CPU')
+        self.assertIn('model-vram', [m['name'] for m in accepted], rejected)
+        self.assertIn('kind: KIND_GPU', (out / 'model-vram' / 'config.pbtxt').read_text())
+
+    @unittest.skipUnless(HAVE_ORT, 'onnxruntime not installed')
+    def test_memory_follows_the_darkest_pixel_and_score_does_not(self):
+        import numpy as np
+        import onnxruntime as ort
+        probe = ort.InferenceSession(mh.vram_probe_onnx(expose_rows=True), providers=['CPUExecutionProvider'])
+        rows = {}
+        for gray in (0, 1, 7):
+            score, r = probe.run(['SCORE', 'ROWS'], {'IMAGE': np.full((1, 3, 64, 64), gray, np.uint8)})
+            rows[gray] = int(r[0])
+            self.assertAlmostEqual(float(score[0]), 1 / (1 + 2.718281828459045 ** (0.5 - gray / 255)), places=5)
+        self.assertEqual(rows, {0: 2048, 1: 4096, 7: 16384})          # (pixel nho nhat + 1) * 2048 hang x 1024 float
+        golden = np.frombuffer(mh.rgb_chw_uint8(mh.golden_png(), 64), np.uint8).reshape(1, 3, 64, 64)
+        self.assertEqual(int(probe.run(['ROWS'], {'IMAGE': golden})[0][0]), 2048)  # golden chi can 1 muc -> nap/warm-up nhe
+        self.assertAlmostEqual(mh.run_onnx(mh.vram_probe_onnx(), golden.tobytes(), 64), mh.VRAM_PROBE['expected'], places=5)
+
+
 @unittest.skipUnless(HAVE_ORT, 'onnxruntime not installed')
 class TestHeavyOverKServeBinary(HeavyBase):
     def make_backend(self):

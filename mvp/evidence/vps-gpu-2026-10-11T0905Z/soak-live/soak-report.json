@@ -1,0 +1,86 @@
+{
+  "samples": 200,
+  "duration_h": 1.66,
+  "series": {
+    "vr01_process_resident_memory_bytes": {
+      "unit": "MiB",
+      "min": 56.23,
+      "max": 107.59,
+      "first_window_avg": 76.6,
+      "last_window_avg": 97.04,
+      "slope_per_hour": 14.172,
+      "last_vs_first_pct": 26.68
+    },
+    "api_container_mem_bytes": {
+      "unit": "MiB",
+      "min": 40.37,
+      "max": 94.21,
+      "first_window_avg": 61.14,
+      "last_window_avg": 82.54,
+      "slope_per_hour": 14.883,
+      "last_vs_first_pct": 35.01
+    },
+    "triton_container_mem_bytes": {
+      "unit": "MiB",
+      "min": 1458.18,
+      "max": 1634.3,
+      "first_window_avg": 1541.04,
+      "last_window_avg": 1599.49,
+      "slope_per_hour": 51.045,
+      "last_vs_first_pct": 3.79
+    },
+    "gpu_mem_used_mib": {
+      "unit": "MiB",
+      "min": 2572.0,
+      "max": 6810.0,
+      "first_window_avg": 4622.84,
+      "last_window_avg": 4620.0,
+      "slope_per_hour": 1.91,
+      "last_vs_first_pct": -0.06
+    },
+    "gpu_util_pct": {
+      "unit": "%",
+      "min": 0.0,
+      "max": 100.0,
+      "first_window_avg": 39.38,
+      "last_window_avg": 42.66,
+      "slope_per_hour": 1.981,
+      "last_vs_first_pct": 8.33
+    },
+    "gpu_temp_c": {
+      "unit": "C",
+      "min": 57.0,
+      "max": 62.0,
+      "first_window_avg": 58.88,
+      "last_window_avg": 58.96,
+      "slope_per_hour": -0.126,
+      "last_vs_first_pct": 0.14
+    },
+    "vr01_queue_depth": {
+      "unit": "request",
+      "min": 0.0,
+      "max": 1.0,
+      "first_window_avg": 0.42,
+      "last_window_avg": 0.42,
+      "slope_per_hour": -0.045,
+      "last_vs_first_pct": 0.0
+    }
+  },
+  "container_restart_counts_seen": [
+    [
+      "0",
+      "1"
+    ]
+  ],
+  "process_start_times_seen": [
+    1791712082.579
+  ],
+  "not_ready_samples": 0,
+  "memory_growth_over_10pct": [
+    "vr01_process_resident_memory_bytes",
+    "api_container_mem_bytes"
+  ],
+  "no_restart_during_soak": true,
+  "verdict": "REVIEW",
+  "note": "PASS = tai dat + khong restart + khong chuoi bo nho nao tang qua 10% (gio cuoi so voi gio dau). REVIEW = can nguoi xem; khong tu dong la FAIL."
+}

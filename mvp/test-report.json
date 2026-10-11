@@ -2,7 +2,7 @@
   "verdict": "PASS",
   "python": "3.12.7",
   "platform": "macOS-26.6-arm64-arm-64bit",
-  "seconds": 27.8,
+  "seconds": 27.4,
   "openapi_static": {
     "checks": 11,
     "failed": []
@@ -42,16 +42,16 @@
       "failing": []
     },
     "test_k8s_manifests": {
-      "run": 7,
-      "passed": 7,
+      "run": 8,
+      "passed": 8,
       "failed": 0,
       "errors": 0,
       "skipped": [],
       "failing": []
     },
     "test_heavy": {
-      "run": 10,
-      "passed": 10,
+      "run": 12,
+      "passed": 12,
       "failed": 0,
       "errors": 0,
       "skipped": [],

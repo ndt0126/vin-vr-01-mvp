@@ -72,6 +72,14 @@ class TestManifests(unittest.TestCase):
         restricted = [p['port'] for rule in np['spec']['ingress'] if 'from' in rule for p in rule['ports']]
         self.assertEqual(sorted(restricted), [8002, 9090])
 
+    def test_offline_gpu_overlay_is_offline_cpu_plus_the_gpu_patches(self):
+        cpu = yaml.safe_load((K8S / 'overlays' / 'offline-cpu' / 'kustomization.yaml').read_text())
+        gpu = yaml.safe_load((K8S / 'overlays' / 'offline-gpu' / 'kustomization.yaml').read_text())
+        lab = yaml.safe_load((K8S / 'overlays' / 'lab-gpu' / 'kustomization.yaml').read_text())
+        self.assertEqual(gpu['images'], cpu['images'])                      # cung image local, khong keo registry
+        ops = lambda k: yaml.safe_load(k['patches'][0]['patch'])            # noqa: E731
+        self.assertEqual(ops(gpu), ops(cpu) + ops(lab))                     # Never-pull + KIND_GPU + 1 GPU
+
     def test_overlays_pin_the_same_triton_digest_as_compose(self):
         env = (K8S.parent / '.env.sample').read_text()
         digest = re.search(r'TRITON_IMAGE=.*@(sha256:[a-f0-9]{64})', env).group(1)

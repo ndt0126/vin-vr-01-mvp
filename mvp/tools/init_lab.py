@@ -106,6 +106,7 @@ def main():
         dev = 'nvidia-gpu' if args.instance_kind == 'KIND_GPU' else 'cpu'
         info = make_heavy_fixture.make_preset(examples, args.with_heavy_fixture, dev)
         make_heavy_fixture.make_preset(examples, args.with_heavy_fixture, dev, 'model-heavy-b')
+        make_heavy_fixture.make_vram_probe(examples, dev)  # fixture tiem loi: bo nho cap luc suy luan phu thuoc anh (bai G6)
         print(f"examples: added TEST FIXTURES model-heavy + model-heavy-b ({info['preset']}: {info['layers']} lop, {info['channels']} kenh, "
               f"anh {info['size']}x{info['size']}, {info['onnx_bytes'] // 1024} KiB, device {info['device']})")
     accepted, rejected = build_triton_repo.build(examples / 'packages', run / 'triton-repo', args.instance_kind)

@@ -1,0 +1,54 @@
+# VR-01 MVP (lab): Triton + Inspection API. Chay qua Makefile o thu muc mvp/ (make build | start | stop).
+# Triton KHONG publish cong ra host: chi container api goi duoc qua mang noi bo cua Compose.
+name: vr01-mvp
+services:
+  init:
+    image: vr01-mvp-api:${MVP_VERSION:-0.1.0}
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      args:
+        PYTHON_IMAGE: ${PYTHON_IMAGE:-python:3.12-slim}
+    profiles: ["tools"]
+    user: "${HOST_UID:-10001}:${HOST_GID:-10001}"
+    environment:
+      HOME: /tmp
+    volumes:
+      - ../run:/run-data
+    command: ["python", "tools/init_lab.py", "--run-dir", "/run-data", "--instance-kind", "${TRITON_INSTANCE_KIND:-KIND_CPU}"]
+
+  triton:
+    image: ${TRITON_IMAGE:-nvcr.io/nvidia/tritonserver:25.08-py3}
+    command: ["tritonserver", "--model-repository=/models", "--model-control-mode=explicit",
+              "--http-port=8000", "--allow-grpc=false", "--allow-metrics=true", "--metrics-port=8002"]
+    volumes:
+      - ../run/triton-repo:/models:ro
+    expose: ["8000", "8002"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/v2/health/ready || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 60
+    restart: unless-stopped
+
+  api:
+    image: vr01-mvp-api:${MVP_VERSION:-0.1.0}
+    user: "${HOST_UID:-10001}:${HOST_GID:-10001}"
+    depends_on:
+      triton:
+        condition: service_healthy
+    command: ["python", "backend/inspection_api.py", "--host", "0.0.0.0",
+              "--data-dir", "/run-data/data", "--principals", "/run-data/auth/principals.json",
+              "--tls-cert", "/run-data/tls/server.crt", "--tls-key", "/run-data/tls/server.key",
+              "--kserve-url", "http://triton:8000"]
+    volumes:
+      - ../run:/run-data
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:${INFERENCE_PORT:-8443}:8443"
+      - "${BIND_ADDR:-127.0.0.1}:${MANAGEMENT_PORT:-9443}:9443"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import ssl,urllib.request as u; u.urlopen('https://localhost:8443/readyz', context=ssl.create_default_context(cafile='/run-data/tls/ca.crt'), timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped

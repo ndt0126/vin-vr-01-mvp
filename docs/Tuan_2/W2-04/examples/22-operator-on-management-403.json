@@ -1,0 +1,26 @@
+{
+  "operationId": "listRecipes",
+  "plane": "management",
+  "method": "GET",
+  "path": "/v1/admin/recipes",
+  "request_headers": {
+    "Authorization": "Bearer <redacted:operator>",
+    "Content-Type": null
+  },
+  "request_body": null,
+  "status": 403,
+  "response_headers": {
+    "Content-Type": "application/problem+json",
+    "X-Trace-Id": "48904f3e3bf943769177c1c42e124ca2"
+  },
+  "response_body": {
+    "type": "urn:vr01:problem:FORBIDDEN",
+    "title": "Forbidden",
+    "status": 403,
+    "code": "FORBIDDEN",
+    "detail": "role operator is not allowed to call listRecipes",
+    "trace_id": "48904f3e3bf943769177c1c42e124ca2",
+    "request_id": null,
+    "retryable": false
+  }
+}

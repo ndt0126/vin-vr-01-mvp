@@ -1,0 +1,41 @@
+{
+  "operationId": "submitInspection",
+  "plane": "inference",
+  "method": "POST",
+  "path": "/v1/inspections",
+  "request_headers": {
+    "Authorization": "Bearer <redacted:operator>",
+    "Content-Type": "application/json"
+  },
+  "request_body": {
+    "request_id": "st1-20261006-000129",
+    "product_id": "PCB1-SN-000123",
+    "product_type": "PCB1",
+    "recipe_version": "recipe-a@0.1.0",
+    "captured_at": "2026-10-06T08:15:30Z",
+    "station_id": "station-sim",
+    "retry_of": null,
+    "image": {
+      "content_type": "image/png",
+      "data_base64": "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAAAAACEICPDAAAAKklEQVR4nO3MMQEAAAjDMEAX/nUhYg9H+je9lTXhDwAAAAAAAAAAAN4CBzB/AJwKcrH+AAAAAElFTkSuQmCC"
+    }
+  },
+  "status": 409,
+  "response_headers": {
+    "Content-Type": "application/problem+json",
+    "X-Trace-Id": "fb591ea1a7234b88913fda500aa829ff"
+  },
+  "response_body": {
+    "type": "urn:vr01:problem:RECIPE_VERSION_MISMATCH",
+    "title": "Conflict",
+    "status": 409,
+    "code": "RECIPE_VERSION_MISMATCH",
+    "detail": "requested recipe-a@0.1.0 but station-sim has recipe-b@0.1.0 active",
+    "trace_id": "fb591ea1a7234b88913fda500aa829ff",
+    "request_id": "st1-20261006-000129",
+    "retryable": false,
+    "details": {
+      "active_recipe_version": "recipe-b@0.1.0"
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "operationId": "rollbackRecipe",
+  "plane": "management",
+  "method": "POST",
+  "path": "/v1/admin/stations/station-sim/rollback",
+  "request_headers": {
+    "Authorization": "Bearer <redacted:admin>",
+    "Content-Type": "application/json"
+  },
+  "request_body": {
+    "reason": "kết thúc lô thử, quay lại recipe A"
+  },
+  "status": 200,
+  "response_headers": {
+    "Content-Type": "application/json",
+    "X-Trace-Id": "7abf29d857c84e31976191b8e6caac4e"
+  },
+  "response_body": {
+    "activation_id": 3,
+    "station_id": "station-sim",
+    "changed": true,
+    "from_recipe": {
+      "name": "recipe-b",
+      "version": "0.1.0",
+      "sha256": "6ee3711f1bf3ebc82d7f6d417a6c98a90ba42648d84886ffbd8b753989e8f0b7"
+    },
+    "to_recipe": {
+      "name": "recipe-a",
+      "version": "0.1.0",
+      "sha256": "de9871c469e04977f5e85df5941412f35f3193d091523ee842da0b3a6de33677"
+    },
+    "active_revision": "de9871c469e04977f5e85df5941412f35f3193d091523ee842da0b3a6de33677",
+    "golden": {
+      "expected": 0.375,
+      "actual": 0.375,
+      "passed": true
+    },
+    "actor": "ops-admin-01",
+    "reason": "kết thúc lô thử, quay lại recipe A",
+    "at": "2026-10-06T07:39:26.451Z",
+    "trace_id": "7abf29d857c84e31976191b8e6caac4e"
+  }
+}

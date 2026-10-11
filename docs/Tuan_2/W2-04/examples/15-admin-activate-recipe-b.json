@@ -1,0 +1,45 @@
+{
+  "operationId": "activateRecipe",
+  "plane": "management",
+  "method": "POST",
+  "path": "/v1/admin/stations/station-sim/activation",
+  "request_headers": {
+    "Authorization": "Bearer <redacted:admin>",
+    "Content-Type": "application/json"
+  },
+  "request_body": {
+    "recipe_name": "recipe-b",
+    "recipe_version": "0.1.0",
+    "reason": "chuyển sang model B cho lô thử"
+  },
+  "status": 200,
+  "response_headers": {
+    "Content-Type": "application/json",
+    "X-Trace-Id": "5e6e75532b134b9fa8ef5612c2083699"
+  },
+  "response_body": {
+    "activation_id": 2,
+    "station_id": "station-sim",
+    "changed": true,
+    "from_recipe": {
+      "name": "recipe-a",
+      "version": "0.1.0",
+      "sha256": "de9871c469e04977f5e85df5941412f35f3193d091523ee842da0b3a6de33677"
+    },
+    "to_recipe": {
+      "name": "recipe-b",
+      "version": "0.1.0",
+      "sha256": "6ee3711f1bf3ebc82d7f6d417a6c98a90ba42648d84886ffbd8b753989e8f0b7"
+    },
+    "active_revision": "6ee3711f1bf3ebc82d7f6d417a6c98a90ba42648d84886ffbd8b753989e8f0b7",
+    "golden": {
+      "expected": 0.3125,
+      "actual": 0.3125,
+      "passed": true
+    },
+    "actor": "ops-admin-01",
+    "reason": "chuyển sang model B cho lô thử",
+    "at": "2026-10-06T07:39:26.440Z",
+    "trace_id": "5e6e75532b134b9fa8ef5612c2083699"
+  }
+}

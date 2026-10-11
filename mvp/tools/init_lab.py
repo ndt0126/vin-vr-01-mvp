@@ -1,0 +1,80 @@
+"""Khoi tao du lieu LAB cho MVP trong mot thu muc run/ (chay lai duoc, khong ghi de thu da co):
+  auth/principals.json        SHA-256 cua token (server doc)
+  auth/lab-tokens.secret.json token lab, mode 600 - KHONG dua vao evidence/repo
+  tls/ca.crt, server.crt/key  CA lab + chung chi server (SAN localhost, 127.0.0.1, api)
+  triton-repo/                model repository sinh tu ModelPackage (luon tao lai)
+Day la khoa/chung chi THU NGHIEM. Production dung PKI nha may (chua lam).
+"""
+import argparse
+import os
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parent / 'backend'))
+sys.path.insert(0, str(HERE))
+import build_triton_repo  # noqa: E402
+import inspection_api  # noqa: E402
+
+EXT = '''basicConstraints=critical,CA:FALSE
+keyUsage=critical,digitalSignature
+extendedKeyUsage=serverAuth
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid
+subjectAltName=DNS:localhost,DNS:api,IP:127.0.0.1
+'''
+
+
+def make_tls(d):
+    d.mkdir(parents=True, exist_ok=True)
+    if not shutil.which('openssl'):
+        raise SystemExit('openssl is required to create the lab certificate')
+
+    def run(*a):
+        subprocess.run(a, cwd=d, check=True, capture_output=True)
+
+    run('openssl', 'req', '-x509', '-newkey', 'ec', '-pkeyopt', 'ec_paramgen_curve:P-256', '-nodes',
+        '-keyout', 'ca.key', '-out', 'ca.crt', '-days', '30', '-subj', '/CN=VR01 MVP LAB CA',
+        '-addext', 'basicConstraints=critical,CA:TRUE', '-addext', 'keyUsage=critical,keyCertSign,cRLSign')
+    run('openssl', 'req', '-newkey', 'ec', '-pkeyopt', 'ec_paramgen_curve:P-256', '-nodes',
+        '-keyout', 'server.key', '-out', 'server.csr', '-subj', '/CN=localhost')
+    (d / 'server.ext').write_text(EXT)
+    run('openssl', 'x509', '-req', '-in', 'server.csr', '-CA', 'ca.crt', '-CAkey', 'ca.key', '-CAcreateserial',
+        '-out', 'server.crt', '-days', '30', '-extfile', 'server.ext')
+    run('openssl', 'verify', '-x509_strict', '-CAfile', 'ca.crt', 'server.crt')
+    for name in ('ca.key', 'server.key'):
+        os.chmod(d / name, 0o600)
+    for name in ('server.csr', 'server.ext', 'ca.srl'):
+        (d / name).unlink(missing_ok=True)
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument('--run-dir', type=Path, required=True)
+    ap.add_argument('--instance-kind', default='KIND_CPU', choices=['KIND_CPU', 'KIND_GPU'])
+    args = ap.parse_args()
+    run = args.run_dir
+    (run / 'data').mkdir(parents=True, exist_ok=True)
+    if (run / 'auth' / 'principals.json').is_file():
+        print('auth: kept existing lab principals')
+    else:
+        inspection_api.init_lab_principals(run / 'auth')
+        print('auth: created lab principals (token file mode 600)')
+    if (run / 'tls' / 'server.crt').is_file():
+        print('tls: kept existing lab certificate')
+    else:
+        make_tls(run / 'tls')
+        print('tls: created lab CA + server certificate (30 days, strict X.509 verified)')
+    accepted, rejected = build_triton_repo.build(build_triton_repo.PACKAGES_ROOT / 'examples' / 'packages',
+                                                 run / 'triton-repo', args.instance_kind)
+    for m in accepted:
+        print(f"model: {m['name']}@{m['version']} {m['instance_kind']} digest {m['manifest_sha256'][:12]}")
+    for r in rejected:
+        print(f"model REJECTED: {r['package']} {r['code']}")
+    return 0 if accepted and not rejected else 1
+
+
+if __name__ == '__main__':
+    sys.exit(main())

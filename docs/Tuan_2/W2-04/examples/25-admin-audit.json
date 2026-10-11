@@ -1,0 +1,101 @@
+{
+  "operationId": "listAudit",
+  "plane": "management",
+  "method": "GET",
+  "path": "/v1/admin/audit?limit=20",
+  "request_headers": {
+    "Authorization": "Bearer <redacted:admin>",
+    "Content-Type": null
+  },
+  "request_body": null,
+  "status": 200,
+  "response_headers": {
+    "Content-Type": "application/json",
+    "X-Trace-Id": "7e50ce19093b4f8bae223c1e342b8c07"
+  },
+  "response_body": {
+    "items": [
+      {
+        "seq": 7,
+        "at": "2026-10-06T07:39:26.455Z",
+        "actor": "cam-sim-01",
+        "role": "operator",
+        "action": "authorize",
+        "target": "management:listRecipes",
+        "outcome": "FORBIDDEN",
+        "trace_id": "48904f3e3bf943769177c1c42e124ca2",
+        "details": {}
+      },
+      {
+        "seq": 6,
+        "at": "2026-10-06T07:39:26.451Z",
+        "actor": "ops-admin-01",
+        "role": "admin",
+        "action": "rollback",
+        "target": "station-sim:recipe-a@0.1.0",
+        "outcome": "OK",
+        "trace_id": "7abf29d857c84e31976191b8e6caac4e",
+        "details": {
+          "activation_id": 3
+        }
+      },
+      {
+        "seq": 5,
+        "at": "2026-10-06T07:39:26.440Z",
+        "actor": "ops-admin-01",
+        "role": "admin",
+        "action": "activate",
+        "target": "station-sim:recipe-b@0.1.0",
+        "outcome": "OK",
+        "trace_id": "5e6e75532b134b9fa8ef5612c2083699",
+        "details": {
+          "activation_id": 2
+        }
+      },
+      {
+        "seq": 4,
+        "at": "2026-10-06T07:39:26.437Z",
+        "actor": "ops-admin-01",
+        "role": "admin",
+        "action": "validate_package",
+        "target": "model-b@0.1.0",
+        "outcome": "PASS",
+        "trace_id": "955b6e2a3ff840c08876e0709378f3ab",
+        "details": {}
+      },
+      {
+        "seq": 3,
+        "at": "2026-10-06T07:39:26.426Z",
+        "actor": "qc-ui-01",
+        "role": "viewer",
+        "action": "authorize",
+        "target": "inference:submitInspection",
+        "outcome": "FORBIDDEN",
+        "trace_id": "559093a295144dfd94ae312013f6dee4",
+        "details": {}
+      },
+      {
+        "seq": 2,
+        "at": "2026-10-06T07:39:26.425Z",
+        "actor": "anonymous",
+        "role": "none",
+        "action": "auth",
+        "target": "inference:submitInspection",
+        "outcome": "UNAUTHENTICATED",
+        "trace_id": "335dd5ba65da45b394c5630f0d0aae3c",
+        "details": {}
+      },
+      {
+        "seq": 1,
+        "at": "2026-10-06T07:39:26.326Z",
+        "actor": "system",
+        "role": "system",
+        "action": "bootstrap_activation",
+        "target": "station-sim:recipe-a@0.1.0",
+        "outcome": "OK",
+        "trace_id": "475a3c4ac488416297b9859f6bc01ac8",
+        "details": {}
+      }
+    ]
+  }
+}

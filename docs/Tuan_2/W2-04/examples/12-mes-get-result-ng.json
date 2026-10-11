@@ -1,0 +1,51 @@
+{
+  "operationId": "getInspectionResult",
+  "plane": "inference",
+  "method": "GET",
+  "path": "/v1/inspections/st1-20261006-000128/result",
+  "request_headers": {
+    "Authorization": "Bearer <redacted:viewer>",
+    "Content-Type": null
+  },
+  "request_body": null,
+  "status": 200,
+  "response_headers": {
+    "Content-Type": "application/json",
+    "X-Trace-Id": "947e31cced1248dcba9350feb6a1ca66"
+  },
+  "response_body": {
+    "request_id": "st1-20261006-000128",
+    "state": "COMPLETED",
+    "decision": "NG",
+    "score": 0.901961,
+    "threshold": 0.5,
+    "review_band": 0.05,
+    "reason": null,
+    "lineage": {
+      "product_id": "PCB1-SN-000128",
+      "product_type": "PCB1",
+      "station_id": "station-sim",
+      "recipe": {
+        "name": "recipe-a",
+        "version": "0.1.0",
+        "sha256": "de9871c469e04977f5e85df5941412f35f3193d091523ee842da0b3a6de33677"
+      },
+      "model": {
+        "name": "model-a",
+        "version": "0.1.0",
+        "manifest_sha256": "a700dc698dfef898dda6ba046196ef339dd7614ea360d041321c8becb6aecce1"
+      },
+      "input_sha256": "7ce207842067e4ea5508cfcebe9821d358b3e1e6be4ce74f582f636f27b6987a",
+      "trace_id": "8a940b81374946878cb966c4116c57b7",
+      "submitted_by": "cam-sim-01"
+    },
+    "timing_ms": {
+      "queue": 0.373,
+      "inference": 0.136,
+      "total": 1.08
+    },
+    "received_at": "2026-10-06T07:39:26.428Z",
+    "started_at": "2026-10-06T07:39:26.429Z",
+    "finished_at": "2026-10-06T07:39:26.430Z"
+  }
+}

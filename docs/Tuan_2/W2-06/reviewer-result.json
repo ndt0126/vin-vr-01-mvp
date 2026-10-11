@@ -1,0 +1,87 @@
+{
+  "check": "W2-06 UI/UX",
+  "spec_version": "draft-1",
+  "verdict": "PASS",
+  "screens": 5,
+  "screen_states": 34,
+  "checks": [
+    {
+      "check": "prototype_has_every_screen_state",
+      "result": "PASS",
+      "detail": []
+    },
+    {
+      "check": "markdown_matrix_equals_spec",
+      "result": "PASS",
+      "detail": []
+    },
+    {
+      "check": "screen_operations_exist_and_roles_allowed",
+      "result": "PASS",
+      "detail": []
+    },
+    {
+      "check": "touch_tasks_map_to_permitted_screens",
+      "result": "PASS",
+      "detail": []
+    },
+    {
+      "check": "cli_tasks_are_admin_only",
+      "result": "PASS",
+      "detail": []
+    },
+    {
+      "check": "markdown_task_table_equals_spec",
+      "result": "PASS",
+      "detail": []
+    },
+    {
+      "check": "markdown_gap_table_equals_spec",
+      "result": "PASS",
+      "detail": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5"
+      ]
+    },
+    {
+      "check": "every_screen_has_permission_state",
+      "result": "PASS",
+      "detail": []
+    },
+    {
+      "check": "every_screen_has_error_state",
+      "result": "PASS",
+      "detail": []
+    },
+    {
+      "check": "every_screen_has_loading_state",
+      "result": "PASS",
+      "detail": []
+    },
+    {
+      "check": "history_has_empty_state",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "prototype_is_self_contained_no_network",
+      "result": "PASS",
+      "detail": []
+    },
+    {
+      "check": "technical_error_never_shown_as_ok_or_ng",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "dangerous_actions_have_confirm_dialog",
+      "result": "PASS",
+      "detail": ""
+    }
+  ],
+  "errors": [],
+  "meaning": "Static consistency only. No design review has taken place; no UI is implemented."
+}

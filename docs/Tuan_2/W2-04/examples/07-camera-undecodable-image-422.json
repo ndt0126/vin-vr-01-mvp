@@ -1,0 +1,38 @@
+{
+  "operationId": "submitInspection",
+  "plane": "inference",
+  "method": "POST",
+  "path": "/v1/inspections",
+  "request_headers": {
+    "Authorization": "Bearer <redacted:operator>",
+    "Content-Type": "application/json"
+  },
+  "request_body": {
+    "request_id": "st1-20261006-000124",
+    "product_id": "PCB1-SN-000123",
+    "product_type": "PCB1",
+    "recipe_version": "recipe-a@0.1.0",
+    "captured_at": "2026-10-06T08:15:30Z",
+    "station_id": "station-sim",
+    "retry_of": null,
+    "image": {
+      "content_type": "image/png",
+      "data_base64": "bm90IGFuIGltYWdl"
+    }
+  },
+  "status": 422,
+  "response_headers": {
+    "Content-Type": "application/problem+json",
+    "X-Trace-Id": "d2880ff38363422aa709b1425c5413de"
+  },
+  "response_body": {
+    "type": "urn:vr01:problem:IMAGE_UNDECODABLE",
+    "title": "Unprocessable content",
+    "status": 422,
+    "code": "IMAGE_UNDECODABLE",
+    "detail": "content is not a decodable image/png",
+    "trace_id": "d2880ff38363422aa709b1425c5413de",
+    "request_id": "st1-20261006-000124",
+    "retryable": false
+  }
+}

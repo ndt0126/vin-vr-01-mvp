@@ -1,0 +1,111 @@
+{
+  "operationId": "getStation",
+  "plane": "management",
+  "method": "GET",
+  "path": "/v1/admin/stations/station-sim",
+  "request_headers": {
+    "Authorization": "Bearer <redacted:admin>",
+    "Content-Type": null
+  },
+  "request_body": null,
+  "status": 200,
+  "response_headers": {
+    "Content-Type": "application/json",
+    "X-Trace-Id": "031767444c1e4ace88ec18def35797a1"
+  },
+  "response_body": {
+    "station_id": "station-sim",
+    "active": {
+      "station_id": "station-sim",
+      "recipe_version": "recipe-a@0.1.0",
+      "recipe": {
+        "name": "recipe-a",
+        "version": "0.1.0",
+        "sha256": "de9871c469e04977f5e85df5941412f35f3193d091523ee842da0b3a6de33677"
+      },
+      "model": {
+        "name": "model-a",
+        "version": "0.1.0",
+        "manifest_sha256": "a700dc698dfef898dda6ba046196ef339dd7614ea360d041321c8becb6aecce1"
+      },
+      "product_types": [
+        "PCB1"
+      ],
+      "active_revision": "de9871c469e04977f5e85df5941412f35f3193d091523ee842da0b3a6de33677",
+      "activated_at": "2026-10-06T07:39:26.451Z"
+    },
+    "history": [
+      {
+        "activation_id": 3,
+        "station_id": "station-sim",
+        "changed": true,
+        "from_recipe": {
+          "name": "recipe-b",
+          "version": "0.1.0",
+          "sha256": "6ee3711f1bf3ebc82d7f6d417a6c98a90ba42648d84886ffbd8b753989e8f0b7"
+        },
+        "to_recipe": {
+          "name": "recipe-a",
+          "version": "0.1.0",
+          "sha256": "de9871c469e04977f5e85df5941412f35f3193d091523ee842da0b3a6de33677"
+        },
+        "active_revision": "de9871c469e04977f5e85df5941412f35f3193d091523ee842da0b3a6de33677",
+        "golden": {
+          "expected": 0.375,
+          "actual": 0.375,
+          "passed": true
+        },
+        "actor": "ops-admin-01",
+        "reason": "kết thúc lô thử, quay lại recipe A",
+        "at": "2026-10-06T07:39:26.451Z",
+        "trace_id": "7abf29d857c84e31976191b8e6caac4e"
+      },
+      {
+        "activation_id": 2,
+        "station_id": "station-sim",
+        "changed": true,
+        "from_recipe": {
+          "name": "recipe-a",
+          "version": "0.1.0",
+          "sha256": "de9871c469e04977f5e85df5941412f35f3193d091523ee842da0b3a6de33677"
+        },
+        "to_recipe": {
+          "name": "recipe-b",
+          "version": "0.1.0",
+          "sha256": "6ee3711f1bf3ebc82d7f6d417a6c98a90ba42648d84886ffbd8b753989e8f0b7"
+        },
+        "active_revision": "6ee3711f1bf3ebc82d7f6d417a6c98a90ba42648d84886ffbd8b753989e8f0b7",
+        "golden": {
+          "expected": 0.3125,
+          "actual": 0.3125,
+          "passed": true
+        },
+        "actor": "ops-admin-01",
+        "reason": "chuyển sang model B cho lô thử",
+        "at": "2026-10-06T07:39:26.440Z",
+        "trace_id": "5e6e75532b134b9fa8ef5612c2083699"
+      },
+      {
+        "activation_id": 1,
+        "station_id": "station-sim",
+        "changed": true,
+        "from_recipe": null,
+        "to_recipe": {
+          "name": "recipe-a",
+          "version": "0.1.0",
+          "sha256": "de9871c469e04977f5e85df5941412f35f3193d091523ee842da0b3a6de33677"
+        },
+        "active_revision": "de9871c469e04977f5e85df5941412f35f3193d091523ee842da0b3a6de33677",
+        "golden": {
+          "expected": 0.375,
+          "actual": 0.375,
+          "passed": true
+        },
+        "actor": "system",
+        "reason": "bootstrap default recipe",
+        "at": "2026-10-06T07:39:26.326Z",
+        "trace_id": "475a3c4ac488416297b9859f6bc01ac8"
+      }
+    ]
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "operationId": "submitInspection",
+  "plane": "inference",
+  "method": "POST",
+  "path": "/v1/inspections",
+  "request_headers": {
+    "Authorization": "Bearer <redacted:operator>",
+    "Content-Type": "application/json"
+  },
+  "request_body": {
+    "request_id": "st1-20261006-000123",
+    "product_id": "PCB1-SN-000123",
+    "product_type": "PCB1",
+    "recipe_version": "recipe-a@0.1.0",
+    "captured_at": "2026-10-06T08:15:30Z",
+    "station_id": "station-sim",
+    "retry_of": null,
+    "image": {
+      "content_type": "image/png",
+      "data_base64": "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAAAAACEICPDAAAAKklEQVR4nO3MMQEAAAjDMEAX/nUhYg9H+je9lTXhDwAAAAAAAAAAAN4CBzB/AJwKcrH+AAAAAElFTkSuQmCC"
+    }
+  },
+  "status": 200,
+  "response_headers": {
+    "Content-Type": "application/json",
+    "X-Trace-Id": "1ad1f9178654487a894a9031d93601df",
+    "Idempotent-Replay": "true"
+  },
+  "response_body": {
+    "request_id": "st1-20261006-000123",
+    "state": "COMPLETED",
+    "decision": "OK",
+    "reason": null,
+    "product_id": "PCB1-SN-000123",
+    "product_type": "PCB1",
+    "station_id": "station-sim",
+    "retry_of": null,
+    "received_at": "2026-10-06T07:39:26.383Z",
+    "updated_at": "2026-10-06T07:39:26.383Z",
+    "links": {
+      "self": "/v1/inspections/st1-20261006-000123",
+      "result": "/v1/inspections/st1-20261006-000123/result"
+    }
+  }
+}

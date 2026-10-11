@@ -1,0 +1,50 @@
+{
+  "operationId": "listRecipes",
+  "plane": "management",
+  "method": "GET",
+  "path": "/v1/admin/recipes",
+  "request_headers": {
+    "Authorization": "Bearer <redacted:admin>",
+    "Content-Type": null
+  },
+  "request_body": null,
+  "status": 200,
+  "response_headers": {
+    "Content-Type": "application/json",
+    "X-Trace-Id": "68e0d2501af04b918760d8de8c6190cb"
+  },
+  "response_body": {
+    "items": [
+      {
+        "recipe": {
+          "name": "recipe-a",
+          "version": "0.1.0",
+          "sha256": "de9871c469e04977f5e85df5941412f35f3193d091523ee842da0b3a6de33677"
+        },
+        "model": {
+          "name": "model-a",
+          "version": "0.1.0",
+          "manifest_sha256": "a700dc698dfef898dda6ba046196ef339dd7614ea360d041321c8becb6aecce1"
+        },
+        "threshold": 0.5,
+        "active": true,
+        "rollback_recipe": null
+      },
+      {
+        "recipe": {
+          "name": "recipe-b",
+          "version": "0.1.0",
+          "sha256": "6ee3711f1bf3ebc82d7f6d417a6c98a90ba42648d84886ffbd8b753989e8f0b7"
+        },
+        "model": {
+          "name": "model-b",
+          "version": "0.1.0",
+          "manifest_sha256": "dcf1542894dc2dad0c8a71c5289b56e92db2cc39718158053967c0831a9d3e15"
+        },
+        "threshold": 0.3,
+        "active": false,
+        "rollback_recipe": "recipe-a@0.1.0"
+      }
+    ]
+  }
+}

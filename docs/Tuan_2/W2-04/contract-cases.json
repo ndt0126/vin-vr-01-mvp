@@ -1,0 +1,75 @@
+{
+  "item": "Câu hỏi đặt ra #5 - REST API tích hợp (W2-04, W3-03)",
+  "version": "draft-1",
+  "date": "2026-10-06",
+  "usecase_source": "../W2-01/usecase-pcb1.json",
+  "usecase_cases": {
+    "N1": ["TestHappyPath.test_N1_submit_status_result_with_lineage", "TestHappyPath.test_N1_decisions_ok_review_ng_from_recipe_threshold", "TestHappyPath.test_N1_jpeg_accepted"],
+    "F1": ["TestAdmissionErrors.test_F1_malformed_json_missing_fields_bad_base64"],
+    "F2": ["TestAdmissionErrors.test_F2_payload_too_large"],
+    "F3": ["TestAdmissionErrors.test_F3_undecodable_or_wrong_format_or_dimensions"],
+    "F4": ["TestIdempotency.test_F4_same_id_same_payload_returns_old_record_without_reinference", "TestIdempotency.test_concurrent_duplicate_submits_create_one_record"],
+    "F5": ["TestIdempotency.test_F5_same_id_different_payload_conflict"],
+    "F6": ["TestAdmissionErrors.test_F6_unknown_product_type_or_recipe_mismatch_never_scored"],
+    "F7": ["TestCapacity.test_F7_queue_full_429_with_retry_after_then_retry_same_id"],
+    "F8": ["TestReadiness.test_F8_backend_unavailable_stops_admission_but_reads_still_work", "TestKServeAdapter.test_business_api_translates_to_kserve_v2_and_propagates_trace"],
+    "F9": ["TestReadiness.test_F9_storage_write_failure_rejects_with_503", "TestReadiness.test_F9_low_disk_space_rejects_with_503", "TestReadiness.test_F9_result_never_returned_if_not_persisted"],
+    "F10": ["TestTechnicalStates.test_F10_backend_error_failed_decision_null_lineage_kept"],
+    "F11": ["TestTechnicalStates.test_F11_execution_timeout_late_result_ignored", "TestQueueTimeout.test_queue_timeout_is_separate_from_execution_timeout"],
+    "F12": ["TestRestart.test_F12_restart_while_processing_becomes_indeterminate_not_rerun"],
+    "F13": ["TestRestart.test_F13_active_recipe_survives_restart", "TestRestartUnverified.test_F13_changed_active_recipe_blocks_admission_no_silent_fallback"],
+    "F14": ["TestRestart.test_F14_consumer_disconnects_result_still_readable"],
+    "F15": ["TestTechnicalStates.test_F15_unknown_request_id_404"],
+    "F16": ["TestManagement.test_F16_activation_during_processing_keeps_pinned_model"]
+  },
+  "mentor_requirements": {
+    "R1_openapi_versioned_submit_status_result": {
+      "text": "OpenAPI versioned cho submit/status/result",
+      "evidence": ["static:openapi_3_1", "static:operation_rules", "TestHappyPath.test_N1_submit_status_result_with_lineage", "TestZZCoverage.test_every_operation_exercised"]
+    },
+    "R2_management_api": {
+      "text": "Management API (package/recipe/activation/rollback/audit)",
+      "evidence": ["TestManagement.test_activation_noop_if_match_busy_golden_and_rollback", "TestManagement.test_packages_recipes_and_validation", "TestManagement.test_rollback_without_history_409", "TestManagement.test_rollback_errors_and_storage_failure_during_activation", "TestManagement.test_management_validation_errors"]
+    },
+    "R3_auth_rbac": {
+      "text": "Auth/RBAC",
+      "evidence": ["TestSecurity.test_unauthenticated_401", "TestSecurity.test_every_secured_operation_requires_token", "TestSecurity.test_rbac_matrix", "TestSecurity.test_tokens_never_logged", "TestTLS.test_https_both_planes_and_plain_http_refused", "static:spec_matches_reference_routes_and_roles"]
+    },
+    "R4_payload_limit": {
+      "text": "Payload limit",
+      "evidence": ["TestAdmissionErrors.test_F2_payload_too_large", "TestAdmissionErrors.test_F3_undecodable_or_wrong_format_or_dimensions", "static:limits_declared"]
+    },
+    "R5_timeout": {
+      "text": "Timeout (body read, queue, execution)",
+      "evidence": ["TestSlowBody.test_slow_client_body_gets_408", "TestQueueTimeout.test_queue_timeout_is_separate_from_execution_timeout", "TestTechnicalStates.test_F11_execution_timeout_late_result_ignored"]
+    },
+    "R6_idempotency": {
+      "text": "Idempotency",
+      "evidence": ["TestIdempotency.test_F4_same_id_same_payload_returns_old_record_without_reinference", "TestIdempotency.test_F5_same_id_different_payload_conflict", "TestIdempotency.test_concurrent_duplicate_submits_create_one_record", "TestAdmissionErrors.test_retry_of_rules"]
+    },
+    "R7_error_schema": {
+      "text": "Error schema chung (RFC 9457 + code/trace_id/request_id/retryable)",
+      "evidence": ["static:operation_rules", "static:error_codes_declared", "static:error_statuses_documented_somewhere", "TestAdmissionErrors.test_unsupported_media_type_chunked_and_method"]
+    },
+    "R8_plane_separation": {
+      "text": "Tách inference plane khỏi management plane",
+      "evidence": ["TestSecurity.test_plane_separation_and_no_triton_passthrough", "static:operation_rules"]
+    },
+    "R9_business_api_not_triton": {
+      "text": "Module khác tích hợp qua business API, không phụ thuộc API nội bộ Triton",
+      "evidence": ["static:no_triton_internal_api_exposed", "TestSecurity.test_plane_separation_and_no_triton_passthrough", "TestKServeAdapter.test_business_api_translates_to_kserve_v2_and_propagates_trace", "TestHappyPath.test_active_recipe_lookup_for_camera"]
+    },
+    "C1_example_payloads": {
+      "text": "Example payload",
+      "evidence": ["static:examples_match_schemas", "static:example_files_match_spec"]
+    },
+    "C2_contract_and_negative_tests": {
+      "text": "Mock/contract tests, negative cases",
+      "evidence": ["TestZZCoverage.test_every_operation_exercised", "TestAdmissionErrors.test_F1_malformed_json_missing_fields_bad_base64", "TestSecurity.test_rbac_matrix"]
+    },
+    "C3_trace_end_to_end": {
+      "text": "Trace request_id/product_id/model/config end-to-end",
+      "evidence": ["TestHappyPath.test_trace_end_to_end_request_product_model_config", "TestKServeAdapter.test_business_api_translates_to_kserve_v2_and_propagates_trace"]
+    }
+  }
+}

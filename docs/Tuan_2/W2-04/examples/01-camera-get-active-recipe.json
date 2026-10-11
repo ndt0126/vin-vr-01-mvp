@@ -1,0 +1,35 @@
+{
+  "operationId": "getActiveRecipe",
+  "plane": "inference",
+  "method": "GET",
+  "path": "/v1/stations/station-sim/active-recipe",
+  "request_headers": {
+    "Authorization": "Bearer <redacted:operator>",
+    "Content-Type": null
+  },
+  "request_body": null,
+  "status": 200,
+  "response_headers": {
+    "Content-Type": "application/json",
+    "X-Trace-Id": "c62f7431392b4e04bd3a0a3ac2d4b001"
+  },
+  "response_body": {
+    "station_id": "station-sim",
+    "recipe_version": "recipe-a@0.1.0",
+    "recipe": {
+      "name": "recipe-a",
+      "version": "0.1.0",
+      "sha256": "de9871c469e04977f5e85df5941412f35f3193d091523ee842da0b3a6de33677"
+    },
+    "model": {
+      "name": "model-a",
+      "version": "0.1.0",
+      "manifest_sha256": "a700dc698dfef898dda6ba046196ef339dd7614ea360d041321c8becb6aecce1"
+    },
+    "product_types": [
+      "PCB1"
+    ],
+    "active_revision": "de9871c469e04977f5e85df5941412f35f3193d091523ee842da0b3a6de33677",
+    "activated_at": "2026-10-06T07:39:26.326Z"
+  }
+}

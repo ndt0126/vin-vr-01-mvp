@@ -1,0 +1,135 @@
+{
+  "server": "reference_api.py subprocess, HTTPS (lab CA), two ports",
+  "examples": [
+    {
+      "file": "01-camera-get-active-recipe.json",
+      "operationId": "getActiveRecipe",
+      "status": 200
+    },
+    {
+      "file": "02-camera-submit-202.json",
+      "operationId": "submitInspection",
+      "status": 202
+    },
+    {
+      "file": "03-mes-get-status.json",
+      "operationId": "getInspectionStatus",
+      "status": 200
+    },
+    {
+      "file": "04-mes-get-result-ok.json",
+      "operationId": "getInspectionResult",
+      "status": 200
+    },
+    {
+      "file": "05-camera-retry-same-payload-200.json",
+      "operationId": "submitInspection",
+      "status": 200
+    },
+    {
+      "file": "06-camera-same-id-other-image-409.json",
+      "operationId": "submitInspection",
+      "status": 409
+    },
+    {
+      "file": "07-camera-undecodable-image-422.json",
+      "operationId": "submitInspection",
+      "status": 422
+    },
+    {
+      "file": "08-camera-missing-field-400.json",
+      "operationId": "submitInspection",
+      "status": 400
+    },
+    {
+      "file": "09-no-token-401.json",
+      "operationId": "submitInspection",
+      "status": 401
+    },
+    {
+      "file": "10-viewer-submit-403.json",
+      "operationId": "submitInspection",
+      "status": 403
+    },
+    {
+      "file": "11-ng-sample-submit.json",
+      "operationId": "submitInspection",
+      "status": 202
+    },
+    {
+      "file": "12-mes-get-result-ng.json",
+      "operationId": "getInspectionResult",
+      "status": 200
+    },
+    {
+      "file": "13-admin-list-recipes.json",
+      "operationId": "listRecipes",
+      "status": 200
+    },
+    {
+      "file": "14-admin-validate-package-b.json",
+      "operationId": "validatePackage",
+      "status": 200
+    },
+    {
+      "file": "15-admin-activate-recipe-b.json",
+      "operationId": "activateRecipe",
+      "status": 200
+    },
+    {
+      "file": "16-camera-old-recipe-409.json",
+      "operationId": "submitInspection",
+      "status": 409
+    },
+    {
+      "file": "17-camera-submit-recipe-b.json",
+      "operationId": "submitInspection",
+      "status": 202
+    },
+    {
+      "file": "18-mes-get-result-recipe-b.json",
+      "operationId": "getInspectionResult",
+      "status": 200
+    },
+    {
+      "file": "19-qc-history-by-product.json",
+      "operationId": "listInspections",
+      "status": 200
+    },
+    {
+      "file": "20-admin-rollback.json",
+      "operationId": "rollbackRecipe",
+      "status": 200
+    },
+    {
+      "file": "21-admin-station-history.json",
+      "operationId": "getStation",
+      "status": 200
+    },
+    {
+      "file": "22-operator-on-management-403.json",
+      "operationId": "listRecipes",
+      "status": 403
+    },
+    {
+      "file": "23-admin-path-on-inference-port-404.json",
+      "operationId": "listRecipes",
+      "status": 404
+    },
+    {
+      "file": "24-triton-path-not-exposed-404.json",
+      "operationId": null,
+      "status": 404
+    },
+    {
+      "file": "25-admin-audit.json",
+      "operationId": "listAudit",
+      "status": 200
+    },
+    {
+      "file": "26-readiness.json",
+      "operationId": "getReadiness",
+      "status": 200
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+run/
+deploy/.env
+__pycache__/
+*.pyc
+.DS_Store
+reviewer-result.tmp.json

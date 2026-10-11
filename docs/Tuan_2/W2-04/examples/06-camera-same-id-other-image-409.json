@@ -1,0 +1,38 @@
+{
+  "operationId": "submitInspection",
+  "plane": "inference",
+  "method": "POST",
+  "path": "/v1/inspections",
+  "request_headers": {
+    "Authorization": "Bearer <redacted:operator>",
+    "Content-Type": "application/json"
+  },
+  "request_body": {
+    "request_id": "st1-20261006-000123",
+    "product_id": "PCB1-SN-000123",
+    "product_type": "PCB1",
+    "recipe_version": "recipe-a@0.1.0",
+    "captured_at": "2026-10-06T08:15:30Z",
+    "station_id": "station-sim",
+    "retry_of": null,
+    "image": {
+      "content_type": "image/png",
+      "data_base64": "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAAAAACEICPDAAAAKklEQVR4nO3MMQEAAAjDMMC/MGQhYg9H+je9lTXhDwAAAAAAAAAAAN4CB9qNASiYfnBUAAAAAElFTkSuQmCC"
+    }
+  },
+  "status": 409,
+  "response_headers": {
+    "Content-Type": "application/problem+json",
+    "X-Trace-Id": "8237446dbd6a43a8a71d12aaa98404b2"
+  },
+  "response_body": {
+    "type": "urn:vr01:problem:IDEMPOTENCY_CONFLICT",
+    "title": "Conflict",
+    "status": 409,
+    "code": "IDEMPOTENCY_CONFLICT",
+    "detail": "request_id already used with a different payload",
+    "trace_id": "8237446dbd6a43a8a71d12aaa98404b2",
+    "request_id": "st1-20261006-000123",
+    "retryable": false
+  }
+}

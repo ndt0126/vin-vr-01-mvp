@@ -1,0 +1,264 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "site-config w2-draft-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "site_id",
+    "station_id",
+    "version",
+    "mode",
+    "target",
+    "policy",
+    "runtime_profiles",
+    "capacity",
+    "limits",
+    "retention",
+    "operations"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "w2-draft-v1"
+    },
+    "site_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,63}$"
+    },
+    "station_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,63}$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "mode": {
+      "enum": [
+        "lab",
+        "production"
+      ]
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "os",
+        "arch"
+      ],
+      "properties": {
+        "os": {
+          "const": "linux"
+        },
+        "arch": {
+          "enum": [
+            "amd64",
+            "arm64"
+          ]
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allowed_purposes",
+        "require_signature",
+        "allowed_preprocess",
+        "allowed_postprocess"
+      ],
+      "properties": {
+        "allowed_purposes": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "fixture",
+              "qc-model"
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 32
+        },
+        "require_signature": {
+          "type": "boolean"
+        },
+        "allowed_preprocess": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "maxItems": 32
+        },
+        "allowed_postprocess": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "maxItems": 32
+        }
+      }
+    },
+    "runtime_profiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "backend",
+          "device",
+          "image_digest"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{0,63}$"
+          },
+          "backend": {
+            "enum": [
+              "reference-linear-score-v1",
+              "triton-onnx-v1"
+            ]
+          },
+          "device": {
+            "enum": [
+              "cpu",
+              "nvidia-gpu"
+            ]
+          },
+          "image_digest": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^sha256:[a-f0-9]{64}$"
+          }
+        }
+      },
+      "minItems": 1,
+      "maxItems": 32
+    },
+    "capacity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cpu_millicores",
+        "ram_mib",
+        "available_vram_mib",
+        "gpu_reserve_mib"
+      ],
+      "properties": {
+        "cpu_millicores": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64000
+        },
+        "ram_mib": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        },
+        "available_vram_mib": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1048576
+        },
+        "gpu_reserve_mib": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1048576
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_payload_bytes",
+        "max_decoded_pixels",
+        "max_inflight",
+        "queue_capacity",
+        "request_timeout_ms"
+      ],
+      "properties": {
+        "max_payload_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16777216
+        },
+        "max_decoded_pixels": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 67108864
+        },
+        "max_inflight": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "queue_capacity": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "request_timeout_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 600000
+        }
+      }
+    },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "image_days",
+        "log_days",
+        "audit_days",
+        "storage_budget_mib"
+      ],
+      "properties": {
+        "image_days": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3650
+        },
+        "log_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3650
+        },
+        "audit_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3650
+        },
+        "storage_budget_mib": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        }
+      }
+    },
+    "operations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enable_touch",
+        "enable_cli"
+      ],
+      "properties": {
+        "enable_touch": {
+          "const": true
+        },
+        "enable_cli": {
+          "const": true
+        }
+      }
+    }
+  }
+}

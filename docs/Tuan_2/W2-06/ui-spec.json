@@ -1,0 +1,50 @@
+{
+  "spec": "W2-06 UI/UX for the QC station (touch) and CLI",
+  "version": "draft-1",
+  "date": "2026-10-10",
+  "status": "DRAFT_NOT_REVIEWED",
+  "api": "mvp/backend/openapi.v1.yaml (1.2.0-draft.1)",
+  "roles": ["viewer", "operator", "admin"],
+  "screens": [
+    {"id": "overview", "title": "Tổng quan", "roles": ["viewer", "operator", "admin"],
+     "operations": ["getReadiness", "getActiveRecipe", "listInspections"],
+     "states": ["loading", "ready", "not_ready", "error"]},
+    {"id": "inspect", "title": "Kiểm tra", "roles": ["operator"],
+     "operations": ["getActiveRecipe", "submitInspection", "getInspectionStatus", "getInspectionResult", "cancelInspection"],
+     "states": ["idle", "sending", "processing", "result_ok", "result_ng", "result_review", "technical", "cancelled",
+                "rejected", "not_ready", "permission"]},
+    {"id": "history", "title": "Lịch sử", "roles": ["viewer", "operator", "admin"],
+     "operations": ["listInspections", "getInspectionResult"],
+     "states": ["loading", "list", "empty", "detail", "error"]},
+    {"id": "recipe", "title": "Recipe và model", "roles": ["admin"],
+     "operations": ["getStation", "listRecipes", "activateRecipe", "rollbackRecipe", "listAudit"],
+     "states": ["loading", "view", "confirm_activate", "confirm_rollback", "switching", "switched",
+                "golden_failed", "busy", "permission", "error"]},
+    {"id": "health", "title": "Sức khỏe và cảnh báo", "roles": ["viewer", "operator", "admin"],
+     "operations": ["getReadiness"],
+     "states": ["loading", "healthy", "alerts", "error"]}
+  ],
+  "tasks": [
+    {"id": "K1", "task": "Xem hệ thống có sẵn sàng không, recipe/model nào đang active", "role": "viewer", "channel": "touch", "screen": "overview"},
+    {"id": "K2", "task": "Gửi ảnh kiểm tra và xem OK/NG/REVIEW", "role": "operator", "channel": "touch", "screen": "inspect"},
+    {"id": "K3", "task": "Kiểm lại sản phẩm bị lỗi kỹ thuật", "role": "operator", "channel": "touch", "screen": "inspect"},
+    {"id": "K9", "task": "Hủy một lần kiểm đang chờ hoặc đang chạy", "role": "operator", "channel": "touch", "screen": "inspect"},
+    {"id": "K4", "task": "Tra lịch sử theo sản phẩm, lọc NG/REVIEW/lỗi kỹ thuật", "role": "viewer", "channel": "touch", "screen": "history"},
+    {"id": "K5", "task": "Xem truy vết một lần kiểm (request, model, recipe, thời gian)", "role": "viewer", "channel": "touch", "screen": "history"},
+    {"id": "K6", "task": "Chuyển recipe/model có xác nhận", "role": "admin", "channel": "touch", "screen": "recipe"},
+    {"id": "K7", "task": "Rollback về recipe trước có xác nhận", "role": "admin", "channel": "touch", "screen": "recipe"},
+    {"id": "K8", "task": "Xem cảnh báo và hướng xử lý", "role": "viewer", "channel": "touch", "screen": "health"},
+    {"id": "C1", "task": "Cài đặt, khởi động, dừng hệ thống", "role": "admin", "channel": "cli", "screen": null},
+    {"id": "C2", "task": "Sao lưu, khôi phục, cập nhật, rollback bản phần mềm", "role": "admin", "channel": "cli", "screen": null},
+    {"id": "C3", "task": "Thêm ModelPackage mới và kiểm package", "role": "admin", "channel": "cli", "screen": null},
+    {"id": "C4", "task": "Đọc log, trace, truy vấn ledger khi debug", "role": "admin", "channel": "cli", "screen": null},
+    {"id": "C5", "task": "Cấp, thu hồi token/chứng chỉ", "role": "admin", "channel": "cli", "screen": null}
+  ],
+  "api_gaps": [
+    {"id": "U1", "need": "Số đếm OK/NG/REVIEW/lỗi kỹ thuật trong ca", "today": "UI phải tự đếm từ listInspections theo state; chưa lọc theo decision hay khoảng thời gian", "target": "W4-01 / W5-03"},
+    {"id": "U2", "need": "Dung lượng ổ, VRAM, số lần restart", "today": "readyz chỉ trả ready + reasons", "target": "W4-01"},
+    {"id": "U3", "need": "Xem lại ảnh đã kiểm và overlay vùng lỗi", "today": "Ảnh gốc đã lưu nhưng chưa có API đọc ảnh; model mẫu chỉ trả score, không có anomaly map", "target": "W5-02 / W5-03"},
+    {"id": "U4", "need": "Đăng nhập người dùng trên màn hình cảm ứng", "today": "Bearer token lab cho từng thiết bị; chưa có đăng nhập/đăng xuất, chưa PKI", "target": "W5-03"},
+    {"id": "U5", "need": "viewer xem lịch sử audit (ai chuyển recipe, lúc nào)", "today": "listAudit chỉ cho admin", "target": "W5-03"}
+  ]
+}

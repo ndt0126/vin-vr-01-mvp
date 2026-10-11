@@ -1,0 +1,38 @@
+{
+  "operationId": "submitInspection",
+  "plane": "inference",
+  "method": "POST",
+  "path": "/v1/inspections",
+  "request_headers": {
+    "Authorization": "Bearer <redacted:viewer>",
+    "Content-Type": "application/json"
+  },
+  "request_body": {
+    "request_id": "st1-20261006-000127",
+    "product_id": "PCB1-SN-000123",
+    "product_type": "PCB1",
+    "recipe_version": "recipe-a@0.1.0",
+    "captured_at": "2026-10-06T08:15:30Z",
+    "station_id": "station-sim",
+    "retry_of": null,
+    "image": {
+      "content_type": "image/png",
+      "data_base64": "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAAAAACEICPDAAAAKklEQVR4nO3MMQEAAAjDMEAX/nUhYg9H+je9lTXhDwAAAAAAAAAAAN4CBzB/AJwKcrH+AAAAAElFTkSuQmCC"
+    }
+  },
+  "status": 403,
+  "response_headers": {
+    "Content-Type": "application/problem+json",
+    "X-Trace-Id": "559093a295144dfd94ae312013f6dee4"
+  },
+  "response_body": {
+    "type": "urn:vr01:problem:FORBIDDEN",
+    "title": "Forbidden",
+    "status": 403,
+    "code": "FORBIDDEN",
+    "detail": "role viewer is not allowed to call submitInspection",
+    "trace_id": "559093a295144dfd94ae312013f6dee4",
+    "request_id": null,
+    "retryable": false
+  }
+}

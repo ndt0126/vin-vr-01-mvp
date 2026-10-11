@@ -1,0 +1,32 @@
+{
+  "operationId": "getInspectionStatus",
+  "plane": "inference",
+  "method": "GET",
+  "path": "/v1/inspections/st1-20261006-000123",
+  "request_headers": {
+    "Authorization": "Bearer <redacted:viewer>",
+    "Content-Type": null
+  },
+  "request_body": null,
+  "status": 200,
+  "response_headers": {
+    "Content-Type": "application/json",
+    "X-Trace-Id": "ad9d7604da3245c0afaca827f37ba2d1"
+  },
+  "response_body": {
+    "request_id": "st1-20261006-000123",
+    "state": "COMPLETED",
+    "decision": "OK",
+    "reason": null,
+    "product_id": "PCB1-SN-000123",
+    "product_type": "PCB1",
+    "station_id": "station-sim",
+    "retry_of": null,
+    "received_at": "2026-10-06T07:39:26.383Z",
+    "updated_at": "2026-10-06T07:39:26.383Z",
+    "links": {
+      "self": "/v1/inspections/st1-20261006-000123",
+      "result": "/v1/inspections/st1-20261006-000123/result"
+    }
+  }
+}

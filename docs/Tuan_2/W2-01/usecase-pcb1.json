@@ -1,0 +1,245 @@
+{
+  "spec": "W2-01 PCB1 visual anomaly",
+  "version": "draft-1",
+  "date": "2026-10-06",
+  "status": "SUBMITTED_PENDING_QC_INTEGRATION_CONFIRMATION",
+  "source": "mentor replies Q7-Q10, Task_Plan_Weeks_1_5_Reviewed_2026-09-30.xlsx",
+  "request_fields": [
+    "request_id",
+    "product_id",
+    "product_type",
+    "recipe_version",
+    "captured_at",
+    "station_id",
+    "image"
+  ],
+  "states": {
+    "non_terminal": [
+      "RECEIVED",
+      "PROCESSING"
+    ],
+    "terminal": [
+      "COMPLETED",
+      "FAILED",
+      "TIMEOUT",
+      "INDETERMINATE"
+    ],
+    "technical": [
+      "FAILED",
+      "TIMEOUT",
+      "INDETERMINATE"
+    ],
+    "decisions": [
+      "OK",
+      "NG",
+      "REVIEW"
+    ]
+  },
+  "transitions": [
+    [
+      "START",
+      "RECEIVED"
+    ],
+    [
+      "RECEIVED",
+      "PROCESSING"
+    ],
+    [
+      "PROCESSING",
+      "COMPLETED"
+    ],
+    [
+      "PROCESSING",
+      "FAILED"
+    ],
+    [
+      "PROCESSING",
+      "TIMEOUT"
+    ],
+    [
+      "PROCESSING",
+      "INDETERMINATE"
+    ],
+    [
+      "RECEIVED",
+      "INDETERMINATE"
+    ]
+  ],
+  "cases": [
+    {
+      "id": "N1",
+      "situation": "valid image, model ready",
+      "required_outcome": "COMPLETED+OK/NG/REVIEW",
+      "creates_record": true,
+      "decision_allowed": true,
+      "lab_status": "PARTIAL",
+      "probe": "probe_N1",
+      "note": "COMPLETED exists; no OK/NG/REVIEW decision (ImageNet model)"
+    },
+    {
+      "id": "F1",
+      "situation": "malformed body / bad base64 / missing field",
+      "required_outcome": "HTTP 400",
+      "creates_record": false,
+      "decision_allowed": false,
+      "lab_status": "PASS",
+      "probe": "probe_F1",
+      "note": ""
+    },
+    {
+      "id": "F2",
+      "situation": "image > 4 MiB",
+      "required_outcome": "HTTP 413",
+      "creates_record": false,
+      "decision_allowed": false,
+      "lab_status": "PASS",
+      "probe": "probe_F2",
+      "note": ""
+    },
+    {
+      "id": "F3",
+      "situation": "base64 ok but not a decodable image",
+      "required_outcome": "HTTP 422",
+      "creates_record": false,
+      "decision_allowed": false,
+      "lab_status": "GAP",
+      "probe": "probe_F3",
+      "note": ""
+    },
+    {
+      "id": "F4",
+      "situation": "same request_id + same payload",
+      "required_outcome": "return old record, no re-inference",
+      "creates_record": true,
+      "decision_allowed": true,
+      "lab_status": "PASS",
+      "probe": "probe_F4",
+      "note": ""
+    },
+    {
+      "id": "F5",
+      "situation": "same request_id + different payload",
+      "required_outcome": "HTTP 409",
+      "creates_record": false,
+      "decision_allowed": false,
+      "lab_status": "PASS",
+      "probe": "probe_F5",
+      "note": ""
+    },
+    {
+      "id": "F6",
+      "situation": "unknown product_type / recipe_version mismatch",
+      "required_outcome": "HTTP 422/409, never scored with another recipe",
+      "creates_record": false,
+      "decision_allowed": false,
+      "lab_status": "GAP",
+      "probe": "probe_F6",
+      "note": ""
+    },
+    {
+      "id": "F7",
+      "situation": "admission queue full",
+      "required_outcome": "HTTP 429",
+      "creates_record": false,
+      "decision_allowed": false,
+      "lab_status": "PASS",
+      "probe": "probe_F7",
+      "note": ""
+    },
+    {
+      "id": "F8",
+      "situation": "model not ready / GPU lost",
+      "required_outcome": "HTTP 503, stop admission",
+      "creates_record": false,
+      "decision_allowed": false,
+      "lab_status": "PARTIAL",
+      "probe": "probe_F8",
+      "note": "readiness returns 503 but submit is not gated by readiness"
+    },
+    {
+      "id": "F9",
+      "situation": "storage / ledger error",
+      "required_outcome": "HTTP 503, never return unpersisted result",
+      "creates_record": false,
+      "decision_allowed": false,
+      "lab_status": "GAP",
+      "probe": "probe_F9",
+      "note": ""
+    },
+    {
+      "id": "F10",
+      "situation": "inference error after admission",
+      "required_outcome": "FAILED, decision=null, lineage kept",
+      "creates_record": true,
+      "decision_allowed": false,
+      "lab_status": "PASS",
+      "probe": "probe_F10",
+      "note": ""
+    },
+    {
+      "id": "F11",
+      "situation": "execution timeout",
+      "required_outcome": "TIMEOUT, decision=null",
+      "creates_record": true,
+      "decision_allowed": false,
+      "lab_status": "GAP",
+      "probe": "probe_F11",
+      "note": ""
+    },
+    {
+      "id": "F12",
+      "situation": "restart while PROCESSING",
+      "required_outcome": "INDETERMINATE, not re-executed",
+      "creates_record": true,
+      "decision_allowed": false,
+      "lab_status": "PASS",
+      "probe": "probe_F12",
+      "note": ""
+    },
+    {
+      "id": "F13",
+      "situation": "restart after model switch A->B",
+      "required_outcome": "restore persisted active model or 503",
+      "creates_record": false,
+      "decision_allowed": false,
+      "lab_status": "GAP",
+      "probe": "probe_F13",
+      "note": "same finding as Item 11 A6000 run 2026-10-05"
+    },
+    {
+      "id": "F14",
+      "situation": "consumer disconnects",
+      "required_outcome": "result persisted, readable by request_id",
+      "creates_record": true,
+      "decision_allowed": true,
+      "lab_status": "PASS",
+      "probe": "probe_F14",
+      "note": ""
+    },
+    {
+      "id": "F15",
+      "situation": "unknown request_id",
+      "required_outcome": "HTTP 404",
+      "creates_record": false,
+      "decision_allowed": false,
+      "lab_status": "PASS",
+      "probe": "probe_F15",
+      "note": ""
+    },
+    {
+      "id": "F16",
+      "situation": "model switch while request in flight",
+      "required_outcome": "request keeps pinned model; old model drained before unload",
+      "creates_record": true,
+      "decision_allowed": true,
+      "lab_status": "PASS",
+      "probe": "unittest:test_switch,test_old_is_not_unloaded_before_drain",
+      "note": ""
+    }
+  ],
+  "lab_status_legend": {
+    "PASS": "implemented in lab controller and probe/test passes",
+    "PARTIAL": "partly implemented",
+    "GAP": "not implemented; probe confirms current behaviour differs from spec"
+  }
+}

@@ -1,0 +1,85 @@
+HOST_UID=$(id -u) HOST_GID=$(id -g) docker compose --env-file deploy/.env -f deploy/docker-compose.yml build init
+time="2026-10-10T05:15:36Z" level=warning msg="Docker Compose is configured to build using Bake, but buildx isn't installed"
+#0 building with "default" instance using docker driver
+
+#1 [init internal] load build definition from Dockerfile
+#1 transferring dockerfile: 827B done
+#1 DONE 0.0s
+
+#2 [init internal] load metadata for docker.io/library/python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1
+#2 DONE 0.0s
+
+#3 [init internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [init  1/10] FROM docker.io/library/python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1
+#4 resolve docker.io/library/python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1 0.0s done
+#4 DONE 0.0s
+
+#5 [init internal] load build context
+#5 transferring context: 1.67kB done
+#5 DONE 0.0s
+
+#6 [init  5/10] RUN pip install --no-cache-dir -r backend/requirements.txt
+#6 CACHED
+
+#7 [init  7/10] COPY packages packages
+#7 CACHED
+
+#8 [init  9/10] COPY tests tests
+#8 CACHED
+
+#9 [init  4/10] COPY backend/requirements.txt backend/requirements.txt
+#9 CACHED
+
+#10 [init  6/10] COPY backend backend
+#10 CACHED
+
+#11 [init  8/10] COPY tools tools
+#11 CACHED
+
+#12 [init  2/10] RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+#12 CACHED
+
+#13 [init  3/10] WORKDIR /app
+#13 CACHED
+
+#14 [init 10/10] RUN useradd --uid 10001 --create-home vr01 && mkdir -p /run-data && chown vr01 /run-data
+#14 CACHED
+
+#15 [init] exporting to image
+#15 exporting layers done
+#15 exporting manifest sha256:539701932beb3b07bef381964e635ed2ee1fbfc982bb9e013e9b09625f2ca31d done
+#15 exporting config sha256:7b7b2cb9a8b283342cc961aecf794f39eda170478c5d4df6ca7e9e3d15be254a done
+#15 exporting attestation manifest sha256:09c45cf903aac87166f4eca35a130dc1743e2821f41c27c25e29829fb03ff42f 0.0s done
+#15 exporting manifest list sha256:c9d8fe255292ade8dd38b4d5949f513001e07a38cbf6503a85a86910548123bb 0.0s done
+#15 naming to docker.io/library/vr01-mvp-api:0.1.0 done
+#15 unpacking to docker.io/library/vr01-mvp-api:0.1.0 0.0s done
+#15 DONE 0.1s
+
+#16 [init] resolving provenance for metadata file
+#16 DONE 0.0s
+ init  Built
+HOST_UID=$(id -u) HOST_GID=$(id -g) docker compose --env-file deploy/.env -f deploy/docker-compose.yml run --rm init
+ Network vr01-mvp_default  Creating
+ Network vr01-mvp_default  Created
+auth: kept existing lab principals
+tls: kept existing lab certificate
+model: model-a@0.1.0 KIND_CPU digest a700dc698dfe
+model: model-b@0.1.0 KIND_CPU digest dcf1542894dc
+HOST_UID=$(id -u) HOST_GID=$(id -g) docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d --wait triton api
+ Container vr01-mvp-triton-1  Creating
+ Container vr01-mvp-triton-1  Created
+ Container vr01-mvp-api-1  Creating
+ Container vr01-mvp-api-1  Created
+ Container vr01-mvp-triton-1  Starting
+ Container vr01-mvp-triton-1  Started
+ Container vr01-mvp-triton-1  Waiting
+ Container vr01-mvp-triton-1  Healthy
+ Container vr01-mvp-api-1  Starting
+ Container vr01-mvp-api-1  Started
+ Container vr01-mvp-triton-1  Waiting
+ Container vr01-mvp-api-1  Waiting
+ Container vr01-mvp-triton-1  Healthy
+ Container vr01-mvp-api-1  Healthy

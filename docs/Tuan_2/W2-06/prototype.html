@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VR-01 QC Station — prototype W2-06</title>
+<style>
+:root{--bg:#f3f4f1;--panel:#fff;--ink:#1b1f1d;--muted:#5d6661;--line:#d5d9d4;--accent:#0f5c4d;--accent-ink:#fff;
+--ok:#1d6b3a;--ok-bg:#e2f3e7;--ng:#a3231f;--ng-bg:#fbe4e2;--rv:#8a5a00;--rv-bg:#fdf0d2;--tech:#3d4a8f;--tech-bg:#e6e9f8;--demo:#6b4fa0}
+@media (prefers-color-scheme:dark){:root{--bg:#141716;--panel:#1e2321;--ink:#eef1ee;--muted:#a3ada7;--line:#353c38;--accent:#49b89f;--accent-ink:#08201b;
+--ok:#7fd39a;--ok-bg:#183524;--ng:#ff9a94;--ng-bg:#43201e;--rv:#f1c463;--rv-bg:#3d3013;--tech:#aab4f5;--tech-bg:#262c4d;--demo:#b9a3e6}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,input,select{font:inherit;color:inherit}
+.app{display:grid;grid-template-columns:200px 1fr;grid-template-rows:auto 1fr auto;min-height:100vh}
+header{grid-column:1/3;display:flex;gap:16px;align-items:center;padding:12px 20px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+header h1{font-size:19px;margin:0;font-weight:650}
+header .sp{flex:1}
+nav{background:var(--panel);border-right:1px solid var(--line);padding:12px;display:flex;flex-direction:column;gap:8px}
+nav button{min-height:64px;text-align:left;padding:10px 14px;border:1px solid transparent;border-radius:10px;background:none;cursor:pointer;font-weight:600}
+nav button[aria-current=page]{background:var(--accent);color:var(--accent-ink)}
+nav button small{display:block;font-weight:400;opacity:.8;font-size:13px}
+main{padding:24px;min-width:0}
+h2{margin:0 0 16px;font-size:24px}
+h3{margin:0 0 8px;font-size:15px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:650}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+.big{font-size:30px;font-weight:700;line-height:1.15}
+.muted{color:var(--muted)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;overflow-wrap:anywhere}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;font-weight:650;font-size:15px;border:1px solid currentColor;white-space:nowrap}
+.ok{color:var(--ok);background:var(--ok-bg)}.ng{color:var(--ng);background:var(--ng-bg)}.rv{color:var(--rv);background:var(--rv-bg)}.tech{color:var(--tech);background:var(--tech-bg)}
+.banner{border-radius:12px;padding:18px 20px;margin-bottom:16px;border:2px solid currentColor;font-weight:600}
+.banner p{margin:6px 0 0;font-weight:400;color:var(--ink)}
+.btn{min-height:56px;padding:12px 22px;border-radius:10px;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-weight:650}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.danger{border-color:var(--ng);color:var(--ng)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:focus-visible,nav button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}
+dt{color:var(--muted)}dd{margin:0}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+tbody tr{cursor:pointer}tbody tr:hover{background:var(--bg)}
+.thumbs{display:flex;gap:12px;flex-wrap:wrap}
+.thumb{width:132px;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--panel);cursor:pointer;text-align:center}
+.thumb[aria-pressed=true]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.thumb i{display:block;height:84px;border-radius:6px;margin-bottom:6px}
+input[type=text],select{min-height:52px;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel)}
+.spinner{width:44px;height:44px;border:5px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spinner{animation:none}}
+.center{display:flex;flex-direction:column;align-items:center;gap:14px;padding:48px 16px;text-align:center}
+.verdict{font-size:64px;font-weight:800;letter-spacing:.02em;line-height:1}
+.dialog{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px}
+.dialog .card{max-width:560px;width:100%}
+footer{grid-column:1/3;border-top:2px dashed var(--demo);padding:10px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:14px;color:var(--demo)}
+footer select{min-height:40px;color:var(--ink)}
+@media (max-width:760px){.app{grid-template-columns:1fr}nav{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line)}nav button{min-width:132px}header,footer{grid-column:1}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>VR-01 · Trạm QC <span class="mono muted">station-sim</span></h1>
+    <span class="sp"></span>
+    <span id="readyChip"></span>
+    <span class="chip" id="roleChip"></span>
+  </header>
+  <nav id="nav" aria-label="Màn hình"></nav>
+  <main id="main" aria-live="polite"></main>
+  <footer>
+    <strong>Bảng điều khiển demo (không thuộc sản phẩm)</strong>
+    <label>Vai trò <select id="demoRole"></select></label>
+    <label>Trạng thái màn hình <select id="demoState"></select></label>
+    <span>Dữ liệu trên trang là giả, không gọi API.</span>
+  </footer>
+</div>
+<script>
+// Prototype W2-06: du lieu gia, ten truong theo mvp/backend/openapi.v1.yaml. Moi view dang ky: VIEWS['<screen>/<state>'].
+const SCREENS = [
+  {id:'overview', title:'Tổng quan', hint:'Sẵn sàng? Model nào?'},
+  {id:'inspect', title:'Kiểm tra', hint:'Gửi ảnh, xem kết quả'},
+  {id:'history', title:'Lịch sử', hint:'Tra theo sản phẩm'},
+  {id:'recipe', title:'Recipe và model', hint:'Chuyển, rollback'},
+  {id:'health', title:'Sức khỏe', hint:'Cảnh báo, cách xử lý'},
+];
+const ACTIVE = {recipe:'recipe-a@0.1.0', model:'model-a', version:'0.1.0', digest:'a700dc698dfe…', threshold:0.5, band:0.05,
+  at:'2026-10-10T05:04:44Z', actor:'ops-admin-01'};
+const HISTORY = [
+  {request_id:'st1-20261010-000131', product_id:'PCB1-SN-0131', state:'COMPLETED', decision:'OK', score:0.157, at:'12:05:02', model:'model-a', recipe:'recipe-a@0.1.0', retry_of:null, reason:null},
+  {request_id:'st1-20261010-000130', product_id:'PCB1-SN-0130', state:'COMPLETED', decision:'NG', score:0.863, at:'12:04:55', model:'model-a', recipe:'recipe-a@0.1.0', retry_of:null, reason:null},
+  {request_id:'st1-20261010-000129b', product_id:'PCB1-SN-0129', state:'COMPLETED', decision:'REVIEW', score:0.512, at:'12:04:41', model:'model-a', recipe:'recipe-a@0.1.0', retry_of:'st1-20261010-000129', reason:null},
+  {request_id:'st1-20261010-000129', product_id:'PCB1-SN-0129', state:'TIMEOUT', decision:null, score:null, at:'12:04:20', model:'model-a', recipe:'recipe-a@0.1.0', retry_of:null, reason:'EXECUTION_TIMEOUT'},
+  {request_id:'st1-20261010-000127', product_id:'PCB1-SN-0127', state:'CANCELLED', decision:null, score:null, at:'11:57:40', model:'model-a', recipe:'recipe-a@0.1.0', retry_of:null, reason:'CANCELLED_BY_CLIENT'},
+  {request_id:'st1-20261010-000128', product_id:'PCB1-SN-0128', state:'INDETERMINATE', decision:null, score:null, at:'11:58:03', model:'model-a', recipe:'recipe-a@0.1.0', retry_of:null, reason:'RESTARTED_DURING_PROCESSING'},
+];
+const S = {screen:'overview', role:'operator', state:{}, sample:0, filter:'all', detail:HISTORY[2]};
+const DEFAULT = {overview:'ready', inspect:'idle', history:'list', recipe:'view', health:'healthy'};
+const ALLOWED = {overview:['viewer','operator','admin'], inspect:['operator'], history:['viewer','operator','admin'],
+  recipe:['admin'], health:['viewer','operator','admin']};
+const VIEWS = {};
+const $ = (h) => { const t = document.createElement('template'); t.innerHTML = h.trim(); return t.content; };
+const esc = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const go = (screen, state) => { S.screen = screen; if (state) S.state[screen] = state; render(); };
+const set = (state) => go(S.screen, state);
+
+function decisionChip(r) {
+  if (r.state === 'CANCELLED') return `<span class="chip">⊘ Đã hủy</span>`;
+  if (r.state !== 'COMPLETED') return `<span class="chip tech">⚙ Lỗi kỹ thuật · ${r.state}</span>`;
+  return {OK:'<span class="chip ok">✓ OK</span>', NG:'<span class="chip ng">✕ NG</span>', REVIEW:'<span class="chip rv">? REVIEW</span>'}[r.decision];
+}
+const loading = (what) => `<div class="center"><div class="spinner" role="status" aria-label="Đang tải"></div><div>Đang tải ${what}…</div></div>`;
+const errorBox = (what) => `<div class="banner ng">Không tải được ${what}
+  <p>Trạm không kết nối được tới máy chủ kiểm tra. Kết quả đã lưu không bị mất. Thử lại sau vài giây; nếu vẫn lỗi, báo kỹ sư vận hành.</p>
+  <p><button class="btn" data-go="${S.screen}/${DEFAULT[S.screen]}">Thử lại</button></p></div>`;
+const permission = (need) => `<div class="banner tech">Tài khoản hiện tại không có quyền dùng màn hình này
+  <p>Cần vai trò <strong>${need}</strong>. Bạn đang đăng nhập với vai trò <strong>${S.role}</strong>. Bạn vẫn xem được Tổng quan, Lịch sử và Sức khỏe.</p></div>`;
+const notReady = `<div class="banner ng">Hệ thống CHƯA SẴN SÀNG — không nhận ảnh mới
+  <p>Lý do: <span class="mono">WARMUP_FAILED</span> (model đang active chưa nạp được). Hệ thống tự thử nạp lại. Sản phẩm trong lúc này <strong>chưa được kiểm</strong>; giữ lại theo quy trình QC.</p></div>`;
+const activeCard = () => `<div class="card"><h3>Recipe và model đang dùng</h3><div class="big">${ACTIVE.recipe}</div>
+  <dl style="margin-top:10px"><dt>Model</dt><dd>${ACTIVE.model} · ${ACTIVE.version}</dd><dt>Digest</dt><dd class="mono">${ACTIVE.digest}</dd>
+  <dt>Ngưỡng NG</dt><dd>≥ ${ACTIVE.threshold} (REVIEW ± ${ACTIVE.band})</dd><dt>Kích hoạt</dt><dd>${ACTIVE.at} bởi ${ACTIVE.actor}</dd></dl></div>`;
+
+// ---------------- overview
+VIEWS['overview/loading'] = () => loading('trạng thái hệ thống');
+VIEWS['overview/error'] = () => errorBox('trạng thái hệ thống');
+VIEWS['overview/not_ready'] = () => notReady + `<div class="grid">${activeCard()}</div>`;
+VIEWS['overview/ready'] = () => `<div class="banner ok">Hệ thống SẴN SÀNG nhận ảnh</div>
+  <div class="grid">${activeCard()}
+  <div class="card"><h3>Trong ca này</h3><div class="row">
+    <span class="chip ok">✓ OK 118</span><span class="chip ng">✕ NG 9</span><span class="chip rv">? REVIEW 2</span><span class="chip tech">⚙ Lỗi kỹ thuật 2</span></div>
+    <p class="muted">2 sản phẩm lỗi kỹ thuật <strong>chưa có kết luận</strong>.</p>
+    <button class="btn" data-filter="tech">Xem sản phẩm cần xử lý</button></div>
+  <div class="card"><h3>Lần kiểm gần nhất</h3>${decisionChip(HISTORY[0])}
+    <p class="mono">${HISTORY[0].product_id}<br>${HISTORY[0].request_id}</p></div></div>`;
+
+// ---------------- inspect
+const SAMPLES = [['Mẫu sáng','#c9cfca'],['Mẫu trung bình','#858c87'],['Mẫu tối','#3a403c']];
+const inspectForm = (busy) => `<div class="card"><h3>1. Chọn ảnh mẫu</h3><div class="thumbs">${SAMPLES.map((s,i)=>
+  `<button class="thumb" aria-pressed="${S.sample===i}" data-sample="${i}" ${busy?'disabled':''}><i style="background:${s[1]}"></i>${s[0]}</button>`).join('')}</div>
+  <h3 style="margin-top:18px">2. Mã sản phẩm</h3><input type="text" value="PCB1-SN-0132" aria-label="Mã sản phẩm" ${busy?'disabled':''}>
+  <p class="muted">Recipe gửi kèm: <span class="mono">${ACTIVE.recipe}</span> (lấy từ hệ thống, không nhập tay)</p>
+  <button class="btn primary" data-go="inspect/sending" ${busy?'disabled':''}>Gửi kiểm tra</button></div>`;
+const traceCard = (r, extra='') => `<div class="card"><h3>Truy vết</h3><dl>
+  <dt>Sản phẩm</dt><dd class="mono">${r.product_id}</dd><dt>Request</dt><dd class="mono">${r.request_id}</dd>
+  <dt>Trace</dt><dd class="mono">0d3c9a51e2b74f0c…</dd><dt>Recipe</dt><dd class="mono">${r.recipe}</dd>
+  <dt>Model</dt><dd class="mono">${r.model} · a700dc698dfe…</dd><dt>Ảnh (SHA-256)</dt><dd class="mono">429b0be044a7…</dd>
+  <dt>Thời gian</dt><dd>chờ 3 ms · suy luận ${r.state==='COMPLETED'?'2,7 ms':'—'}</dd>${extra}</dl></div>`;
+const resultView = (cls, word, text, r) => `<div class="grid"><div class="card ${cls}" style="border-width:2px"><div class="center">
+  <div class="verdict">${word}</div><div>${text}</div><div>Điểm ${r.score} · ngưỡng ${ACTIVE.threshold}</div>
+  <button class="btn primary" data-go="inspect/idle">Kiểm sản phẩm tiếp theo</button></div></div>${traceCard(r)}</div>
+  <p class="muted">Overlay vùng lỗi: model mẫu chỉ trả điểm, chưa có bản đồ bất thường. Vị trí overlay sẽ nằm trên ảnh ở thẻ kết quả.</p>`;
+VIEWS['inspect/idle'] = () => inspectForm(false);
+VIEWS['inspect/sending'] = () => inspectForm(true) + `<div class="center"><div class="spinner" role="status"></div><div>Đang gửi ảnh…</div><button class="btn" data-go="inspect/processing">(demo) Máy chủ đã nhận →</button></div>`;
+VIEWS['inspect/processing'] = () => `<div class="card"><div class="center"><div class="spinner" role="status"></div>
+  <div class="big">Đã nhận, đang kiểm</div><div class="mono">st1-20261010-000132</div>
+  <div class="muted">Nếu mất mạng lúc này, kết quả vẫn được lưu và xem lại được trong Lịch sử.</div>
+  <button class="btn danger" data-go="inspect/cancelled">Hủy lần kiểm này</button>
+  <div class="row"><button class="btn" data-go="inspect/result_ok">(demo) → OK</button><button class="btn" data-go="inspect/result_ng">(demo) → NG</button>
+  <button class="btn" data-go="inspect/result_review">(demo) → REVIEW</button><button class="btn" data-go="inspect/technical">(demo) → lỗi kỹ thuật</button></div></div></div>`;
+VIEWS['inspect/result_ok'] = () => resultView('ok','✓ OK','Không phát hiện bất thường', HISTORY[0]);
+VIEWS['inspect/result_ng'] = () => resultView('ng','✕ NG','Phát hiện bất thường', HISTORY[1]);
+VIEWS['inspect/result_review'] = () => resultView('rv','? REVIEW','Điểm sát ngưỡng — cần người xem', HISTORY[2]);
+VIEWS['inspect/technical'] = () => `<div class="grid"><div class="card tech" style="border-width:2px"><div class="center">
+  <div class="verdict" style="font-size:40px">⚙ CHƯA CÓ KẾT LUẬN</div>
+  <div>Lỗi kỹ thuật: <span class="mono">TIMEOUT · EXECUTION_TIMEOUT</span></div>
+  <div><strong>Đây không phải OK và không phải NG.</strong> Sản phẩm này chưa được kiểm.</div>
+  <div class="row"><button class="btn primary" data-go="inspect/processing">Kiểm lại (tạo mã mới)</button><button class="btn" data-go="inspect/idle">Bỏ qua, kiểm sản phẩm khác</button></div>
+  <div class="muted">Kiểm lại sẽ tạo request mới nối với lần này (<span class="mono">retry_of</span>); lần lỗi vẫn nằm trong lịch sử.</div></div></div>
+  ${traceCard(HISTORY[3])}</div>`;
+VIEWS['inspect/cancelled'] = () => `<div class="grid"><div class="card" style="border-width:2px"><div class="center">
+  <div class="verdict" style="font-size:40px">⊘ ĐÃ HỦY</div>
+  <div><strong>Không có kết luận.</strong> Sản phẩm này chưa được kiểm.</div>
+  <div class="muted">Nếu máy chủ đã chạy xong trước khi hủy, màn hình sẽ hiện kết quả thật thay vì "Đã hủy" (<span class="mono">409 ALREADY_TERMINAL</span>).</div>
+  <div class="row"><button class="btn primary" data-go="inspect/processing">Kiểm lại (tạo mã mới)</button><button class="btn" data-go="inspect/idle">Kiểm sản phẩm khác</button></div></div></div>
+  ${traceCard({...HISTORY[3], state:'CANCELLED'}, '<dt>Lý do</dt><dd class="mono">CANCELLED_BY_CLIENT</dd>')}</div>`;
+VIEWS['inspect/rejected'] = () => `<div class="banner ng">Ảnh không được nhận — chưa tạo lần kiểm nào
+  <p><span class="mono">422 IMAGE_UNDECODABLE</span>: file không phải ảnh PNG/JPEG đọc được. Chụp hoặc chọn lại ảnh.</p></div>
+  <div class="card"><h3>Các lý do từ chối khác và cách xử lý</h3><table><thead><tr><th>Mã</th><th>Nghĩa</th><th>Màn hình làm gì</th></tr></thead><tbody style="cursor:default">
+  <tr><td class="mono">413</td><td>Ảnh lớn hơn 4 MiB</td><td>Báo lỗi, không tự gửi lại</td></tr>
+  <tr><td class="mono">409 RECIPE_VERSION_MISMATCH</td><td>Recipe vừa được đổi</td><td>Tự lấy recipe mới, hỏi người dùng gửi lại</td></tr>
+  <tr><td class="mono">429 QUEUE_FULL</td><td>Hàng đợi đầy</td><td>Tự gửi lại cùng mã sau 1 giây, tối đa 5 lần</td></tr>
+  <tr><td class="mono">503</td><td>Hệ thống chưa sẵn sàng</td><td>Chuyển sang trạng thái "chưa sẵn sàng"</td></tr></tbody></table></div>${inspectForm(false)}`;
+VIEWS['inspect/not_ready'] = () => notReady + inspectForm(true);
+VIEWS['inspect/permission'] = () => permission('operator');
+
+// ---------------- history
+const FILTERS = [['all','Tất cả'],['NG','NG'],['REVIEW','REVIEW'],['tech','Lỗi kỹ thuật']];
+const filterBar = () => `<div class="row" style="margin-bottom:14px">${FILTERS.map(f=>`<button class="btn ${S.filter===f[0]?'primary':''}" data-filter="${f[0]}">${f[1]}</button>`).join('')}
+  <input type="text" placeholder="Mã sản phẩm, ví dụ PCB1-SN-0129" aria-label="Tìm theo mã sản phẩm" style="flex:1;min-width:220px"></div>`;
+const rows = () => HISTORY.filter(r => S.filter==='all' || (S.filter==='tech' ? r.state!=='COMPLETED' : r.decision===S.filter));
+VIEWS['history/loading'] = () => filterBar() + loading('lịch sử');
+VIEWS['history/error'] = () => filterBar() + errorBox('lịch sử');
+VIEWS['history/empty'] = () => filterBar() + `<div class="card"><div class="center"><div class="big">Không có lần kiểm nào khớp</div>
+  <div class="muted">Thử bỏ bộ lọc hoặc kiểm lại mã sản phẩm.</div><button class="btn" data-filter="all">Bỏ bộ lọc</button></div></div>`;
+VIEWS['history/list'] = () => { const r = rows(); if (!r.length) return VIEWS['history/empty']();
+  return filterBar() + `<div class="card" style="padding:4px 8px;overflow-x:auto"><table><thead><tr><th>Giờ</th><th>Sản phẩm</th><th>Kết quả</th><th>Điểm</th><th>Request</th></tr></thead><tbody>${r.map(x=>
+  `<tr data-detail="${x.request_id}" tabindex="0"><td>${x.at}</td><td class="mono">${x.product_id}</td><td>${decisionChip(x)}</td><td>${x.score??'—'}</td>
+   <td class="mono">${x.request_id}${x.retry_of?'<br><span class="muted">kiểm lại của '+x.retry_of+'</span>':''}</td></tr>`).join('')}</tbody></table></div>`; };
+VIEWS['history/detail'] = () => { const r = S.detail; const chain = HISTORY.filter(x=>x.product_id===r.product_id);
+  return `<p><button class="btn" data-go="history/list">← Quay lại danh sách</button></p><div class="grid">
+  <div class="card"><h3>Kết quả</h3><div style="margin-bottom:10px">${decisionChip(r)}</div>
+    ${r.state==='COMPLETED' ? `<div>Điểm ${r.score} · ngưỡng ${ACTIVE.threshold}</div>` : `<div><strong>Chưa có kết luận.</strong> Lý do: <span class="mono">${r.reason}</span></div>`}
+    <h3 style="margin-top:16px">Mọi lần kiểm của sản phẩm này</h3>${chain.map(x=>`<div class="row" style="margin:6px 0">${x.at} ${decisionChip(x)} <span class="mono">${x.request_id}</span></div>`).join('')}</div>
+  ${traceCard(r, r.retry_of?`<dt>Kiểm lại của</dt><dd class="mono">${r.retry_of}</dd>`:'')}</div>`; };
+
+// ---------------- recipe
+const recipeBody = (extra='') => `<div class="grid">${activeCard()}<div class="card"><h3>Recipe có sẵn</h3>
+  <div class="row" style="justify-content:space-between;margin:8px 0"><span><strong>recipe-a@0.1.0</strong> · model-a <span class="chip ok">đang dùng</span></span></div>
+  <div class="row" style="justify-content:space-between;margin:8px 0"><span><strong>recipe-b@0.1.0</strong> · model-b · ngưỡng 0,3</span>
+    <button class="btn primary" data-go="recipe/confirm_activate">Chuyển sang recipe-b</button></div>
+  <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
+  <button class="btn danger" data-go="recipe/confirm_rollback">Rollback về recipe trước</button></div>
+  <div class="card"><h3>Lịch sử thay đổi</h3><div>05:05:02 · ops-admin-01 · chuyển sang recipe-b</div><div>05:04:44 · system · khởi tạo recipe-a</div></div></div>${extra}`;
+const dialog = (title, body, okLabel, okGo, cls='primary') => `<div class="dialog" role="dialog" aria-modal="true" aria-label="${title}"><div class="card">
+  <h2>${title}</h2>${body}<div class="row" style="margin-top:18px;justify-content:flex-end"><button class="btn" data-go="recipe/view">Hủy</button>
+  <button class="btn ${cls}" data-go="${okGo}">${okLabel}</button></div></div></div>`;
+VIEWS['recipe/loading'] = () => loading('recipe');
+VIEWS['recipe/error'] = () => errorBox('recipe');
+VIEWS['recipe/permission'] = () => permission('admin') + `<div class="grid">${activeCard()}</div>`;
+VIEWS['recipe/view'] = () => recipeBody();
+VIEWS['recipe/confirm_activate'] = () => recipeBody(dialog('Chuyển recipe?', `<dl><dt>Từ</dt><dd>recipe-a@0.1.0 · model-a</dd><dt>Sang</dt><dd><strong>recipe-b@0.1.0 · model-b</strong></dd></dl>
+  <p>Hệ thống sẽ nạp model-b và chạy kiểm tra mẫu chuẩn (golden). Chỉ khi đạt mới chuyển. Request đang chạy vẫn dùng model-a.</p>
+  <label>Lý do (bắt buộc, ghi vào audit)<br><input type="text" value="Chuyển sang model B cho lô thử" style="width:100%"></label>`, 'Chuyển', 'recipe/switching'));
+VIEWS['recipe/confirm_rollback'] = () => recipeBody(dialog('Rollback về recipe trước?', `<p>Quay về <strong>recipe-a@0.1.0 · model-a</strong>. Các lần kiểm đã có kết quả không bị thay đổi.</p>
+  <label>Lý do (bắt buộc)<br><input type="text" value="Model B cho kết quả bất thường" style="width:100%"></label>`, 'Rollback', 'recipe/switching', 'danger'));
+VIEWS['recipe/switching'] = () => `<div class="card"><div class="center"><div class="spinner" role="status"></div><div class="big">Đang nạp model và kiểm mẫu chuẩn…</div>
+  <div class="muted">Hệ thống vẫn nhận ảnh bằng recipe hiện tại.</div><div class="row"><button class="btn" data-go="recipe/switched">(demo) → thành công</button>
+  <button class="btn" data-go="recipe/golden_failed">(demo) → golden lỗi</button><button class="btn" data-go="recipe/busy">(demo) → đang bận</button></div></div></div>`;
+VIEWS['recipe/switched'] = () => `<div class="banner ok">Đã chuyển sang recipe-b@0.1.0
+  <p>Golden: mong đợi 0,3125 · thực tế 0,3125 · đạt. Model-a sẽ được gỡ sau khi các request đang chạy hoàn tất. Nếu model mới lỗi 3 lần liên tiếp trong 60 giây, hệ thống tự rollback.</p></div>` + recipeBody();
+VIEWS['recipe/golden_failed'] = () => `<div class="banner ng">KHÔNG chuyển — recipe cũ vẫn đang dùng
+  <p><span class="mono">422 ACTIVATION_GOLDEN_FAILED</span>: model-b không qua kiểm tra mẫu chuẩn. Không có sản phẩm nào bị chấm bằng model-b.</p></div>` + recipeBody();
+VIEWS['recipe/busy'] = () => `<div class="banner rv">Đang có một lần chuyển khác — thử lại sau vài giây
+  <p><span class="mono">409 TRANSITION_BUSY</span>. Recipe đang dùng không đổi.</p></div>` + recipeBody();
+
+// ---------------- health
+const healthRows = (bad) => `<div class="card"><h3>Thành phần</h3><table><tbody style="cursor:default">
+  <tr><td>API kiểm tra</td><td><span class="chip ok">✓ Hoạt động</span></td></tr>
+  <tr><td>Inference server</td><td>${bad?'<span class="chip ng">✕ Model chưa nạp</span>':'<span class="chip ok">✓ Hoạt động</span>'}</td></tr>
+  <tr><td>Lưu trữ</td><td><span class="chip ok">✓ Ghi được</span> <span class="muted">dung lượng: chưa có số liệu (W4-01)</span></td></tr></tbody></table></div>`;
+VIEWS['health/loading'] = () => loading('trạng thái sức khỏe');
+VIEWS['health/error'] = () => errorBox('trạng thái sức khỏe');
+VIEWS['health/healthy'] = () => `<div class="banner ok">Không có cảnh báo</div>${healthRows(false)}`;
+VIEWS['health/alerts'] = () => `<div class="banner ng">2 cảnh báo đang mở</div><div class="grid">
+  <div class="card"><h3>Model đang active chưa nạp được</h3><p><span class="mono">WARMUP_FAILED</span> từ 12:06:10. Hệ thống không nhận ảnh mới và đang tự thử nạp lại.</p>
+    <p><strong>Cần làm:</strong> giữ sản phẩm chưa kiểm. Nếu quá 2 phút chưa hết, báo kỹ sư vận hành (xem runbook mục "model unavailable").</p></div>
+  <div class="card"><h3>Hệ thống đã tự rollback</h3><p>12:01:33 · recipe-b lỗi 3 lần liên tiếp sau khi chuyển → quay về recipe-a.</p>
+    <p><strong>Cần làm:</strong> 3 sản phẩm bị lỗi kỹ thuật cần kiểm lại. <button class="btn" data-filter="tech">Xem danh sách</button></p></div>
+  ${healthRows(true)}</div>`;
+
+// ---------------- shell
+function render() {
+  const allowed = ALLOWED[S.screen].includes(S.role);
+  let state = S.state[S.screen] || DEFAULT[S.screen];
+  if (!allowed) state = 'permission';
+  const key = `${S.screen}/${state}`;
+  const title = SCREENS.find(s => s.id === S.screen).title;
+  const main = document.getElementById('main');
+  main.dataset.screen = S.screen; main.dataset.state = state;
+  main.replaceChildren($(`<h2>${title}</h2>${VIEWS[key]()}`));
+  document.getElementById('nav').replaceChildren($(SCREENS.map(s =>
+    `<button data-nav="${s.id}" ${s.id===S.screen?'aria-current="page"':''}>${s.title}<small>${s.hint}${ALLOWED[s.id].includes(S.role)?'':' · cần quyền'}</small></button>`).join('')));
+  const sysBad = ['overview/not_ready','inspect/not_ready','health/alerts'].includes(key);
+  document.getElementById('readyChip').outerHTML = `<span id="readyChip" class="chip ${sysBad?'ng':'ok'}">${sysBad?'✕ Chưa sẵn sàng':'✓ Sẵn sàng'}</span>`;
+  document.getElementById('roleChip').textContent = `Vai trò: ${S.role}`;
+  document.getElementById('demoRole').value = S.role;
+  const sel = document.getElementById('demoState');
+  sel.replaceChildren($(Object.keys(VIEWS).filter(k => k.startsWith(S.screen + '/')).map(k => k.split('/')[1])
+    .map(st => `<option ${st===state?'selected':''}>${st}</option>`).join('')));
+}
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-nav],[data-go],[data-sample],[data-filter],[data-detail]'); if (!t) return;
+  if (t.dataset.nav) { S.state[t.dataset.nav] = DEFAULT[t.dataset.nav]; go(t.dataset.nav); }
+  else if (t.dataset.go) { const [sc, st] = t.dataset.go.split('/'); go(sc, st); }
+  else if (t.dataset.sample) { S.sample = +t.dataset.sample; render(); }
+  else if (t.dataset.filter) { S.filter = t.dataset.filter; go('history', 'list'); }
+  else if (t.dataset.detail) { S.detail = HISTORY.find(r => r.request_id === t.dataset.detail); go('history', 'detail'); }
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.dataset && e.target.dataset.detail) e.target.click(); });
+document.getElementById('demoRole').replaceChildren($(['viewer','operator','admin'].map(r => `<option ${r===S.role?'selected':''}>${r}</option>`).join('')));
+document.getElementById('demoRole').addEventListener('change', (e) => { S.role = e.target.value; render(); });
+document.getElementById('demoState').addEventListener('change', (e) => set(e.target.value));
+render();
+</script>
+</body>
+</html>

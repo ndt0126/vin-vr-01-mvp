@@ -1,0 +1,52 @@
+# VR-01 MVP - mot lenh cho moi viec. Chay trong thu muc mvp/.
+COMPOSE = HOST_UID=$$(id -u) HOST_GID=$$(id -g) docker compose --env-file deploy/.env -f deploy/docker-compose.yml
+PY ?= python3
+
+.PHONY: env build init start stop down logs smoke load docs report test test-local digests clean
+
+env:
+	@test -f deploy/.env || cp deploy/.env.sample deploy/.env
+
+build: env          ## build image api
+	$(COMPOSE) build init
+
+init: build         ## tao token lab, chung chi TLS lab, Triton model repository trong run/
+	@mkdir -p run
+	$(COMPOSE) run --rm init
+
+start: init         ## bat Triton + API, cho toi khi healthy
+	$(COMPOSE) up -d --wait triton api
+
+stop:               ## dung, giu du lieu trong run/
+	$(COMPOSE) stop
+
+down:               ## go container va mang, giu du lieu trong run/
+	$(COMPOSE) down
+
+logs:
+	$(COMPOSE) logs --tail=100
+
+smoke:              ## smoke flow tren stack dang chay (can python3 tren host, chi dung thu vien chuan)
+	$(PY) tests/smoke.py --run-dir run
+
+load:               ## chuyen recipe duoi tai lien tuc tren stack dang chay (W3-04)
+	$(PY) tests/load_cutover.py --run-dir run --rate 10 --duration 120 --cutover-every 10
+
+docs:               ## sinh lai docs/API.md tu openapi.v1.yaml
+	$(PY) tools/gen_api_docs.py
+
+report:             ## sinh TEST-REPORT.md tu cac file JSON/log trong evidence/
+	$(PY) tools/make_test_report.py
+
+test: build         ## toan bo unit/contract/integration test, chay trong container
+	$(COMPOSE) run --rm --no-deps -w /app/tests init python run_tests.py --output /tmp/test-report.json
+
+test-local:         ## nhu tren nhung dung python tren host (can pip install -r backend/requirements.txt)
+	cd tests && $(PY) -B run_tests.py --output ../run/test-report.json
+
+digests:            ## in digest image Triton va ID image api de pin vao deploy/.env
+	@docker image inspect --format 'TRITON_IMAGE={{index .RepoDigests 0}}' $$(grep -E '^TRITON_IMAGE=' deploy/.env | cut -d= -f2-)
+	@docker image inspect --format 'api image id={{.Id}}' vr01-mvp-api:$$(grep -E '^MVP_VERSION=' deploy/.env | cut -d= -f2-)
+
+clean: down         ## XOA du lieu lab trong run/ (ledger, anh, token, chung chi)
+	rm -rf run

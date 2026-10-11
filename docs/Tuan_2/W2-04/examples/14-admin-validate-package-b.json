@@ -1,0 +1,28 @@
+{
+  "operationId": "validatePackage",
+  "plane": "management",
+  "method": "POST",
+  "path": "/v1/admin/packages/validate",
+  "request_headers": {
+    "Authorization": "Bearer <redacted:admin>",
+    "Content-Type": "application/json"
+  },
+  "request_body": {
+    "package_name": "model-b",
+    "package_version": "0.1.0"
+  },
+  "status": 200,
+  "response_headers": {
+    "Content-Type": "application/json",
+    "X-Trace-Id": "955b6e2a3ff840c08876e0709378f3ab"
+  },
+  "response_body": {
+    "package": {
+      "name": "model-b",
+      "version": "0.1.0",
+      "manifest_sha256": "dcf1542894dc2dad0c8a71c5289b56e92db2cc39718158053967c0831a9d3e15"
+    },
+    "outcome": "PASS",
+    "golden_score": 0.3125
+  }
+}

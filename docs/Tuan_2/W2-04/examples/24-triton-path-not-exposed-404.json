@@ -1,0 +1,28 @@
+{
+  "operationId": null,
+  "plane": "inference",
+  "method": "POST",
+  "path": "/v2/models/model-a/infer",
+  "request_headers": {
+    "Authorization": "Bearer <redacted:operator>",
+    "Content-Type": "application/json"
+  },
+  "request_body": {
+    "inputs": []
+  },
+  "status": 404,
+  "response_headers": {
+    "Content-Type": "application/problem+json",
+    "X-Trace-Id": "22e4c3aab73742bbae220f94c942ee29"
+  },
+  "response_body": {
+    "type": "urn:vr01:problem:NOT_FOUND",
+    "title": "Not found",
+    "status": 404,
+    "code": "NOT_FOUND",
+    "detail": "no route /v2/models/model-a/infer on inference plane",
+    "trace_id": "22e4c3aab73742bbae220f94c942ee29",
+    "request_id": null,
+    "retryable": false
+  }
+}

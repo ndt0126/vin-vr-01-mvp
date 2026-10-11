@@ -1,0 +1,17 @@
+{
+  "schema_version": "w2-draft-v1",
+  "name": "recipe-a",
+  "version": "0.1.0",
+  "site_id": "lab-only",
+  "station_id": "station-sim",
+  "package": {
+    "name": "model-a",
+    "version": "0.1.0",
+    "manifest_sha256": "a700dc698dfef898dda6ba046196ef339dd7614ea360d041321c8becb6aecce1"
+  },
+  "decision": {
+    "rule": "score-gte-threshold-is-ng",
+    "threshold": 0.5
+  },
+  "rollback_recipe": null
+}

@@ -1,0 +1,365 @@
+{
+  "check": "W2-03 data flow + state machine",
+  "spec_version": "draft-1",
+  "verdict": "PASS",
+  "errors": [],
+  "notes": [
+    {
+      "added_to_w2_01": [
+        "RECEIVED->TIMEOUT"
+      ]
+    }
+  ],
+  "summary": {
+    "transitions_observed": 8,
+    "invariants_observed": 8,
+    "gaps_confirmed": 5
+  },
+  "rows": [
+    {
+      "id": "T1",
+      "probe": "probe_happy_path",
+      "result": "OBSERVED"
+    },
+    {
+      "id": "T2",
+      "probe": "probe_happy_path",
+      "result": "OBSERVED"
+    },
+    {
+      "id": "T3",
+      "probe": "probe_queue_timeout",
+      "result": "OBSERVED"
+    },
+    {
+      "id": "T4",
+      "probe": "probe_happy_path",
+      "result": "OBSERVED"
+    },
+    {
+      "id": "T5",
+      "probe": "probe_backend_error",
+      "result": "OBSERVED"
+    },
+    {
+      "id": "T6",
+      "probe": "probe_execution_timeout_late_result",
+      "result": "OBSERVED"
+    },
+    {
+      "id": "T7",
+      "probe": "probe_sigkill_recovery",
+      "result": "OBSERVED"
+    },
+    {
+      "id": "T8",
+      "probe": "probe_sigkill_recovery",
+      "result": "OBSERVED"
+    },
+    {
+      "id": "I1",
+      "probe": "probe_wrong_product",
+      "result": "OBSERVED"
+    },
+    {
+      "id": "I2",
+      "probe": "probe_wrong_product",
+      "result": "OBSERVED"
+    },
+    {
+      "id": "I3",
+      "probe": "probe_wrong_product",
+      "result": "OBSERVED"
+    },
+    {
+      "id": "I4",
+      "probe": "probe_execution_timeout_late_result",
+      "result": "OBSERVED"
+    },
+    {
+      "id": "I5",
+      "probe": "probe_backend_error",
+      "result": "OBSERVED"
+    },
+    {
+      "id": "I6",
+      "probe": "probe_sigkill_recovery",
+      "result": "OBSERVED"
+    },
+    {
+      "id": "I7",
+      "probe": "probe_sigkill_recovery",
+      "result": "OBSERVED"
+    },
+    {
+      "id": "I8",
+      "probe": "probe_sigkill_recovery",
+      "result": "OBSERVED"
+    },
+    {
+      "id": "G1",
+      "probe": "probe_gap_no_cas_guard",
+      "result": "GAP_CONFIRMED",
+      "target": "W3-04"
+    },
+    {
+      "id": "G2",
+      "probe": "probe_gap_backend_id_not_checked",
+      "result": "GAP_CONFIRMED",
+      "target": "W3-03"
+    },
+    {
+      "id": "G3",
+      "probe": "probe_gap_captured_at_not_stored",
+      "result": "GAP_CONFIRMED",
+      "target": "W3-03"
+    },
+    {
+      "id": "G4",
+      "probe": "probe_gap_no_list_by_state",
+      "result": "GAP_CONFIRMED",
+      "target": "W3-03"
+    },
+    {
+      "id": "G5",
+      "probe": "probe_gap_image_not_stored",
+      "result": "GAP_CONFIRMED",
+      "target": "W3-03"
+    }
+  ],
+  "probes": {
+    "probe_happy_path": {
+      "status": "PASS",
+      "observed": [
+        "T1",
+        "T2",
+        "T4"
+      ],
+      "states_seen_by_consumer": [
+        "RECEIVED",
+        "PROCESSING",
+        "COMPLETED"
+      ],
+      "trace_events": [
+        "request.admitted",
+        "inference.started",
+        "inference.finished",
+        "request.terminal"
+      ],
+      "decision": "NG",
+      "timestamps": {
+        "received_at": "2026-10-11T04:13:37.164Z",
+        "started_at": "2026-10-11T04:13:37.469Z",
+        "finished_at": "2026-10-11T04:13:37.772Z"
+      },
+      "seconds": 0.78
+    },
+    "probe_queue_timeout": {
+      "status": "PASS",
+      "observed": [
+        "T3"
+      ],
+      "state": "TIMEOUT",
+      "reason": "QUEUE_TIMEOUT",
+      "started_at": null,
+      "backend_calls_for_q2": 0,
+      "seconds": 0.81
+    },
+    "probe_backend_error": {
+      "status": "PASS",
+      "observed": [
+        "T5",
+        "I5"
+      ],
+      "state": "FAILED",
+      "reason": "BACKEND_ERROR",
+      "decision": null,
+      "retry_with_new_id": {
+        "request_id": "be-2",
+        "retry_of": "be-1",
+        "state": "COMPLETED",
+        "decision": "NG"
+      },
+      "seconds": 0.18
+    },
+    "probe_execution_timeout_late_result": {
+      "status": "PASS",
+      "observed": [
+        "T6",
+        "I4"
+      ],
+      "state": "TIMEOUT",
+      "reason": "EXECUTION_TIMEOUT",
+      "late_score_logged": 0.784314,
+      "row_after_late_result": {
+        "state": "TIMEOUT",
+        "decision": null,
+        "score": null
+      },
+      "seconds": 1.04
+    },
+    "probe_wrong_product": {
+      "status": "PASS",
+      "observed": [
+        "I1",
+        "I2",
+        "I3"
+      ],
+      "requests": 12,
+      "products": 4,
+      "results_matching_own_product_image_recipe_model_score": 12,
+      "decisions": {
+        "NG": 6,
+        "REVIEW": 3,
+        "OK": 3
+      },
+      "recipe_a_requests_processed_after_switch_to_b": [
+        "wp-02",
+        "wp-03",
+        "wp-04",
+        "wp-05"
+      ],
+      "queue_full_429_retried_with_same_id": 6,
+      "conflict_same_id_other_product": 409,
+      "replay_after_switch": 200,
+      "backend_calls_for_replayed_id": 1,
+      "seconds": 1.48
+    },
+    "probe_sigkill_recovery": {
+      "status": "PASS",
+      "observed": [
+        "T7",
+        "T8",
+        "I6",
+        "I7",
+        "I8"
+      ],
+      "signal": "SIGKILL",
+      "ledger_while_service_down": {
+        "c0": "COMPLETED",
+        "c1": "PROCESSING",
+        "c2": "RECEIVED",
+        "c3": "RECEIVED"
+      },
+      "after_restart": {
+        "c0": {
+          "state": "COMPLETED",
+          "reason": null,
+          "decision": "OK"
+        },
+        "c1": {
+          "state": "INDETERMINATE",
+          "reason": "RESTARTED_DURING_PROCESSING",
+          "decision": null
+        },
+        "c2": {
+          "state": "INDETERMINATE",
+          "reason": "RESTARTED_DURING_PROCESSING",
+          "decision": null
+        },
+        "c3": {
+          "state": "INDETERMINATE",
+          "reason": "RESTARTED_DURING_PROCESSING",
+          "decision": null
+        }
+      },
+      "transition_by_request": {
+        "c1": "T8 (started_at set)",
+        "c2": "T7 (started_at null)",
+        "c3": "T7 (started_at null)"
+      },
+      "completed_before_crash_unchanged": true,
+      "backend_calls_before_kill": [
+        "golden",
+        "c0",
+        "golden",
+        "c1"
+      ],
+      "backend_calls_after_restart": [
+        "golden",
+        "c1-retry"
+      ],
+      "active_recipe_after_restart": "recipe-b@0.1.0",
+      "readyz_after_restart": 200,
+      "replay_of_c1": "HTTP 200, still INDETERMINATE, no inference",
+      "retry_with_new_id": {
+        "request_id": "c1-retry",
+        "retry_of": "c1",
+        "state": "COMPLETED",
+        "model": "model-b"
+      },
+      "identified_by": {
+        "request_id": true,
+        "product_id_listing": [
+          [
+            "c1-retry",
+            "COMPLETED",
+            "c1"
+          ],
+          [
+            "c1",
+            "INDETERMINATE",
+            null
+          ]
+        ],
+        "ledger_query": [
+          "c1",
+          "c2",
+          "c3"
+        ],
+        "trace_log": [
+          "c1",
+          "c2",
+          "c3"
+        ]
+      },
+      "kill_to_serving_again_s_lab_only": 0.54,
+      "seconds": 1.65
+    },
+    "probe_gap_no_cas_guard": {
+      "status": "PASS",
+      "gap_confirmed": true,
+      "terminal_row_after_second_writer": "COMPLETED",
+      "how": "direct call to the ledger write path; the public API has no way to do this",
+      "seconds": 0.56
+    },
+    "probe_gap_backend_id_not_checked": {
+      "status": "PASS",
+      "gap_confirmed": true,
+      "backend_answered_with_id": "another-request",
+      "state": "COMPLETED",
+      "decision": "OK",
+      "seconds": 0.6
+    },
+    "probe_gap_captured_at_not_stored": {
+      "status": "PASS",
+      "gap_confirmed": true,
+      "ledger_columns_with_time": [
+        "received_at",
+        "started_at",
+        "finished_at",
+        "updated_at"
+      ],
+      "seconds": 0.2
+    },
+    "probe_gap_no_list_by_state": {
+      "status": "PASS",
+      "gap_confirmed": true,
+      "http_status": 400,
+      "code": "INVALID_REQUEST",
+      "seconds": 0.19
+    },
+    "probe_gap_image_not_stored": {
+      "status": "PASS",
+      "gap_confirmed": true,
+      "data_dir_files": [
+        "ledger.sqlite3",
+        "ledger.sqlite3-shm",
+        "ledger.sqlite3-wal",
+        "trace.jsonl"
+      ],
+      "seconds": 0.17
+    }
+  },
+  "meaning": "PASS = table consistent + behaviour observed on the W2-04 lab reference server. It is not mentor acceptance and not evidence about the Kubernetes gateway/controller."
+}

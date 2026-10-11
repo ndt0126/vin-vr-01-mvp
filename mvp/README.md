@@ -1,0 +1,103 @@
+# VR-01 MVP — Inspection API + lifecycle + Triton (W3-01 → W3-05)
+
+Trạng thái 10/10/2026: **bản đầu, đã chạy với Triton thật (CPU) trên một VPS amd64**. Chưa GPU, chưa Kubernetes, chưa được mentor review.
+
+## Cấu trúc
+
+| Thư mục | Nội dung |
+|---|---|
+| `backend/` | `inspection_api.py` (business API hai cổng + lifecycle controller), `openapi.v1.yaml` (hợp đồng, bản 1.1.0-draft.1), `requirements.txt` (pin version) |
+| `packages/` | Chuẩn ModelPackage/Recipe của W2-05: validator, schema, 2 package + 2 recipe mẫu |
+| `tools/` | `build_triton_repo.py` (package → Triton model repository), `init_lab.py` (token, chứng chỉ TLS lab, model repository) |
+| `deploy/` | `Dockerfile`, `docker-compose.yml`, `.env.sample` |
+| `tests/` | `run_tests.py` (một lệnh chạy mọi test), `smoke.py` (smoke flow qua HTTPS), `load_cutover.py` (chuyển recipe dưới tải liên tục), `local_stack.py` (chạy thử không cần Docker, inference server giả) |
+| `docs/API.md`, `TEST-REPORT.md` | Sinh tự động từ spec và từ raw evidence |
+| `run/` | Dữ liệu lúc chạy: ledger, ảnh, token, chứng chỉ. Không đưa vào repo |
+
+## Quick start
+
+Cần Docker có Compose v2, `make`, và `python3` trên host cho bước smoke (chỉ dùng thư viện chuẩn).
+
+```bash
+make start
+```
+
+Lệnh này build image API, tạo token + chứng chỉ TLS lab + model repository trong `run/`, bật Triton và API, rồi chờ tới khi cả hai healthy. Lần đầu phải tải image Triton (khoảng 7 GiB nén, 20 GB sau khi bung; cần ổ trống tối thiểu khoảng 30 GB).
+
+```bash
+make smoke
+```
+
+```bash
+make stop
+```
+
+Chạy toàn bộ test trong container (không cần Triton):
+
+```bash
+make test
+```
+
+Lệnh khác: `make logs`, `make down`, `make digests`, `make clean` (xóa `run/`).
+
+## Smoke flow kiểm gì
+
+`readyz` → thiếu token 401 → viewer gửi ảnh 403 → operator gọi management 403 → không có route Triton trên business API → admin chọn recipe A → 2 ảnh ra OK/NG với lineage `model-a` → ảnh hỏng 422 → gửi lại cùng ID trả 200 replay → cùng ID khác sản phẩm 409 → admin chuyển recipe B → recipe cũ bị 409 → ảnh mới có lineage `model-b` → kết quả đã pin A không đổi → liệt kê theo state. Kết quả ghi ở `run/smoke-report.json`.
+
+## Khác gì so với server tham chiếu W2-04
+
+- Mọi UPDATE trạng thái có điều kiện trạng thái nguồn; dòng đã kết thúc không ghi đè được (W2-03 G1).
+- Adapter so `id` của response với `request_id`; lệch thì `FAILED` / `BACKEND_ID_MISMATCH` (G2).
+- Lưu và trả `captured_at` (G3); liệt kê theo `state` (G4); lưu ảnh gốc theo SHA-256 trong `run/data/images/` (G5).
+- Lifecycle với Triton explicit model control: load candidate → golden check → cutover → drain request đã pin model cũ → unload model cũ. Candidate load/golden lỗi thì giữ recipe cũ. Sau cutover, 3 lỗi backend liên tiếp trong 60 giây thì tự rollback về recipe trước.
+- **Hủy request** (`POST /v1/inspections/{id}/cancel`, vai trò operator): trạng thái kết thúc mới `CANCELLED`. Đang chờ thì không bao giờ tới inference server; đang chạy thì kết quả về sau bị bỏ và ghi log; hủy và hoàn tất cùng lúc thì đúng một bên thắng (bên thua nhận `409 ALREADY_TERMINAL`).
+- Recipe/model active được khôi phục từ ledger khi khởi động lại. Nếu inference server mất model (khởi động lại), readiness tự nạp lại đúng model active.
+
+Hợp đồng đang ở 1.2.0-draft.1. Các thay đổi đều là bổ sung: `captured_at` trong result, tham số `state` cho danh sách, reason `BACKEND_ID_MISMATCH`, và (11/10) operation `cancelInspection` với state `CANCELLED`, reason `CANCELLED_BY_CLIENT`, mã lỗi `ALREADY_TERMINAL`. Lưu ý cho client cũ: `state` giờ có thêm giá trị `CANCELLED`; client phải coi mọi state lạ là "chưa có kết luận".
+
+## Đã kiểm chứng (10/10/2026)
+
+**VPS Hetzner amd64, Ubuntu 26.04.1, 4 vCPU / 8 GB, Docker 29.1.3, Triton 2.60.0 (image `25.08-py3`), model chạy CPU.** Log và báo cáo ở `evidence/vps-2026-10-10/` (không gồm token và private key).
+
+| # | Kịch bản | Kết quả |
+|---|---|---|
+| 1 | `make down` → `make start` → `make smoke` | start exit 0, smoke 16/16 |
+| 2 | `make start` lần nữa khi stack đang chạy | exit 0, smoke 16/16 |
+| 3 | Chỉ khởi động lại Triton (explicit mode nên mất hết model đã nạp) | API tự nạp lại đúng model active, `readyz` 200 sau vài giây, recipe vẫn `recipe-b`, smoke 16/16 |
+| 4 | `kill -9` tiến trình API từ host | Docker khởi động lại container, recipe active vẫn `recipe-b`, smoke 16/16 |
+| 5 | `make stop` → `make start` | recipe active vẫn `recipe-b`, smoke 16/16 |
+| 6 | `make test` trong container | 64/65 đạt, 1 bỏ qua (image không có `onnxruntime`); kiểm tĩnh OpenAPI 11/11 |
+| 7 | Chạy lại từ đầu với image pin theo digest (`.env.sample`) | start exit 0, smoke 16/16 |
+
+Triton nạp được file ONNX và `config.pbtxt` do `build_triton_repo.py` sinh ra; golden check qua Triton ra đúng 0,375 và 0,3125. Log Triton có đúng trình tự nạp model mới rồi gỡ model cũ khi chuyển recipe.
+
+**Lỗi tìm thấy nhờ chạy thật, đã sửa và có test:**
+
+1. `make start` lần hai xóa rồi tạo lại thư mục model repository, làm Triton đang chạy mất repository ("model not found"). Giờ thư mục được giữ nguyên, nội dung không đổi thì không đụng tới.
+2. Khi model active không còn được nạp (Triton khởi động lại, hoặc nạp lỗi lúc boot), API kẹt ở not-ready. Giờ readiness tự nạp lại đúng model active và chạy lại golden; không tự đổi sang recipe khác.
+
+Ghi chú vận hành: `docker kill` được Docker coi là dừng thủ công nên container **không** tự khởi động lại; kịch bản 4 dùng `kill -9` lên PID từ host.
+
+**Laptop macOS arm64 (sau lượt VPS, bản 11/10 có cancellation):** bộ test trên host 73/73; smoke 18/18 với inference server giả (`tests/local_stack.py`).
+
+**Chuyển recipe dưới tải liên tục (`make load`, mới chạy với inference server giả):** 3 lượt, mỗi lượt 1.001 request ở 50 request/giây, chuyển recipe mỗi giây (19 lần): 0 thiếu, 0 trùng, 0 sai recipe/model/ảnh/điểm, 19/19 lần chuyển đạt. Lượt đầu tiên của bài này (trước khi sửa) lộ lỗi thứ 3:
+
+3. Request được pin vào model cũ đúng lúc chuyển có thể chạy **sau khi** model cũ đã bị gỡ, và kết thúc `FAILED` (1/401 request). Nguyên nhân: việc đếm request theo model diễn ra sau thời điểm pin. Đã sửa (đếm ngay trong lúc pin) và có test hồi quy. **Bản chạy trên VPS là bản trước khi sửa lỗi này**; bản đã sửa chưa chạy với Triton thật.
+
+Số liệu chi tiết và file nguồn: `TEST-REPORT.md` (sinh bằng `make report`). Tài liệu API: `docs/API.md` (sinh bằng `make docs`, test kiểm nó khớp spec).
+
+## Chưa kiểm chứng
+
+- **GPU:** model mới chạy `KIND_CPU`. `KIND_GPU` chỉ được ghi vào `config.pbtxt`; Compose chưa có cấu hình GPU cho Triton.
+- **Máy sạch bởi người khác:** lượt VPS do tác giả chạy, cài Docker bằng `apt install docker.io docker-compose-v2 make`. Chưa có reviewer tự làm theo README.
+- Chuyển model **dưới tải liên tục** trên Triton thật: `make load` đã sẵn sàng nhưng mới chạy với inference server giả. Bản sửa lỗi thứ 3 cũng chưa chạy với Triton thật.
+- Reboot cả máy; đầy ổ; mất Triton lâu hơn vài giây.
+- **Cancellation chưa chạy với Triton thật** (7 test với backend stub; smoke trên VPS ngày 10/10 là bản 16 bước, chưa có 2 bước hủy). Hủy không giải phóng GPU: inference đang chạy vẫn chạy hết.
+- Chưa có UI.
+
+## Giới hạn
+
+- Hai model mẫu là hàm tuyến tính trên ảnh thu về 2×2 (deterministic stub), không phải model QC. OK/NG/REVIEW ở đây không nói gì về chất lượng sản phẩm.
+- Package khai báo tham số (`model.json`); file ONNX được sinh từ tham số đó. Chuẩn package chưa mang trực tiếp file ONNX/TensorRT.
+- Auth là bearer token lab, chứng chỉ TLS tự ký 30 ngày. SQLite, 1 worker, 1 node. Chưa mTLS/PKI.
+- Đây là Compose cho lab. Triển khai Kubernetes thuộc W4-03.

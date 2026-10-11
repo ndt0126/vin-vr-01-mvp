@@ -1,0 +1,38 @@
+{
+  "operationId": "submitInspection",
+  "plane": "inference",
+  "method": "POST",
+  "path": "/v1/inspections",
+  "request_headers": {
+    "Authorization": null,
+    "Content-Type": "application/json"
+  },
+  "request_body": {
+    "request_id": "st1-20261006-000126",
+    "product_id": "PCB1-SN-000123",
+    "product_type": "PCB1",
+    "recipe_version": "recipe-a@0.1.0",
+    "captured_at": "2026-10-06T08:15:30Z",
+    "station_id": "station-sim",
+    "retry_of": null,
+    "image": {
+      "content_type": "image/png",
+      "data_base64": "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAAAAACEICPDAAAAKklEQVR4nO3MMQEAAAjDMEAX/nUhYg9H+je9lTXhDwAAAAAAAAAAAN4CBzB/AJwKcrH+AAAAAElFTkSuQmCC"
+    }
+  },
+  "status": 401,
+  "response_headers": {
+    "Content-Type": "application/problem+json",
+    "X-Trace-Id": "335dd5ba65da45b394c5630f0d0aae3c"
+  },
+  "response_body": {
+    "type": "urn:vr01:problem:UNAUTHENTICATED",
+    "title": "Unauthenticated",
+    "status": 401,
+    "code": "UNAUTHENTICATED",
+    "detail": "missing or invalid bearer token",
+    "trace_id": "335dd5ba65da45b394c5630f0d0aae3c",
+    "request_id": null,
+    "retryable": false
+  }
+}

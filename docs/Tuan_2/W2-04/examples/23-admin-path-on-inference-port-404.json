@@ -1,0 +1,26 @@
+{
+  "operationId": "listRecipes",
+  "plane": "inference",
+  "method": "GET",
+  "path": "/v1/admin/recipes",
+  "request_headers": {
+    "Authorization": "Bearer <redacted:admin>",
+    "Content-Type": null
+  },
+  "request_body": null,
+  "status": 404,
+  "response_headers": {
+    "Content-Type": "application/problem+json",
+    "X-Trace-Id": "71ab0cc76a1e45f386668dcdf1bb12f1"
+  },
+  "response_body": {
+    "type": "urn:vr01:problem:NOT_FOUND",
+    "title": "Not found",
+    "status": 404,
+    "code": "NOT_FOUND",
+    "detail": "no route /v1/admin/recipes on inference plane",
+    "trace_id": "71ab0cc76a1e45f386668dcdf1bb12f1",
+    "request_id": null,
+    "retryable": false
+  }
+}

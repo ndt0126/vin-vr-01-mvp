@@ -1,0 +1,20 @@
+{
+  "operationId": "getReadiness",
+  "plane": "inference",
+  "method": "GET",
+  "path": "/readyz",
+  "request_headers": {
+    "Authorization": null,
+    "Content-Type": null
+  },
+  "request_body": null,
+  "status": 200,
+  "response_headers": {
+    "Content-Type": "application/json",
+    "X-Trace-Id": "57175d07abb34e548260f7d34f693835"
+  },
+  "response_body": {
+    "ready": true,
+    "reasons": []
+  }
+}

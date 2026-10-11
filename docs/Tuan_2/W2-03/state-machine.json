@@ -1,0 +1,77 @@
+{
+  "spec": "W2-03 inspection data flow + state machine",
+  "version": "draft-1",
+  "date": "2026-10-10",
+  "status": "DRAFT_FOR_MENTOR_REVIEW",
+  "source": [
+    "mentor answer #10 (sheet 'Phan hoi cau hoi', workbook reviewed 2026-09-30)",
+    "W2-01 draft-1 section 5-6",
+    "W2-04 draft-1 openapi.v1.yaml + reference_api.py"
+  ],
+  "implementation_under_test": "docs/Tuan_2/W2-04/reference_api.py (lab reference server, stub / fake KServe backend)",
+  "states": {
+    "non_terminal": ["RECEIVED", "PROCESSING"],
+    "terminal": ["COMPLETED", "FAILED", "TIMEOUT", "INDETERMINATE"],
+    "technical": ["FAILED", "TIMEOUT", "INDETERMINATE"],
+    "decisions": ["OK", "NG", "REVIEW"]
+  },
+  "transitions": [
+    {"id": "T1", "from": "NONE", "to": "RECEIVED", "event": "submit passes every pre-admission check",
+     "durable_write": "INSERT row: request_id, fingerprint, product_id, input_sha256, trace_id, pin_json (recipe+model+threshold)",
+     "reason": null, "decision": false, "probe": "probe_happy_path"},
+    {"id": "T2", "from": "RECEIVED", "to": "PROCESSING", "event": "worker dequeues within queue_timeout_s",
+     "durable_write": "UPDATE state, started_at, queue_ms", "reason": null, "decision": false, "probe": "probe_happy_path"},
+    {"id": "T3", "from": "RECEIVED", "to": "TIMEOUT", "event": "waited in queue longer than queue_timeout_s",
+     "durable_write": "UPDATE state, reason, finished_at", "reason": "QUEUE_TIMEOUT", "decision": false, "probe": "probe_queue_timeout"},
+    {"id": "T4", "from": "PROCESSING", "to": "COMPLETED", "event": "backend returned a score; pinned threshold applied",
+     "durable_write": "UPDATE state, decision, score, finished_at (before any consumer can read it)", "reason": null, "decision": true,
+     "probe": "probe_happy_path"},
+    {"id": "T5", "from": "PROCESSING", "to": "FAILED", "event": "backend error / GPU OOM",
+     "durable_write": "UPDATE state, reason, finished_at", "reason": "BACKEND_ERROR", "decision": false, "probe": "probe_backend_error"},
+    {"id": "T6", "from": "PROCESSING", "to": "TIMEOUT", "event": "inference longer than execution_timeout_s",
+     "durable_write": "UPDATE state, reason, finished_at", "reason": "EXECUTION_TIMEOUT", "decision": false,
+     "probe": "probe_execution_timeout_late_result"},
+    {"id": "T7", "from": "RECEIVED", "to": "INDETERMINATE", "event": "found at startup after crash/restart (was still queued)",
+     "durable_write": "UPDATE state, reason, finished_at during startup scan, before listeners open",
+     "reason": "RESTARTED_DURING_PROCESSING", "decision": false, "probe": "probe_sigkill_recovery"},
+    {"id": "T8", "from": "PROCESSING", "to": "INDETERMINATE", "event": "found at startup after crash/restart (inference had started)",
+     "durable_write": "UPDATE state, reason, finished_at during startup scan, before listeners open",
+     "reason": "RESTARTED_DURING_PROCESSING", "decision": false, "probe": "probe_sigkill_recovery"}
+  ],
+  "invariants": [
+    {"id": "I1", "rule": "A result is returned only under its own request_id and carries the product_id, input_sha256 and pinned recipe/model of that request",
+     "probe": "probe_wrong_product"},
+    {"id": "I2", "rule": "One request_id maps to exactly one record; same id + other payload is rejected with 409 and the old record is untouched",
+     "probe": "probe_wrong_product"},
+    {"id": "I3", "rule": "A replay returns the stored record; it is never re-scored with a newer recipe/model",
+     "probe": "probe_wrong_product"},
+    {"id": "I4", "rule": "Terminal states never change: a late backend result is logged and ignored",
+     "probe": "probe_execution_timeout_late_result"},
+    {"id": "I5", "rule": "decision is non-null only when state=COMPLETED", "probe": "probe_backend_error"},
+    {"id": "I6", "rule": "After a crash every admitted request is in exactly one terminal state and unfinished ones are identifiable by request_id, by product_id and in the ledger",
+     "probe": "probe_sigkill_recovery"},
+    {"id": "I7", "rule": "The platform never re-runs inference by itself after a crash", "probe": "probe_sigkill_recovery"},
+    {"id": "I8", "rule": "The active recipe/model survives a crash; requests after restart are pinned to it",
+     "probe": "probe_sigkill_recovery"}
+  ],
+  "gaps": [
+    {"id": "G1", "gap": "Ledger UPDATE has no compare-and-set guard (WHERE state=<from>); terminal immutability relies on the single worker",
+     "target": "W3-04", "probe": "probe_gap_no_cas_guard"},
+    {"id": "G2", "gap": "KServe adapter does not compare the response id with request_id (defence against a mismatched backend response)",
+     "target": "W3-03", "probe": "probe_gap_backend_id_not_checked"},
+    {"id": "G3", "gap": "captured_at is part of the fingerprint but is not stored as a column nor returned in the result",
+     "target": "W3-03", "probe": "probe_gap_captured_at_not_stored"},
+    {"id": "G4", "gap": "No API to list requests by state/time window (only by product_id); operators must query the ledger",
+     "target": "W3-03", "probe": "probe_gap_no_list_by_state"},
+    {"id": "G5", "gap": "The original image is not stored (only input_sha256); image retention rules cannot be exercised yet",
+     "target": "W3-03", "probe": "probe_gap_image_not_stored"}
+  ],
+  "retention": [
+    {"class": "ledger rows (request/result/lineage)", "proposal": "90 days online + monthly read-only archive", "owner": "QC", "source": "W2-02 section 3"},
+    {"class": "audit (login, activate, rollback, export)", "proposal": ">= 1 year (archive)", "owner": "Security/IT", "source": "W2-02 section 3"},
+    {"class": "image, decision OK", "proposal": "7 days", "owner": "QC", "source": "W2-02 section 3"},
+    {"class": "image, decision NG / REVIEW / technical state", "proposal": "90 days", "owner": "QC", "source": "W2-02 section 3"},
+    {"class": "application + trace log", "proposal": "14 days and 10 GiB cap, whichever first", "owner": "Operations", "source": "W2-02 section 3"},
+    {"class": "idempotency window for request_id", "proposal": "equal to ledger online retention (90 days)", "owner": "Integration", "source": "W2-03 new"}
+  ]
+}

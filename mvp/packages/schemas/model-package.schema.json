@@ -1,0 +1,318 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "model-package w2-draft-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "name",
+    "version",
+    "purpose",
+    "artifact",
+    "runtime",
+    "io",
+    "preprocess",
+    "postprocess",
+    "resources",
+    "compatibility",
+    "warmup",
+    "golden",
+    "rollback_candidates"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "w2-draft-v1"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,63}$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "purpose": {
+      "enum": [
+        "fixture",
+        "qc-model"
+      ]
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "backend",
+        "profile",
+        "device"
+      ],
+      "properties": {
+        "backend": {
+          "enum": [
+            "reference-linear-score-v1",
+            "triton-onnx-v1"
+          ]
+        },
+        "profile": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,63}$"
+        },
+        "device": {
+          "enum": [
+            "cpu",
+            "nvidia-gpu"
+          ]
+        }
+      }
+    },
+    "io": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input",
+        "output"
+      ],
+      "properties": {
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "dtype",
+            "shape"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]{0,31}$"
+            },
+            "dtype": {
+              "enum": [
+                "FP32",
+                "UINT8"
+              ]
+            },
+            "shape": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 8192
+              },
+              "minItems": 1,
+              "maxItems": 32
+            }
+          }
+        },
+        "output": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "dtype",
+            "shape"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]{0,31}$"
+            },
+            "dtype": {
+              "enum": [
+                "FP32",
+                "UINT8"
+              ]
+            },
+            "shape": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 8192
+              },
+              "minItems": 1,
+              "maxItems": 32
+            }
+          }
+        }
+      }
+    },
+    "preprocess": {
+      "enum": [
+        "tensor-json-v1",
+        "image-rgb-unit-v1"
+      ]
+    },
+    "postprocess": {
+      "const": "normalized-score-v1"
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cpu_millicores",
+        "ram_mib",
+        "peak_vram_mib",
+        "basis"
+      ],
+      "properties": {
+        "cpu_millicores": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64000
+        },
+        "ram_mib": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        },
+        "peak_vram_mib": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1048576
+        },
+        "basis": {
+          "enum": [
+            "estimate",
+            "measured"
+          ]
+        }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platform_contract",
+        "os",
+        "arch"
+      ],
+      "properties": {
+        "platform_contract": {
+          "const": "w2-draft-v1"
+        },
+        "os": {
+          "const": "linux"
+        },
+        "arch": {
+          "enum": [
+            "amd64",
+            "arm64"
+          ]
+        }
+      }
+    },
+    "warmup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runs",
+        "timeout_ms"
+      ],
+      "properties": {
+        "runs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 600000
+        }
+      }
+    },
+    "golden": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input",
+        "expected_score",
+        "atol",
+        "rtol"
+      ],
+      "properties": {
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "expected_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "atol": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.01
+        },
+        "rtol": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.01
+        }
+      }
+    },
+    "rollback_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "version",
+          "manifest_sha256"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{0,63}$"
+          },
+          "version": {
+            "type": "string",
+            "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+          },
+          "manifest_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      },
+      "minItems": 0,
+      "maxItems": 32
+    }
+  }
+}

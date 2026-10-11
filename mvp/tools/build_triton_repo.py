@@ -186,6 +186,25 @@ def build(packages_dir, out_dir, kind='KIND_CPU', config=None):
     for manifest in sorted(packages_dir.glob('*/manifest.json')):
         try:
             pkg, digest, _ = validate_design.validate_package(manifest, config)
+            if pkg['runtime']['backend'] == 'triton-onnx-v1':
+                # Model ONNX that: chep nguyen file (da kiem SHA-256), config theo io cua package.
+                kind_pkg = 'KIND_GPU' if pkg['runtime']['device'] == 'nvidia-gpu' else 'KIND_CPU'
+                onnx_bytes = (manifest.parent / pkg['artifact']['path']).read_bytes()
+                shape = pkg['io']['input']['shape']
+                cfg = (f'name: "{pkg["name"]}"\nbackend: "onnxruntime"\nmax_batch_size: 0\n'
+                       f'input [ {{ name: "IMAGE", data_type: TYPE_UINT8, dims: {shape} }} ]\n'
+                       f'output [ {{ name: "SCORE", data_type: TYPE_FP32, dims: [ 1 ] }} ]\n'
+                       f'instance_group [ {{ count: 1, kind: {kind_pkg} }} ]\n')
+                mdir = out_dir / pkg['name'] / '1'
+                mdir.mkdir(parents=True)
+                (mdir / 'model.onnx').write_bytes(onnx_bytes)
+                (out_dir / pkg['name'] / 'config.pbtxt').write_text(cfg)
+                accepted.append({'name': pkg['name'], 'version': pkg['version'], 'manifest_sha256': digest, 'burn': None,
+                                 'fail_above_mean': None, 'instance_kind': kind_pkg, 'backend': 'triton-onnx-v1',
+                                 'golden_expected': pkg['golden']['expected_score'], 'golden_onnx': None,
+                                 'files': {'1/model.onnx': hashlib.sha256(onnx_bytes).hexdigest(),
+                                           'config.pbtxt': hashlib.sha256(cfg.encode()).hexdigest()}})
+                continue
             params = json.loads((manifest.parent / pkg['artifact']['path']).read_bytes())
             burn_file = manifest.parent / 'triton-build.json'  # chi fixture test moi co file nay
             build_cfg = json.loads(burn_file.read_text()) if burn_file.is_file() else {}
@@ -213,7 +232,8 @@ def build(packages_dir, out_dir, kind='KIND_CPU', config=None):
                          'files': {'1/model.onnx': hashlib.sha256(onnx_bytes).hexdigest(),
                                    'config.pbtxt': hashlib.sha256(cfg.encode()).hexdigest()}})
     manifest = json.dumps({'models': accepted, 'rejected': rejected,
-                           'golden_checked_with_onnxruntime': all(m['golden_onnx'] is not None for m in accepted)},
+                           'golden_checked_with_onnxruntime': all(m['golden_onnx'] is not None for m in accepted
+                                                                    if m.get('backend') != 'triton-onnx-v1')},
                           indent=2) + '\n'
     (out_dir / 'REPO-MANIFEST.json').write_text(manifest)
     # Khong bao gio xoa chinh thu muc dich: Triton dang chay bind-mount thu muc do, xoa di tao lai thi

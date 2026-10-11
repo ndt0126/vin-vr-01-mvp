@@ -6,6 +6,7 @@
 Day la khoa/chung chi THU NGHIEM. Production dung PKI nha may (chua lam).
 """
 import argparse
+import json
 import os
 import shutil
 import subprocess
@@ -54,10 +55,18 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--run-dir', type=Path, required=True)
     ap.add_argument('--instance-kind', default='KIND_CPU', choices=['KIND_CPU', 'KIND_GPU'])
+    ap.add_argument('--with-heavy-fixture', choices=['tiny', 'cpu', 'gpu', 'gpu-xl'],
+                    help='them model-heavy/recipe-heavy: mang tich chap that (backend triton-onnx-v1) o muc da chon')
     ap.add_argument('--with-slow-fixture', action='store_true',
                     help='them fixture test: model-slow (timeout/cancel/drain) va model-bad (tu rollback)')
+    ap.add_argument('--reset-fixtures', action='store_true', help='bo cac fixture test da chon o lan chay truoc')
     args = ap.parse_args()
     run = args.run_dir
+    # Lua chon fixture duoc NHO lai trong run/init-options.json: `make start` ve sau khong lam mat model dang dung.
+    opt_file = run / 'init-options.json'
+    if not (args.with_slow_fixture or args.with_heavy_fixture or args.reset_fixtures) and opt_file.is_file():
+        saved = json.loads(opt_file.read_text())
+        args.with_slow_fixture, args.with_heavy_fixture = saved.get('slow', False), saved.get('heavy')
     (run / 'data').mkdir(parents=True, exist_ok=True)
     if (run / 'auth' / 'principals.json').is_file():
         print('auth: kept existing lab principals')
@@ -79,7 +88,14 @@ def main():
             for part in ('packages', 'recipes'):
                 shutil.copytree(HERE.parent / 'tests' / 'fixtures' / fixture / part, examples / part, dirs_exist_ok=True)
         print('examples: added TEST FIXTURES model-slow / recipe-slow, model-bad / recipe-bad')
+    if args.with_heavy_fixture:
+        import make_heavy_fixture
+        info = make_heavy_fixture.make_preset(examples, args.with_heavy_fixture,
+                                              'nvidia-gpu' if args.instance_kind == 'KIND_GPU' else 'cpu')
+        print(f"examples: added TEST FIXTURE model-heavy ({info['preset']}: {info['layers']} lop, {info['channels']} kenh, "
+              f"anh {info['size']}x{info['size']}, {info['onnx_bytes'] // 1024} KiB, device {info['device']})")
     accepted, rejected = build_triton_repo.build(examples / 'packages', run / 'triton-repo', args.instance_kind)
+    opt_file.write_text(json.dumps({'slow': bool(args.with_slow_fixture), 'heavy': args.with_heavy_fixture}))
     for m in accepted:
         print(f"model: {m['name']}@{m['version']} {m['instance_kind']} digest {m['manifest_sha256'][:12]}")
     for r in rejected:

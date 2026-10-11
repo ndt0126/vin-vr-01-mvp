@@ -593,6 +593,27 @@ class Session:
                   ok, iptables_chains=applied, sent=q['sent'], completed=q['completed'], not_accepted=q['not_accepted'],
                   client_send_errors=errs, wrong=q['missing_or_wrong'], duplicates=q['duplicate_or_extra_products'])
 
+    def p18_heavy_image_model(self):
+        """Model anh that (backend triton-onnx-v1): golden qua inference server that, diem phu thuoc anh, lineage dung."""
+        import io as _io
+        act = self.activate('recipe-heavy')
+        scores, times = {}, []
+        for name, gray in (('dark', 10), ('mid', 128), ('bright', 245)):
+            rid = self.rid('heavy')
+            self.submit(rid, 'recipe-heavy@0.1.0', gray=gray)
+            self.wait_state(rid, TERMINAL, 120)
+            res = self.result(rid)
+            scores[name] = res['score']
+            times.append(res['timing_ms']['inference'])
+            ok_one = res['state'] == 'COMPLETED' and res['lineage']['model']['name'] == 'model-heavy'
+            if not ok_one:
+                break
+        ok = act['golden']['passed'] and len(scores) == 3 and len(set(scores.values())) == 3 and ok_one
+        self.step('P18 real image model (triton-onnx-v1): golden on the inference server, score depends on the image',
+                  ok, golden=act['golden'], scores=scores, inference_ms=times,
+                  model=self.c.call('GET', f'/v1/stations/{STATION}/active-recipe', 'viewer')[1]['model'])
+        self.activate('recipe-a')
+
     def p10_state_for_reboot(self):
         probe = self.rid('reboot')
         self.submit(probe, self.active())
@@ -639,7 +660,7 @@ def main():
     elif args.phase == 'w4':
         s.report_path = s.run / 'session-w4-report.json'
         s.steps = []
-        for fn in (s.p1_smoke, s.p13_observability, s.p14_auto_rollback, s.p16_app_upgrade_rollback,
+        for fn in (s.p1_smoke, s.p13_observability, s.p14_auto_rollback, s.p18_heavy_image_model, s.p16_app_upgrade_rollback,
                    s.p17_network_interruption, s.p15_disk_full):
             s.guarded(fn.__name__, fn)
     elif args.phase == 'extra':

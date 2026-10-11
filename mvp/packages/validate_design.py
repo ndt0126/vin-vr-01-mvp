@@ -121,6 +121,57 @@ def checked_file(root, entry, max_bytes):
     return parse(data)
 
 
+def checked_binary(root, entry, max_bytes):
+    """Nhu checked_file nhung cho file nhi phan (model ONNX, anh golden): kiem duong dan + SHA-256, tra bytes."""
+    rel = Path(entry['path'])
+    require(not rel.is_absolute() and '..' not in rel.parts and '\\' not in entry['path']
+            and ':' not in entry['path'], 'E_PATH', 'unsafe relative path')
+    current = root
+    for part in rel.parts:
+        current = current / part
+        require(not current.is_symlink(), 'E_PATH', 'symlink not allowed')
+    require(current.resolve().is_relative_to(root.resolve()), 'E_PATH', 'path outside package')
+    data = read(current, max_bytes)
+    require(sha(data) == entry['sha256'], 'E_CHECKSUM', f'{entry["path"]}: sha256 mismatch')
+    return data
+
+
+def validate_onnx_package(path, package, raw, config):
+    """Backend triton-onnx-v1 (MVP mo rong, 11/10/2026): model ONNX nhan anh RGB uint8 va tra MOT diem [0,1].
+
+    Checker nay KHONG chay model (khong co runtime o day): kiem cau truc, checksum, I/O, tai nguyen so voi may.
+    Golden output duoc kiem khi kich hoat, bang chinh inference server (xem lifecycle cua Inspection API).
+    """
+    runtime = package['runtime']
+    for stage in ('preprocess', 'postprocess'):
+        require(package[stage] in config['policy'][f'allowed_{stage}'], 'E_TRANSFORM', f'{stage} not allowed')
+    require(package['preprocess'] == 'image-rgb-unit-v1' and package['postprocess'] == 'normalized-score-v1',
+            'E_TRANSFORM', 'triton-onnx-v1 requires image-rgb-unit-v1 -> normalized-score-v1')
+    i, o = package['io']['input'], package['io']['output']
+    shape = i['shape']
+    require(i['name'] == 'IMAGE' and i['dtype'] == 'UINT8' and len(shape) == 4 and shape[0] == 1 and shape[1] == 3
+            and shape[2] == shape[3] and 8 <= shape[2] <= 4096, 'E_IO', 'input must be IMAGE UINT8 [1,3,S,S], 8 <= S <= 4096')
+    require(o == {'name': 'SCORE', 'dtype': 'FP32', 'shape': [1]}, 'E_IO', 'output must be SCORE FP32 [1]')
+    require(shape[2] * shape[3] <= config['limits']['max_decoded_pixels'], 'E_LIMIT', 'input larger than max_decoded_pixels')
+    res, cap = package['resources'], config['capacity']
+    for key in ('cpu_millicores', 'ram_mib'):
+        require(res[key] <= cap[key], 'E_RESOURCE', f'{key} exceeds budget')
+    if runtime['device'] == 'cpu':
+        require(res['peak_vram_mib'] == 0, 'E_RESOURCE', 'CPU package must declare zero VRAM')
+    else:
+        require(0 < res['peak_vram_mib'] <= cap['available_vram_mib'] - cap['gpu_reserve_mib'], 'E_RESOURCE',
+                'peak_vram_mib must be > 0 and fit available_vram_mib - gpu_reserve_mib')
+    model = checked_binary(path.parent, package['artifact'], 2 * 1024 ** 3)
+    require(package['artifact']['path'].endswith('.onnx') and len(model) >= 64 and model[:1] == b'\x08',
+            'E_ARTIFACT', 'artifact is not an ONNX ModelProto')
+    image = checked_binary(path.parent, package['golden']['input'], 16 * 1024 ** 2)
+    require(image[:8] == b'\x89PNG\r\n\x1a\n', 'E_IO', 'golden input must be a PNG image')
+    golden = package['golden']
+    require(0 <= golden['expected_score'] <= 1 and golden['atol'] <= 0.01, 'E_GOLDEN',
+            'expected_score must be in [0,1] and atol <= 0.01')
+    return package, sha(raw), None
+
+
 def validate_package(path, config):
     raw = read(path)
     package = parse(raw)
@@ -128,10 +179,13 @@ def validate_package(path, config):
     require(package['purpose'] == 'fixture', 'E_PROTOTYPE_ONLY', 'this checker only executes fixture packages')
     require(package['purpose'] in config['policy']['allowed_purposes'], 'E_POLICY', 'purpose not allowed')
     runtime = package['runtime']
-    require(runtime['backend'] == 'reference-linear-score-v1', 'E_BACKEND', 'backend not implemented by fixture checker')
+    require(runtime['backend'] in ('reference-linear-score-v1', 'triton-onnx-v1'), 'E_BACKEND',
+            'backend not implemented by this checker')
     profiles = [p for p in config['runtime_profiles'] if p['name'] == runtime['profile']]
     require(len(profiles) == 1, 'E_RUNTIME', 'runtime profile missing or ambiguous')
     require(all(profiles[0][k] == runtime[k] for k in ('backend', 'device')), 'E_RUNTIME', 'profile mismatch')
+    if runtime['backend'] == 'triton-onnx-v1':
+        return validate_onnx_package(path, package, raw, config)
     require(runtime['device'] == 'cpu', 'E_RUNTIME', 'reference fixture is CPU only')
     require(all(package['compatibility'][k] == config['target'][k] for k in ('os', 'arch')),
             'E_COMPATIBILITY', 'declared target mismatch (not a host probe)')

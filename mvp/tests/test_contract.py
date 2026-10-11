@@ -164,6 +164,7 @@ class FakeKServe:
         self.loaded, self.lifecycle, self.wrong_id = set(), [], False
         self.delays = {}  # ten model -> giay ngu them (gia lap model cham)
         self.fail_above = {}  # ten model -> nguong mean; >= nguong thi tra 400 (gia lap model hong)
+        self.onnx, self.sessions = {}, {}  # ten model -> duong dan model.onnx (model anh that)
         outer = self
 
         class H(BaseHTTPRequestHandler):
@@ -187,12 +188,15 @@ class FakeKServe:
                 self._send(404, {})
 
             def do_POST(self):
-                body = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+                payload = self.rfile.read(int(self.headers['Content-Length']))
+                hlen = self.headers.get('Inference-Header-Content-Length')
+                raw = payload[int(hlen):] if hlen else None       # KServe binary tensor extension
+                body = json.loads(payload[:int(hlen)] if hlen else payload)
                 parts = self.path.split('/')
                 if parts[2] == 'repository':  # Triton explicit model control
                     outer.lifecycle.append((parts[5], parts[4]))
                     if parts[5] == 'load':
-                        if parts[4] not in outer.models:
+                        if parts[4] not in outer.models and parts[4] not in outer.onnx:
                             return self._send(400, {'error': 'unknown model'})
                         outer.loaded.add(parts[4])
                     else:
@@ -203,6 +207,17 @@ class FakeKServe:
                     return self._send(400, {'error': 'model not loaded'})
                 outer.calls.append({'path': self.path, 'trace': self.headers.get('X-Trace-Id'), 'body': body})
                 time.sleep(outer.delays.get(name, 0))
+                if raw is not None:   # model anh that: chay file ONNX bang onnxruntime (may test phai co cai)
+                    import numpy as np
+                    import onnxruntime as ort
+                    sess = outer.sessions.get(name)
+                    if sess is None:
+                        sess = outer.sessions[name] = ort.InferenceSession(outer.onnx[name], providers=['CPUExecutionProvider'])
+                    shape = body['inputs'][0]['shape']
+                    score = float(sess.run(['SCORE'], {'IMAGE': np.frombuffer(raw, dtype=np.uint8).reshape(shape)})[0][0])
+                    outer.calls[-1]['binary_bytes'] = len(raw)
+                    return self._send(200, {'model_name': name, 'id': body['id'], 'outputs': [
+                        {'name': 'SCORE', 'datatype': 'FP32', 'shape': [1], 'data': [score]}]})
                 p = outer.models[name]
                 x = body['inputs'][0]['data']
                 if name in outer.fail_above and body['id'] != 'golden' and sum(x) / len(x) >= outer.fail_above[name]:

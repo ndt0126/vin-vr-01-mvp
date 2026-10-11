@@ -19,7 +19,7 @@ def main():
     ap.add_argument('--host', default='127.0.0.1')
     a = ap.parse_args()
     import test_contract
-    models = {d.name: json.loads((d / 'model.json').read_text()) for d in (a.examples / 'packages').iterdir() if d.is_dir()}
+    models = {d.name: json.loads((d / 'model.json').read_text()) for d in (a.examples / 'packages').iterdir() if (d / 'model.json').is_file()}
     orig = test_contract.ThreadingHTTPServer
 
     class Bound(orig):
@@ -30,6 +30,9 @@ def main():
     fake = FakeKServe(models)
     fake.delays['model-slow'] = 0.8
     fake.fail_above['model-bad'] = 0.5
+    for d in (a.examples / 'packages').iterdir():
+        if (d / 'model.onnx').is_file():
+            fake.onnx[d.name] = str(d / 'model.onnx')
     print(f'FAKE inference server on {fake.url} models={sorted(models)}', flush=True)
     threading.Event().wait()
 

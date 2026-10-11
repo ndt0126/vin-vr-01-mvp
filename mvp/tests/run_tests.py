@@ -49,7 +49,7 @@ def main():
     suites = {}
     ok = not static_fail and docs_ok
     t0 = time.monotonic()
-    for mod in ('test_contract', 'test_mvp', 'test_models', 'test_observability', 'test_k8s_manifests'):
+    for mod in ('test_contract', 'test_mvp', 'test_models', 'test_observability', 'test_k8s_manifests', 'test_heavy'):
         suite = unittest.defaultTestLoader.loadTestsFromName(mod)
         res = unittest.TextTestRunner(resultclass=Collect, verbosity=1).run(suite)
         suites[mod] = {'run': res.testsRun, 'passed': len(res.passed), 'failed': len(res.failures),

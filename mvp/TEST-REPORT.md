@@ -4,9 +4,9 @@ File này được **sinh tự động** bằng `tools/make_test_report.py` từ
 
 ## Unit / contract / integration — local-2026-10-10
 
-Nguồn: `evidence/local-2026-10-10/test-report.json` (sha256 7aee15d0e5121737…)
+Nguồn: `evidence/local-2026-10-10/test-report.json` (sha256 f132b2bca9da131a…)
 
-Kết luận: **PASS** · Python 3.12.7 · macOS-26.6-arm64-arm-64bit · 25.8 s · kiểm tĩnh OpenAPI 11/11 · API.md khớp spec: True
+Kết luận: **PASS** · Python 3.12.7 · macOS-26.6-arm64-arm-64bit · 27.6 s · kiểm tĩnh OpenAPI 11/11 · API.md khớp spec: True
 
 | Bộ test | Chạy | Đạt | Lỗi | Bỏ qua |
 |---|---|---|---|---|
@@ -15,6 +15,7 @@ Kết luận: **PASS** · Python 3.12.7 · macOS-26.6-arm64-arm-64bit · 25.8 s 
 | `test_models` | 6 | 6 | 0 | 0 |
 | `test_observability` | 6 | 6 | 0 | 0 |
 | `test_k8s_manifests` | 7 | 7 | 0 | 0 |
+| `test_heavy` | 10 | 10 | 0 | 0 |
 
 Backend stub và inference server giả. Không chứng minh Triton/GPU.
 

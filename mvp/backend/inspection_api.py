@@ -152,9 +152,18 @@ class Registry:
             pkg, digest, golden_score = validate_design.validate_package(entry['path'], self.config)
         except validate_design.Rejected as exc:
             raise ApiError(422, 'PACKAGE_REJECTED', str(exc), details={'validator_code': exc.code})
+        model = {'name': pkg['name'], 'version': pkg['version'], 'manifest_sha256': digest}
+        if pkg['runtime']['backend'] == 'triton-onnx-v1':
+            # Model anh that: tham so mo ta cach tien xu ly; golden input la anh PNG da tien xu ly thanh CHW uint8.
+            size = pkg['io']['input']['shape'][2]
+            params = {'kind': 'onnx-image', 'size': size,
+                      'artifact': str(entry['path'].parent / pkg['artifact']['path'])}
+            golden_png = (entry['path'].parent / pkg['golden']['input']['path']).read_bytes()
+            golden = {'input': preprocess_rgb(golden_png, size), 'expected': pkg['golden']['expected_score'],
+                      'atol': pkg['golden']['atol'], 'rtol': pkg['golden']['rtol'], 'validator_score': None}
+            return model, params, golden
         params = json.loads((entry['path'].parent / pkg['artifact']['path']).read_bytes())
         golden_input = json.loads((entry['path'].parent / pkg['golden']['input']['path']).read_bytes())
-        model = {'name': pkg['name'], 'version': pkg['version'], 'manifest_sha256': digest}
         golden = {'input': golden_input, 'expected': pkg['golden']['expected_score'],
                   'atol': pkg['golden']['atol'], 'rtol': pkg['golden']['rtol'], 'validator_score': golden_score}
         return model, params, golden
@@ -190,6 +199,20 @@ def preprocess(image_bytes):
         return [round(v / 255.0, 6) for v in gray.getdata()]
 
 
+def preprocess_rgb(image_bytes, size):
+    """Preprocess 'image-rgb-unit-v1': RGB, resize bilinear ve size x size, CHW, uint8 (bytes). Viec chia 255 nam trong model."""
+    with Image.open(io.BytesIO(image_bytes)) as im:
+        rgb = im.convert('RGB').resize((size, size), Image.Resampling.BILINEAR)
+        return b''.join(ch.tobytes() for ch in rgb.split())
+
+
+def preprocess_for(params, image_bytes):
+    """Chon tien xu ly theo package DA PIN cua request."""
+    if params.get('kind') == 'onnx-image':
+        return preprocess_rgb(image_bytes, params['size'])
+    return preprocess(image_bytes)
+
+
 class StubBackend:
     """Backend tuyen tinh 'reference-linear-score-v1' cua W2-05 chay trong tien trinh."""
 
@@ -201,6 +224,7 @@ class StubBackend:
         self.fail_next = 0
         self.calls = []
         self.lifecycle, self.loaded, self.fail_load = [], set(), set()
+        self._sessions = {}
 
     def infer(self, model, params, tensor, trace_id, request_id):
         self.calls.append({'model': model['name'], 'trace_id': trace_id, 'request_id': request_id})
@@ -211,7 +235,20 @@ class StubBackend:
         if self.fail_next:
             self.fail_next -= 1
             raise RuntimeError('injected backend failure')
+        if params.get('kind') == 'onnx-image':
+            return self._run_onnx(params, tensor)
         return min(1.0, max(0.0, params['gain'] * sum(tensor) / len(tensor) + params['bias']))
+
+    def _run_onnx(self, params, tensor):
+        """Chi de test: chay model ONNX bang onnxruntime trong tien trinh (neu may co cai)."""
+        import numpy as np
+        import onnxruntime as ort
+        sess = self._sessions.get(params['artifact'])
+        if sess is None:
+            sess = self._sessions[params['artifact']] = ort.InferenceSession(params['artifact'],
+                                                                             providers=['CPUExecutionProvider'])
+        x = np.frombuffer(tensor, dtype=np.uint8).reshape(1, 3, params['size'], params['size'])
+        return float(sess.run(['SCORE'], {'IMAGE': x})[0][0])
 
     def health(self):
         return self.available
@@ -254,10 +291,24 @@ class KServeV2Backend:
             return resp.status, (json.loads(resp.read() or b'{}'))
 
     def infer(self, model, params, tensor, trace_id, request_id):
-        body = {'id': request_id,
-                'inputs': [{'name': 'IMAGE', 'shape': [1, 1, 2, 2], 'datatype': 'FP32', 'data': tensor}],
-                'outputs': [{'name': 'SCORE'}]}
-        status, out = self._call('POST', f"/v2/models/{model['name']}/infer", body, {'X-Trace-Id': trace_id})
+        if params.get('kind') == 'onnx-image':
+            # KServe v2 binary tensor extension: JSON header + bytes tho cua tensor UINT8 [1,3,S,S].
+            size = params['size']
+            header = json.dumps({'id': request_id, 'inputs': [{
+                'name': 'IMAGE', 'shape': [1, 3, size, size], 'datatype': 'UINT8',
+                'parameters': {'binary_data_size': len(tensor)}}],
+                'outputs': [{'name': 'SCORE', 'parameters': {'binary_data': False}}]}).encode()
+            req = urllib.request.Request(
+                self.base_url + f"/v2/models/{model['name']}/infer", data=header + tensor, method='POST',
+                headers={'Content-Type': 'application/octet-stream', 'X-Trace-Id': trace_id,
+                         'Inference-Header-Content-Length': str(len(header))})
+            with urllib.request.urlopen(req, timeout=self.timeout_s) as resp:
+                status, out = resp.status, json.loads(resp.read() or b'{}')
+        else:
+            body = {'id': request_id,
+                    'inputs': [{'name': 'IMAGE', 'shape': [1, 1, 2, 2], 'datatype': 'FP32', 'data': tensor}],
+                    'outputs': [{'name': 'SCORE'}]}
+            status, out = self._call('POST', f"/v2/models/{model['name']}/infer", body, {'X-Trace-Id': trace_id})
         outputs = {o['name']: o for o in out.get('outputs', [])}
         if status != 200 or 'SCORE' not in outputs:
             raise RuntimeError(f'bad inference response {status}')
@@ -616,7 +667,7 @@ class App:
         if len(image) > self.limits['max_image_bytes']:
             raise ApiError(413, 'PAYLOAD_TOO_LARGE', f"image exceeds {self.limits['max_image_bytes']} bytes",
                            request_id=rid)
-        tensor = self._decode(image, body['image']['content_type'], rid)
+        self._decode(image, body['image']['content_type'], rid)  # chi kiem anh hop le; tien xu ly theo package da pin
         input_sha = sha256(image)
         fp_fields = {k: body.get(k) for k in ('product_id', 'product_type', 'recipe_version', 'captured_at',
                                               'station_id', 'retry_of')}
@@ -696,7 +747,7 @@ class App:
                        station_id=body['station_id'], recipe=pin['recipe'], model=pin['model'],
                        input_sha256=input_sha, submitted_by=principal['id'])
             admitted = True
-            self.queue.put((rid, time.monotonic(), pinned['params'], tensor))
+            self.queue.put((rid, time.monotonic(), pinned['params'], preprocess_for(pinned['params'], image)))
             row = self.ledger.one('SELECT * FROM inspections WHERE request_id=?', (rid,))
             return 202, self.status_view(row), {'Location': f'/v1/inspections/{rid}'}
         finally:

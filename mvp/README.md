@@ -42,7 +42,7 @@ Lệnh này build image API, tạo token + chứng chỉ TLS lab + model reposit
 make smoke
 ```
 
-**Toàn bộ test trong container** (không cần Triton, chạy được khi stack đang bật hoặc tắt). Dòng cuối mong đợi bắt đầu bằng `MVP tests: PASS  85/86 passed, static 11/11` (1 test bỏ qua vì image không cài `onnxruntime`); báo cáo ghi ở `run/test-report-container.json`.
+**Toàn bộ test trong container** (không cần Triton, chạy được khi stack đang bật hoặc tắt). Dòng cuối mong đợi bắt đầu bằng `MVP tests: PASS  92/96 passed, static 11/11` (4 test bỏ qua vì image không cài `onnxruntime`); báo cáo ghi ở `run/test-report-container.json`.
 
 ```bash
 make test
@@ -71,6 +71,7 @@ Bật thêm Prometheus (`http://127.0.0.1:9091`) và Grafana (`http://127.0.0.1:
 - `deploy/k8s/`: manifests kustomize (base + overlay CPU, GPU, offline), script dựng kubeadm lab, nạp image, bài kiểm 10 bước, và bộ script gói offline cho lớp ứng dụng. Đã chạy thử 10/10 bước trên một cluster k3s trong Docker với inference server **giả**. **Chưa chạy trên kubeadm, chưa chạy với Triton thật, gói offline chưa thử.** Xem `deploy/k8s/README.md`.
 - `docs/RUNBOOK.md`: cài/bật/dừng, đổi và rollback model, sao lưu và khôi phục, nâng cấp, cây xử lý sự cố, gói chẩn đoán, giới hạn đã biết. Mỗi quy trình ghi rõ đã chạy thật, mới chạy trên laptop, hay chưa diễn tập. **Chưa có ai khác tự làm theo runbook.**
 - Kịch bản đã viết cho phiên VPS, chưa chạy trên Triton thật: tự rollback bằng fixture `model-bad` (qua golden nhưng lỗi trên ảnh sáng), ổ lưu ảnh đầy thật, nâng cấp và quay lại phiên bản app khi đang có tải, cắt mạng 10 giây (`tests/real_session.py --phase w4`); `tests/load_sweep.py` quét tải tới bão hòa.
+- **Model ảnh thật theo chuẩn package** (`docs/MODEL-PACKAGES.md`): backend `triton-onnx-v1` mà schema W2-05 đã khai báo nay được hiện thực (validator, tiền xử lý RGB theo package đã pin, gửi tensor dạng binary sang Triton, model repository). `make start HEAVY=cpu|gpu|gpu-xl` thêm fixture `model-heavy`: mạng tích chập sâu với trọng số tất định, là tải tính toán thật cho bài hiệu năng, **không phải model QC**. Đã kiểm trên laptop (10 test, chạy trọn luồng và quét tải qua inference server giả có onnxruntime); **chưa chạy trên Triton thật, chưa chạy GPU**.
 - Công cụ mới: `tools/vr01ctl.py` (status, activate, rollback, history, audit, pending, result) và `make diag` (gói chẩn đoán không chứa secret).
 
 ## Phiên kiểm trên stack thật

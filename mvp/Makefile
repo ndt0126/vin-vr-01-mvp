@@ -1,7 +1,8 @@
 # VR-01 MVP - mot lenh cho moi viec. Chay trong thu muc mvp/.
 # GPU=1: them cau hinh GPU cho Triton (chua chay thu).
 # SLOW=1: them fixture model-slow (chi de test timeout/cancel/drain).  VR01_SLOW_ROUNDS=N: chinh do cham.
-INIT_EXTRA = $(if $(SLOW),--with-slow-fixture,)
+# HEAVY=tiny|cpu|gpu|gpu-xl: them model-heavy (mang tich chap that, backend triton-onnx-v1) cho bai hieu nang.
+INIT_EXTRA = $(if $(SLOW),--with-slow-fixture,) $(if $(HEAVY),--with-heavy-fixture $(HEAVY),)
 COMPOSE = HOST_UID=$$(id -u) HOST_GID=$$(id -g) INIT_EXTRA="$(INIT_EXTRA)" docker compose --env-file deploy/.env -f deploy/docker-compose.yml $(if $(GPU),-f deploy/docker-compose.gpu.yml,)
 PY ?= python3
 

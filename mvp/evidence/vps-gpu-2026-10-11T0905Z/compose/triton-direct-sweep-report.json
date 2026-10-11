@@ -1,0 +1,245 @@
+{
+  "model": "model-heavy",
+  "input_size": 1024,
+  "seconds_per_cell": 20,
+  "cells": [
+    {
+      "instances": 1,
+      "concurrency": 1,
+      "completed": 34,
+      "errors": 0,
+      "error_samples": [],
+      "throughput_rps": 1.683,
+      "latency_ms": {
+        "p50": 594.2,
+        "p95": 597.0,
+        "p99": 597.5
+      },
+      "gpu_mid_run": {
+        "vram_mib": 4636.0,
+        "util_pct": 100.0
+      },
+      "load_s": 0.2
+    },
+    {
+      "instances": 1,
+      "concurrency": 2,
+      "completed": 35,
+      "errors": 0,
+      "error_samples": [],
+      "throughput_rps": 1.697,
+      "latency_ms": {
+        "p50": 1177.8,
+        "p95": 1186.2,
+        "p99": 1190.5
+      },
+      "gpu_mid_run": {
+        "vram_mib": 4636.0,
+        "util_pct": 100.0
+      },
+      "load_s": 0.2
+    },
+    {
+      "instances": 1,
+      "concurrency": 4,
+      "completed": 37,
+      "errors": 0,
+      "error_samples": [],
+      "throughput_rps": 1.69,
+      "latency_ms": {
+        "p50": 2365.0,
+        "p95": 2370.5,
+        "p99": 2375.0
+      },
+      "gpu_mid_run": {
+        "vram_mib": 4636.0,
+        "util_pct": 100.0
+      },
+      "load_s": 0.2
+    },
+    {
+      "instances": 1,
+      "concurrency": 8,
+      "completed": 41,
+      "errors": 0,
+      "error_samples": [],
+      "throughput_rps": 1.677,
+      "latency_ms": {
+        "p50": 4753.9,
+        "p95": 4766.8,
+        "p99": 4795.2
+      },
+      "gpu_mid_run": {
+        "vram_mib": 4636.0,
+        "util_pct": 99.0
+      },
+      "load_s": 0.2
+    },
+    {
+      "instances": 2,
+      "concurrency": 1,
+      "completed": 34,
+      "errors": 0,
+      "error_samples": [],
+      "throughput_rps": 1.655,
+      "latency_ms": {
+        "p50": 604.2,
+        "p95": 606.7,
+        "p99": 608.1
+      },
+      "gpu_mid_run": {
+        "vram_mib": 8878.0,
+        "util_pct": 100.0
+      },
+      "load_s": 0.1
+    },
+    {
+      "instances": 2,
+      "concurrency": 2,
+      "completed": 34,
+      "errors": 0,
+      "error_samples": [],
+      "throughput_rps": 1.676,
+      "latency_ms": {
+        "p50": 1192.7,
+        "p95": 1194.7,
+        "p99": 1195.4
+      },
+      "gpu_mid_run": {
+        "vram_mib": 8878.0,
+        "util_pct": 100.0
+      },
+      "load_s": 0.1
+    },
+    {
+      "instances": 2,
+      "concurrency": 4,
+      "completed": 36,
+      "errors": 0,
+      "error_samples": [],
+      "throughput_rps": 1.684,
+      "latency_ms": {
+        "p50": 2372.7,
+        "p95": 2375.3,
+        "p99": 2392.5
+      },
+      "gpu_mid_run": {
+        "vram_mib": 8878.0,
+        "util_pct": 100.0
+      },
+      "load_s": 0.1
+    },
+    {
+      "instances": 2,
+      "concurrency": 8,
+      "completed": 40,
+      "errors": 0,
+      "error_samples": [],
+      "throughput_rps": 1.683,
+      "latency_ms": {
+        "p50": 4747.7,
+        "p95": 4756.2,
+        "p99": 4790.6
+      },
+      "gpu_mid_run": {
+        "vram_mib": 8878.0,
+        "util_pct": 100.0
+      },
+      "load_s": 0.1
+    },
+    {
+      "instances": 4,
+      "concurrency": 1,
+      "completed": 33,
+      "errors": 0,
+      "error_samples": [],
+      "throughput_rps": 1.65,
+      "latency_ms": {
+        "p50": 606.0,
+        "p95": 607.4,
+        "p99": 609.0
+      },
+      "gpu_mid_run": {
+        "vram_mib": 17368.0,
+        "util_pct": 91.0
+      },
+      "load_s": 0.2
+    },
+    {
+      "instances": 4,
+      "concurrency": 2,
+      "completed": 34,
+      "errors": 0,
+      "error_samples": [],
+      "throughput_rps": 1.67,
+      "latency_ms": {
+        "p50": 1196.3,
+        "p95": 1202.6,
+        "p99": 1205.6
+      },
+      "gpu_mid_run": {
+        "vram_mib": 17368.0,
+        "util_pct": 100.0
+      },
+      "load_s": 0.2
+    },
+    {
+      "instances": 4,
+      "concurrency": 4,
+      "completed": 36,
+      "errors": 0,
+      "error_samples": [],
+      "throughput_rps": 1.668,
+      "latency_ms": {
+        "p50": 2406.6,
+        "p95": 2419.7,
+        "p99": 2422.7
+      },
+      "gpu_mid_run": {
+        "vram_mib": 17368.0,
+        "util_pct": 100.0
+      },
+      "load_s": 0.2
+    },
+    {
+      "instances": 4,
+      "concurrency": 8,
+      "completed": 40,
+      "errors": 0,
+      "error_samples": [],
+      "throughput_rps": 1.668,
+      "latency_ms": {
+        "p50": 4797.5,
+        "p95": 4854.8,
+        "p99": 4856.1
+      },
+      "gpu_mid_run": {
+        "vram_mib": 17368.0,
+        "util_pct": 100.0
+      },
+      "load_s": 0.2
+    }
+  ],
+  "distinct_scores_for_the_same_input": [
+    0.488
+  ],
+  "best": {
+    "instances": 1,
+    "concurrency": 2,
+    "completed": 35,
+    "errors": 0,
+    "error_samples": [],
+    "throughput_rps": 1.697,
+    "latency_ms": {
+      "p50": 1177.8,
+      "p95": 1186.2,
+      "p99": 1190.5
+    },
+    "gpu_mid_run": {
+      "vram_mib": 4636.0,
+      "util_pct": 100.0
+    },
+    "load_s": 0.2
+  },
+  "note": "Goi thang Triton, vong kin; khong qua Inspection API/ledger. Model fixture, khong phai model QC."
+}

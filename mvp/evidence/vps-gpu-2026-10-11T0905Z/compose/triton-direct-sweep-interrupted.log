@@ -1,0 +1,7 @@
+instances 1 concurrency  1:    1.69 req/s  p50 592.9 ms  p95 595.3 ms  errors 0  gpu {'vram_mib': 4636.0, 'util_pct': 100.0}
+instances 1 concurrency  2:    1.70 req/s  p50 1177.8 ms  p95 1179.4 ms  errors 0  gpu {'vram_mib': 4636.0, 'util_pct': 100.0}
+instances 1 concurrency  4:    1.68 req/s  p50 2368.2 ms  p95 2485.5 ms  errors 0  gpu {'vram_mib': 4636.0, 'util_pct': 99.0}
+instances 1 concurrency  8:    1.68 req/s  p50 4750.7 ms  p95 4765.7 ms  errors 0  gpu {'vram_mib': 4636.0, 'util_pct': 99.0}
+instances 2 concurrency  1:    1.66 req/s  p50 603.8 ms  p95 605.0 ms  errors 0  gpu {'vram_mib': 8878.0, 'util_pct': 100.0}
+instances 2 concurrency  2:    1.67 req/s  p50 1193.3 ms  p95 1209.7 ms  errors 0  gpu {'vram_mib': 9233.0, 'util_pct': 100.0}
+instances 2 concurrency  4:    1.68 req/s  p50 2375.9 ms  p95 2396.1 ms  errors 0  gpu {'vram_mib': 9233.0, 'util_pct': 100.0}

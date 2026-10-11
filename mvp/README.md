@@ -1,6 +1,6 @@
 # VR-01 MVP — Inspection API + lifecycle + Triton (W3-01 → W3-05)
 
-Trạng thái 11/10/2026: **bản lab, đã chạy với Triton thật trên VPS amd64, cả CPU và GPU NVIDIA (RTX A6000), cả Compose và kubeadm**. Soak 8 giờ trên GPU đang chạy. Chưa chạy trên máy AMD của nhà máy, chưa air gap đầy đủ, chưa được mentor review.
+Trạng thái 11/10/2026: **bản lab, đã chạy với Triton thật trên VPS amd64, cả CPU và GPU NVIDIA (RTX A6000), cả Compose và kubeadm**. Soak 8 giờ trên GPU đã xong (12/10). Chưa chạy trên máy AMD của nhà máy, chưa air gap đầy đủ, chưa được mentor review.
 
 ## Cấu trúc
 
@@ -75,8 +75,12 @@ Trên một VPS thuê có RTX A6000 48 GB (NVIDIA, có Internet). Chi tiết, s�
 - **Hết VRAM:** lúc nạp model và khi nạp model thứ hai cạnh model đang chạy, kích hoạt bị từ chối 422, recipe cũ vẫn phục vụ, không cần restart (dùng `tests/vram_hog.py` chiếm VRAM).
 - **Quét tải model nặng:** trần khoảng 1,66 req/s với một instance; quá trần thì hàng đợi dài ra rồi trả 429.
 - **Kubernetes có GPU: 10/10** với `deploy/k8s/lab-kubeadm-gpu.sh` (kubeadm + NVIDIA device plugin) và overlay `lab-gpu`.
-- **Soak 8 giờ** không restart định kỳ: đang chạy (`tests/load_cutover.py` ghi journal, `tests/sampler.py` lấy mẫu mỗi 30 giây, `tests/soak_report.py` tổng hợp). Chưa có kết quả.
-- **Đã viết, CHƯA chạy trên GPU:** hết VRAM giữa lúc suy luận (`--phase gpu-post`, fixture `model-vram` cấp bộ nhớ theo ảnh), reboot node Kubernetes có GPU, gói offline trên node GPU (overlay `offline-gpu`).
+- **Soak 8 giờ** không restart định kỳ: 19.528 request, 0 sai, 0 trùng, 95/95 lần chuyển model, p95 612 ms, không container nào restart, VRAM không đổi. Công cụ kết luận REVIEW: RAM của API tăng trong giờ đầu rồi phẳng; RAM container Triton còn tăng khoảng 7,7 MiB mỗi giờ, 8 giờ chưa đủ để kết luận.
+- **Hết VRAM giữa lúc suy luận (G6):** request đó `FAILED`, model vẫn phục vụ request kế tiếp, Triton không restart.
+- **Quét số instance × mức đồng thời (gọi thẳng Triton):** 1, 2 hay 4 instance đều cho khoảng 1,7 req/s; GPU đã bận 100% với một instance.
+- **Reboot node Kubernetes có GPU:** lượt đầu hỏng vì swap bật lại sau reboot (script tắt swap không khớp `fstab` ngăn bằng tab; đã sửa); lượt hai tự lên lại sau 192 giây, smoke 18/18.
+- **Gói offline trên node GPU** (overlay `offline-gpu`): cài được khi Internet bị cắt, Triton chạy trên GPU; lượt tự động hỏng do lỗi swap ở trên, lượt chạy lại tay đạt với hai điểm cần đọc trong README của evidence.
+- Báo cáo tổng hợp: `docs/W4-04-REPORT.md`.
 
 ## Observability (W4-01, W4-02)
 
@@ -182,7 +186,7 @@ Số liệu chi tiết và file nguồn: `TEST-REPORT.md` (sinh bằng `make rep
 ## Chưa kiểm chứng
 
 - **GPU AMD của nhà máy:** mới chạy trên GPU NVIDIA thuê (RTX A6000). Chưa chạy trên phần cứng AMD; kết quả NVIDIA không suy ra được cho AMD.
-- Soak 8 giờ trên GPU đang chạy, chưa có kết quả. Hết VRAM giữa lúc suy luận chưa chạy thử.
+- Xu hướng RAM của container Triton trong soak (tăng khoảng 7,7 MiB mỗi giờ) chưa có kết luận; cần soak 24 giờ.
 - **Máy sạch bởi người khác:** ngày 11/10 có hai lượt do agent AI độc lập (không phải người) chỉ đọc README, mỗi lượt trên một VPS mới 2 vCPU / 4 GB. Lượt 1 phải đoán 3 bước và bắt được lỗi `make test`; sau khi sửa, **lượt 2 chạy trọn Quick start không cần can thiệp nào** (`make start`, smoke 18/18, test 72/73), ở commit `c83b893`. Biên bản: `evidence/person-b-2026-10-11/` và `evidence/person-b-2026-10-11-run2/`. Chưa có **người** reviewer tự làm.
 - Mất điện thật; tải cao với model QC thật (mới quét tải bằng model tự sinh).
 - Hủy không giải phóng GPU: inference đang chạy vẫn chạy hết (đã thấy trên Triton thật ở bước P4).

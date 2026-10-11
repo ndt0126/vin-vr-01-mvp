@@ -98,6 +98,18 @@ Kết luận: **PASS**, 4/4 bước.
 | P11b normal limits restored: slow request completes again | PASS | {"state": "COMPLETED"} |
 | P12 inference server down ~30 s under load: clean refusals, no wrong result, recovery | PASS | {"sent": 601, "completed": 597, "technical": {}, "not_accepted": 4, "wrong": 0, "duplicates": 0, "client_503": 217, "readyz_during_outage": [503, 503, 503, 503, 503, 503], "outage_s": 24.3, "ready_after_start_s": 0.0, "request_after_recovery": "COMPLETED", "active_recipe": "recipe-a@0.1.0"} |
 
+## Phiên Tuần 4 trên Triton thật — vps-gpu-2026-10-11T0905Z / compose/session-gpu-post-report.json
+
+Nguồn: `evidence/vps-gpu-2026-10-11T0905Z/compose/session-gpu-post-report.json` (sha256 71e92457107bd65d…)
+
+Môi trường: Ubuntu 24.04.4 LTS · 6.17.0-14-generic x86_64 · 6 · Mem:           32139        1010       30317           5        1190       31128 · /dev/sda2       251G  9.9G  231G   5% / · NVIDIA RTX A6000, 49140 MiB, 580.126.16 · Docker version 29.2.1, build a5c7197 · NVIDIA Container Toolkit CLI version 1.18.
+
+Kết luận: **PASS**, 1/1 bước.
+
+| Bước | Kết quả | Số liệu ghi nhận |
+|---|---|---|
+| G6 GPU OOM in the middle of an inference (warmed-up model): that request FAILED without a decision, the model keeps serving, no restart | PASS | {"hog": {"total_mib": 48539, "held_mib": 47627, "free_mib": 199}, "vram_after_load": {"name": "NVIDIA RTX A6000", "used_mib": 446.0, "total_mib": 49140.0, "driver": "580.126.16"}, "big_image_under_pressure": "FAILED/BACKEND_ERROR", "decision": null, "small_image_under_pressure": "COMPLETED", "active_after": "recipe-vram@0.1.0",  |
+
 ## Phiên Tuần 4 trên Triton thật — vps-gpu-2026-10-11T0905Z / compose/session-gpu-report.json
 
 Nguồn: `evidence/vps-gpu-2026-10-11T0905Z/compose/session-gpu-report.json` (sha256 4d4c7096a396ba99…)
@@ -144,11 +156,64 @@ Kết luận: **K8S CHECK PASS  10/10**
 | K9 model switch and model rollback  DA CHUYEN: recipe-b@0.1.0 -> recipe-a@0.1.0 | PASS |
 | K10 smoke flow after update/rollback  SMOKE PASS  18/18  -> /root/k8s-evidence | PASS |
 
+## Kubernetes (kubeadm) — vps-gpu-2026-10-11T0905Z / k8s/post-soak/k8s-report.txt
+
+Nguồn: `evidence/vps-gpu-2026-10-11T0905Z/k8s/post-soak/k8s-report.txt` (sha256 0f71fd1d9269ec01…)
+
+Kết luận: **K8S CHECK PASS  10/10**
+
+| Bước | Kết quả |
+|---|---|
+| K1 deploy from a clean namespace, rollout complete  34s | PASS |
+| K2 both containers Ready (api readiness = active recipe verified + model loaded)  ready=[true true] | PASS |
+| K3 vr01ctl status through NodePort  SAN SANG recipe active : recipe-b@0.1.0  (sha256 6ee3711f1bf3)  | PASS |
+| K4 smoke flow through NodePort  SMOKE PASS  18/18  -> /root/k8s-evidence | PASS |
+| K5 from another pod: Triton 8000 closed, API 8443 open, metrics 9090 closed by NetworkPolicy  triton8000=closed api8443=open metrics9090=closed | PASS |
+| K6 pod deleted -> recreated, same active recipe  11s; recipe active : recipe-b@0.1.0  (sha256 6ee3711f1bf3) | PASS |
+| K7 update to a new release revision  rev 1 -> 2, 12s | PASS |
+| K8 rollback to the previous release (rollout undo)  release=0.1.0, 11s | PASS |
+| K9 model switch and model rollback  DA CHUYEN: recipe-b@0.1.0 -> recipe-a@0.1.0 | PASS |
+| K10 smoke flow after update/rollback  SMOKE PASS  18/18  -> /root/k8s-evidence | PASS |
+
+## Gói offline lớp ứng dụng — vps-gpu-2026-10-11T0905Z / k8s/post-soak/offline-report.txt
+
+Nguồn: `evidence/vps-gpu-2026-10-11T0905Z/k8s/post-soak/offline-report.txt` (sha256 2a38f85bd97589fe…)
+
+Kết luận: **OFFLINE CHECK FAIL  5/7  (egress stays cut; reboot or flush iptables to restore)**
+
+| Bước | Kết quả |
+|---|---|
+| O1 build offline app bundle  size 7.1G, files 89 | PASS |
+| O2 Internet egress cut on the node (IPv4 + IPv6)  probe=blocked | PASS |
+| O3 app images removed from the node before offline install  left=0 | PASS |
+| O4 install from the bundle with egress cut  166s; error: error validating "/root/vr01-app-bundle/mvp/deploy/k8 | FAIL |
+| O5 smoke flow on the offline-installed stack (tools from the bundle)  urllib.error.URLError: <urlopen error [E | FAIL |
+| O6 no image pull was attempted  pull events=0 | PASS |
+| O7 egress still cut at the end  probe=blocked | PASS |
+
 ## Quét tải model nặng trên GPU — vps-gpu-2026-10-11T0905Z
 
 Nguồn: `evidence/vps-gpu-2026-10-11T0905Z/compose/load-sweep-gpu-heavy-report.json` (sha256 7e9bc8bb2fc524e5…)
 
 Throughput cao nhất chưa bão hòa: **1.66 req/s**; bước đầu tiên bão hòa: 2.0 req/s. Model là mạng tích chập tự sinh, không phải model QC; số chỉ có nghĩa trên máy thử.
+
+## Soak — vps-gpu-2026-10-11T0905Z
+
+Nguồn: `evidence/vps-gpu-2026-10-11T0905Z/compose/soak-report.json` (sha256 adc08a0c172d0e78…)
+
+Kết luận của công cụ: **REVIEW** · 8.03 giờ · 964 mẫu · không restart trong soak: True · chuỗi tăng quá 10%: ['vr01_process_resident_memory_bytes', 'api_container_mem_bytes']
+
+| Chuỗi | Đơn vị | Nhỏ nhất | Lớn nhất | TB giờ đầu | TB giờ cuối | Cuối so với đầu (%) | Độ dốc/giờ (cả lượt) | Độ dốc/giờ (sau giờ đầu) |
+|---|---|---|---|---|---|---|---|---|
+| `vr01_process_resident_memory_bytes` | MiB | 56.23 | 111.14 | 88.74 | 98.16 | 10.61 | 0.712 | None |
+| `api_container_mem_bytes` | MiB | 40.37 | 99.94 | 73.53 | 84.36 | 14.73 | 0.903 | None |
+| `triton_container_mem_bytes` | MiB | 1458.18 | 1690.62 | 1565.53 | 1641.62 | 4.86 | 10.652 | None |
+| `gpu_mem_used_mib` | MiB | 2572.0 | 6810.0 | 4621.18 | 4621.18 | 0.0 | -0.117 | None |
+| `gpu_util_pct` | % | 0.0 | 100.0 | 39.98 | 37.11 | -7.17 | -0.024 | None |
+| `gpu_temp_c` | C | 35.0 | 63.0 | 58.96 | 58.71 | -0.42 | 0.001 | None |
+| `vr01_queue_depth` | request | 0.0 | 1.0 | 0.43 | 0.42 | -3.85 | -0.002 | None |
+
+Tải: **PASS** · gửi 19528 · có kết quả 19528 · thiếu/sai 0 · trùng 0 · cutover 95/95 · p95 611.585 ms
 
 ## Phiên Tuần 4 trên Triton thật — vps-w4-2026-10-11T0754Z / compose/session-w4-report.json
 

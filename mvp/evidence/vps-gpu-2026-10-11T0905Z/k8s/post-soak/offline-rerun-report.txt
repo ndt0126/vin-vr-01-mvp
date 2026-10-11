@@ -1,0 +1,9 @@
+PASS  R0 node Ready with 1 allocatable GPU after swap fix  
+PASS  R1 Internet egress cut (IPv4 + IPv6)  probe=blocked
+FAIL  R2 app images absent before install  left=2
+PASS  R3 install from the bundle (overlay offline-gpu) with egress cut  184s; kich hoat luc : 2026-10-11T17:54:51.714Z
+FAIL  R4 smoke flow on the offline-installed GPU stack  SMOKE FAIL  17/18  -> /root/k8s-evidence
+PASS  R5 no image pull attempted  pull events=0
+PASS  R6 Triton pod holds 1 GPU and runs on it  limit=1 apps=tritonserver, 388 MiB; kinds= 2 instance_group [ { count: 1, kind: KIND_GPU } ];
+PASS  R7 egress still cut at the end  probe=blocked
+OFFLINE GPU RERUN FAIL  6/8

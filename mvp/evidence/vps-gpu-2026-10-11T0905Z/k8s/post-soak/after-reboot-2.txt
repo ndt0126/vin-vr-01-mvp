@@ -1,0 +1,13 @@
+uptime_s=86.67 reboot_requested_at=1791743114 ready_seen_at=1791743306
+0
+active
+SAN SANG
+recipe active : recipe-b@0.1.0  (sha256 6ee3711f1bf3)
+model         : model-b@0.1.0  (sha256 dcf1542894dc)
+SMOKE PASS  18/18  -> /root/k8s-evidence/post-soak/smoke-after-reboot-2.json
+allocatable_gpu=1
+tritonserver, 388 MiB
+vr01-inspection-765b7b74d7-9xwc2   2/2   Running                    0     44s
+vr01-inspection-765b7b74d7-jfwpl   0/2   UnexpectedAdmissionError   0     7m30s
+0
+egress=open

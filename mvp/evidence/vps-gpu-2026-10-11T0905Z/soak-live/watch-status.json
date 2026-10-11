@@ -1,0 +1,13 @@
+{
+ "elapsed_h": 0.02,
+ "planned_h": 8.0,
+ "sent": 41,
+ "cutovers": 0,
+ "cutovers_failed": 0,
+ "readyz": "200",
+ "vram_mib": 4620.0,
+ "gpu_temp_c": 57.0,
+ "api_rss_mib": 57.4,
+ "not_completed": 0,
+ "checked_at": "16:49:34"
+}

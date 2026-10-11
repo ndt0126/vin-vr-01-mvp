@@ -1,6 +1,6 @@
 {
   "verdict": "PASS",
-  "run_id": "20261011T090852",
+  "run_id": "20261011T092934",
   "steps": [
     {
       "step": "readyz",
@@ -47,7 +47,7 @@
       }
     },
     {
-      "step": "inspect smoke-20261011T090852-a1",
+      "step": "inspect smoke-20261011T092934-a1",
       "result": "PASS",
       "detail": {
         "submit": 202,
@@ -57,11 +57,11 @@
         "model": "model-a",
         "model_digest": "a700dc698dfe",
         "recipe": "recipe-a",
-        "inference_ms": 2.159
+        "inference_ms": 2.481
       }
     },
     {
-      "step": "inspect smoke-20261011T090852-a2",
+      "step": "inspect smoke-20261011T092934-a2",
       "result": "PASS",
       "detail": {
         "submit": 202,
@@ -71,7 +71,7 @@
         "model": "model-a",
         "model_digest": "a700dc698dfe",
         "recipe": "recipe-a",
-        "inference_ms": 1.814
+        "inference_ms": 1.673
       }
     },
     {
@@ -120,7 +120,7 @@
       "detail": 409
     },
     {
-      "step": "inspect smoke-20261011T090852-b1",
+      "step": "inspect smoke-20261011T092934-b1",
       "result": "PASS",
       "detail": {
         "submit": 202,
@@ -130,7 +130,7 @@
         "model": "model-b",
         "model_digest": "dcf1542894dc",
         "recipe": "recipe-b",
-        "inference_ms": 1.781
+        "inference_ms": 1.681
       }
     },
     {
@@ -142,9 +142,9 @@
       "step": "list by state",
       "result": "PASS",
       "detail": [
-        "smoke-20261011T090852-b1",
-        "smoke-20261011T090852-a2",
-        "smoke-20261011T090852-a1"
+        "smoke-20261011T092934-b1",
+        "smoke-20261011T092934-a2",
+        "smoke-20261011T092934-a1"
       ]
     }
   ],

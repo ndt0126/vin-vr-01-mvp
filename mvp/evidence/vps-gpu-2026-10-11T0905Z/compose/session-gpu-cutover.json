@@ -1,0 +1,94 @@
+{
+  "verdict": "PASS",
+  "run_id": "20261011T093002",
+  "recipes": [
+    "recipe-heavy",
+    "recipe-heavy-b"
+  ],
+  "score_recomputed_by_client_for": 0,
+  "config": {
+    "rate_per_s": 0.848,
+    "duration_s": 300.0,
+    "cutover_every_s": 30.0,
+    "send_period_s": 1.1792
+  },
+  "requests": {
+    "sent": 256,
+    "with_terminal_result": 256,
+    "completed": 256,
+    "by_recipe": {
+      "recipe-heavy@0.1.0": 132,
+      "recipe-heavy-b@0.1.0": 124
+    },
+    "missing_or_wrong": 0,
+    "duplicate_or_extra_products": 0,
+    "technical_states": {},
+    "not_accepted": 0
+  },
+  "cutovers": {
+    "requested": 9,
+    "succeeded": 9,
+    "detail": [
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.156,
+        "gap_last_old_to_first_new_s": 1.045
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 1.609,
+        "gap_last_old_to_first_new_s": 1.152
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.394,
+        "gap_last_old_to_first_new_s": 0.775
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 1.103,
+        "gap_last_old_to_first_new_s": 1.141
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.362,
+        "gap_last_old_to_first_new_s": 0.802
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 1.191,
+        "gap_last_old_to_first_new_s": 1.127
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.466,
+        "gap_last_old_to_first_new_s": 0.835
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 1.127,
+        "gap_last_old_to_first_new_s": 1.077
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.455,
+        "gap_last_old_to_first_new_s": 1.267
+      }
+    ],
+    "max_gap_s": 1.267,
+    "gap_resolution_note": "gap khong the nho hon chu ky gui 1.179 s; day khong phai so do downtime"
+  },
+  "client_retries_same_request_id": {
+    "recipe_refresh_409": 9,
+    "queue_full_429": 0,
+    "not_ready_503": 1,
+    "send_errors": 0
+  },
+  "latency_total_ms": {
+    "p50": 608.573,
+    "p95": 688.701,
+    "max": 1165.582
+  },
+  "problems": [],
+  "duplicates": []
+}

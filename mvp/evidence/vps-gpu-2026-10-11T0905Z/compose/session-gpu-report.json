@@ -1,105 +1,164 @@
 {
-  "verdict": "FAIL",
-  "failed": [
-    "g2_calibrate_heavy",
-    "p18_heavy_image_model",
-    "g3_heavy_cutover_under_load",
-    "G4 GPU OOM at model load/warm-up: activation refused, old recipe keeps serving, no restart needed",
-    "g5_oom_when_two_models_coexist",
-    "p7_kill_api"
-  ],
+  "verdict": "PASS",
+  "failed": [],
   "steps": [
     {
       "step": "P1 smoke flow",
       "result": "PASS",
-      "at": "09:08:53",
+      "at": "09:29:34",
       "last": "SMOKE PASS  18/18  -> /opt/vin-vr-01-mvp/mvp/run/session-smoke.json"
     },
     {
       "step": "G1 the heavy model executes on the GPU (no silent CPU fallback)",
       "result": "PASS",
-      "at": "09:08:54",
+      "at": "09:29:35",
       "gpu": {
         "name": "NVIDIA RTX A6000",
-        "used_mib": 940.0,
+        "used_mib": 942.0,
         "total_mib": 49140.0,
         "driver": "580.126.16"
       },
-      "vram_before_mib": 398.0,
+      "vram_before_mib": 400.0,
       "config_instance_kind": "KIND_GPU",
       "compute_apps": [
-        "tritonserver, 930 MiB"
+        "tritonserver, 932 MiB"
       ],
       "triton_gpu_mem_used_bytes": [
-        1001390080.0
+        418381824.0
       ],
       "triton_success_counter": [
         "nv_inference_request_success{gpu_uuid=\"GPU-74db3384-a268-2daa-9327-d541f954abb5\",model=\"model-heavy\",version=\"1\"} 2"
       ],
       "triton_log_mentions_gpu_instance": true,
-      "inference_ms": 89.907,
+      "inference_ms": 88.941,
       "score": 0.467764,
       "note": "KIND_GPU khong co GPU thi Triton tu choi nap model, nen nap duoc + tritonserver co trong compute-apps la bang chung chinh"
     },
     {
-      "step": "g2_calibrate_heavy",
-      "result": "FAIL",
-      "at": "09:09:09",
-      "error": "AssertionError: activate recipe-heavy: 422 {'type': 'urn:vr01:problem:PACKAGE_REJECTED', 'title': 'Unprocessable content', 'status': 422, 'code': 'PACKAGE_REJECTED', 'detail': 'E_LIMIT: input larger than max_decoded_pixels', 'trace_id': 'f50a226ba242481da053fed5e8636bf1', 'request_id': None, 'retryable': False, 'details': {'validator_code': 'E_LIMIT'}}"
+      "step": "G2 calibrate heavy model on this GPU",
+      "result": "PASS",
+      "at": "09:29:59",
+      "preset_gpu_ms": [
+        89.153,
+        88.194,
+        88.199,
+        88.493,
+        88.645
+      ],
+      "preset_gpu_xl_ms": [
+        664.425,
+        589.325,
+        589.444,
+        589.56,
+        590.864
+      ],
+      "chosen": "gpu-xl",
+      "median_inference_ms": 589.56,
+      "vram": {
+        "name": "NVIDIA RTX A6000",
+        "used_mib": 4622.0,
+        "total_mib": 49140.0,
+        "driver": "580.126.16"
+      }
     },
     {
-      "step": "p18_heavy_image_model",
-      "result": "FAIL",
-      "at": "09:09:09",
-      "error": "AssertionError: activate recipe-heavy: 422 {'type': 'urn:vr01:problem:PACKAGE_REJECTED', 'title': 'Unprocessable content', 'status': 422, 'code': 'PACKAGE_REJECTED', 'detail': 'E_LIMIT: input larger than max_decoded_pixels', 'trace_id': '9d431ad8ed6f43be9eef83ee365cbc2b', 'request_id': None, 'retryable': False, 'details': {'validator_code': 'E_LIMIT'}}"
+      "step": "P18 real image model (triton-onnx-v1): golden on the inference server, score depends on the image",
+      "result": "PASS",
+      "at": "09:30:01",
+      "golden": {
+        "expected": 0.479788,
+        "actual": 0.47975558042526245,
+        "passed": true
+      },
+      "scores": {
+        "dark": 0.435297,
+        "mid": 0.47941,
+        "bright": 0.525869
+      },
+      "inference_ms": [
+        592.937,
+        590.979,
+        592.118
+      ],
+      "model": {
+        "name": "model-heavy",
+        "version": "0.1.0",
+        "manifest_sha256": "a38da7342fd7c44e1317921f0d3204a9c0a2b64de16198c68639220bb49cb3b3"
+      }
     },
     {
-      "step": "g3_heavy_cutover_under_load",
-      "result": "FAIL",
-      "at": "09:09:09",
-      "error": "FileNotFoundError: [Errno 2] No such file or directory: '/opt/vin-vr-01-mvp/mvp/run/session-heavy-ms.txt'"
+      "step": "G3 cutover between two heavy models on GPU under continuous load (5 min)",
+      "result": "PASS",
+      "at": "09:35:05",
+      "rate_per_s": 0.848,
+      "sent": 256,
+      "wrong": 0,
+      "duplicates": 0,
+      "cutovers": "9/9",
+      "max_gap_s": 1.267,
+      "latency_ms": {
+        "p50": 608.573,
+        "p95": 688.701,
+        "max": 1165.582
+      },
+      "vram_after": {
+        "name": "NVIDIA RTX A6000",
+        "used_mib": 4622.0,
+        "total_mib": 49140.0,
+        "driver": "580.126.16"
+      }
     },
     {
       "step": "G4 GPU OOM at model load/warm-up: activation refused, old recipe keeps serving, no restart needed",
-      "result": "FAIL",
-      "at": "09:10:18",
+      "result": "PASS",
+      "at": "09:36:10",
       "hog": {
         "total_mib": 48539,
-        "held_mib": 47675,
+        "held_mib": 47673,
         "free_mib": 199
       },
       "activation_http": 422,
-      "code": "PACKAGE_REJECTED",
+      "code": "ACTIVATION_GOLDEN_FAILED",
       "active_after": "recipe-a@0.1.0",
       "readyz": 200,
       "request_on_old_recipe": "COMPLETED",
-      "activation_after_vram_freed": 422
+      "activation_after_vram_freed": 200
     },
     {
-      "step": "g5_oom_when_two_models_coexist",
-      "result": "FAIL",
-      "at": "09:10:18",
-      "error": "AssertionError: activate recipe-heavy: 422 {'type': 'urn:vr01:problem:PACKAGE_REJECTED', 'title': 'Unprocessable content', 'status': 422, 'code': 'PACKAGE_REJECTED', 'detail': 'E_LIMIT: input larger than max_decoded_pixels', 'trace_id': 'a916eed4ae32429690ed7f4b3bc28e23', 'request_id': None, 'retryable': False, 'details': {'validator_code': 'E_LIMIT'}}"
+      "step": "G5 GPU OOM when a second model is loaded next to the active one: refused, active model unaffected",
+      "result": "PASS",
+      "at": "09:36:20",
+      "hog": {
+        "total_mib": 48539,
+        "held_mib": 45499,
+        "free_mib": 199
+      },
+      "activation_http": 422,
+      "code": "ACTIVATION_GOLDEN_FAILED",
+      "active_after": "recipe-heavy@0.1.0",
+      "request_on_active_model": "COMPLETED",
+      "activation_after_vram_freed": 200,
+      "note": "OOM giua luc suy luan khong tai hien duoc voi model kich thuoc co dinh da warm-up: bo nho da duoc cap tu lan golden"
     },
     {
       "step": "P13a Prometheus scrapes API and Triton",
       "result": "PASS",
-      "at": "09:10:51",
-      "both_targets_up_after_s": 10.1
+      "at": "09:36:32",
+      "both_targets_up_after_s": 0.0
     },
     {
       "step": "P13b one request and one model switch are observable in Prometheus",
       "result": "PASS",
-      "at": "09:11:04",
-      "visible_after_s": 2.0,
+      "at": "09:36:47",
+      "visible_after_s": 4.0,
       "counters_before": {
-        "terminal": 10.0,
-        "act": 4.0,
+        "terminal": 266.0,
+        "act": 17.0,
         "triton_b": 0.0
       },
       "counters_after": {
-        "terminal": 12.0,
-        "act": 5.0,
+        "terminal": 268.0,
+        "act": 18.0,
         "triton_b": 2.0
       },
       "active_recipe_series": [
@@ -115,12 +174,12 @@
           "recipe_version": "0.1.0"
         }
       ],
-      "p95_total_s": 0.0235
+      "p95_total_s": 0.9833380737542017
     },
     {
       "step": "P13c full execution path of one request from its request_id (ledger + log)",
       "result": "PASS",
-      "at": "09:11:04",
+      "at": "09:36:47",
       "events": [
         "request.admitted",
         "http.access",
@@ -137,28 +196,28 @@
     {
       "step": "P13d alert VR01ModelUnavailable fires when Triton is stopped and clears after it is back",
       "result": "PASS",
-      "at": "09:11:36",
-      "fired_after_stop_s": 22.0,
+      "at": "09:37:21",
+      "fired_after_stop_s": 24.0,
       "cleared_after_start_s": 6.0
     },
     {
       "step": "P13e Grafana serves the provisioned dashboard",
       "result": "PASS",
-      "at": "09:11:36",
+      "at": "09:37:21",
       "title": "VR-01 MVP — tổng quan vận hành",
       "panels": 18
     },
     {
       "step": "P13f /metrics is reachable inside the compose network but not published on the host",
       "result": "PASS",
-      "at": "09:11:36",
-      "series_lines": 135,
+      "at": "09:37:21",
+      "series_lines": 141,
       "host_port_9090_http": "000"
     },
     {
       "step": "P14 automatic rollback after 3 consecutive inference errors right after cutover",
       "result": "PASS",
-      "at": "09:11:37",
+      "at": "09:37:22",
       "failed_requests": [
         "FAILED/BACKEND_ERROR",
         "FAILED/BACKEND_ERROR",
@@ -170,15 +229,27 @@
       "request_after_rollback": "COMPLETED/NG"
     },
     {
-      "step": "p7_kill_api",
-      "result": "FAIL",
-      "at": "09:11:47",
-      "error": "AssertionError: sess-20261011T090852-kill-014 did not reach {'PROCESSING'} within 10s (now {'request_id': 'sess-20261011T090852-kill-014', 'state': 'COMPLETED', 'decision': 'OK', 'reason': None, 'product_id': 'PCB1-SESS-016', 'product_type': 'PCB1', 'station_id': 'station-sim', 'retry_of': None, 'received_at': '2026-10-11T09:11:37.770Z', 'updated_at': '2026-10-11T09:11:37.782Z', 'links': {'self': "
+      "step": "P7 kill -9 API with 1 running + 2 queued",
+      "result": "PASS",
+      "at": "09:37:26",
+      "before_kill": [
+        "PROCESSING",
+        "RECEIVED",
+        "RECEIVED"
+      ],
+      "after_restart": [
+        "INDETERMINATE",
+        "INDETERMINATE",
+        "INDETERMINATE"
+      ],
+      "ready_again_s": 1.0,
+      "active_recipe": "recipe-heavy@0.1.0",
+      "retry_with_new_id": "COMPLETED"
     },
     {
       "step": "P8 kill -9 Triton under load: no wrong/duplicate result, service recovers",
       "result": "PASS",
-      "at": "09:12:40",
+      "at": "09:38:19",
       "sent": 501,
       "completed": 501,
       "technical": {},
@@ -188,7 +259,7 @@
       "cutovers": "6/6",
       "ready_after_load_s": 0.0,
       "active_recipe": "recipe-a@0.1.0",
-      "seconds_from_kill_to_end": 40.4
+      "seconds_from_kill_to_end": 40.6
     }
   ]
 }

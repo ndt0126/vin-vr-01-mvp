@@ -1,1 +1,1 @@
-{"run_id": "20261011T091758", "elapsed_s": 0.0, "planned_s": 28800.0, "sent": 1, "cutovers": 0, "cutovers_failed": 0, "client_counters": {"recipe_refresh_409": 0, "queue_full_429": 0, "not_ready_503": 0, "send_errors": 0}, "updated_at": 1791710280.3279743}
+{"run_id": "20261011T094808", "elapsed_s": 88.5, "planned_s": 28800.0, "sent": 61, "cutovers": 0, "cutovers_failed": 0, "client_counters": {"recipe_refresh_409": 0, "queue_full_429": 0, "not_ready_503": 0, "send_errors": 0}, "updated_at": 1791712176.8936772}

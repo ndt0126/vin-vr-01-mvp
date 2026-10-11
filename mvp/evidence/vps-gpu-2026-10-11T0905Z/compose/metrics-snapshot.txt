@@ -3,13 +3,13 @@
 vr01_build_info{api_version="1.2.0-draft.1"} 1
 # HELP vr01_process_start_time_seconds Thoi diem tien trinh API khoi dong (Unix time). Doi gia tri = da restart.
 # TYPE vr01_process_start_time_seconds gauge
-vr01_process_start_time_seconds 1791709724.779
+vr01_process_start_time_seconds 1791710990.39
 # HELP vr01_process_resident_memory_bytes RAM (RSS) cua tien trinh API.
 # TYPE vr01_process_resident_memory_bytes gauge
-vr01_process_resident_memory_bytes 56127488
+vr01_process_resident_memory_bytes 89858048
 # HELP vr01_process_cpu_seconds_total Tong thoi gian CPU cua tien trinh API.
 # TYPE vr01_process_cpu_seconds_total counter
-vr01_process_cpu_seconds_total 1.6
+vr01_process_cpu_seconds_total 14.01
 # HELP vr01_ready 1 neu readyz tra 200 (nhan request moi), 0 neu khong.
 # TYPE vr01_ready gauge
 vr01_ready 1
@@ -34,161 +34,167 @@ vr01_queue_capacity 8
 vr01_inflight_requests{model="model-a"} 0
 vr01_inflight_requests{model="model-b"} 0
 vr01_inflight_requests{model="model-heavy"} 0
+vr01_inflight_requests{model="model-heavy-b"} 0
 # HELP vr01_storage_free_bytes Dung luong trong cua o chua du lieu.
 # TYPE vr01_storage_free_bytes gauge
-vr01_storage_free_bytes 233150464000
+vr01_storage_free_bytes 209549946880
 # HELP vr01_http_requests_total So HTTP request theo plane, operation va ma tra ve.
 # TYPE vr01_http_requests_total counter
-vr01_http_requests_total{plane="inference",operation="cancelInspection",status="403"} 1
-vr01_http_requests_total{plane="inference",operation="cancelInspection",status="409"} 1
-vr01_http_requests_total{plane="inference",operation="getActiveRecipe",status="200"} 1
-vr01_http_requests_total{plane="inference",operation="getActiveRecipe",status="401"} 1
-vr01_http_requests_total{plane="inference",operation="getInspectionResult",status="200"} 10
-vr01_http_requests_total{plane="inference",operation="getInspectionResult",status="409"} 3
-vr01_http_requests_total{plane="inference",operation="getInspectionStatus",status="200"} 36
-vr01_http_requests_total{plane="inference",operation="getReadiness",status="200"} 33
-vr01_http_requests_total{plane="inference",operation="getReadiness",status="503"} 9
-vr01_http_requests_total{plane="inference",operation="listInspections",status="200"} 1
-vr01_http_requests_total{plane="inference",operation="submitInspection",status="200"} 1
-vr01_http_requests_total{plane="inference",operation="submitInspection",status="202"} 12
-vr01_http_requests_total{plane="inference",operation="submitInspection",status="403"} 1
-vr01_http_requests_total{plane="inference",operation="submitInspection",status="409"} 2
-vr01_http_requests_total{plane="inference",operation="submitInspection",status="422"} 1
-vr01_http_requests_total{plane="inference",operation="unmatched",status="404"} 1
-vr01_http_requests_total{plane="management",operation="activateRecipe",status="200"} 7
-vr01_http_requests_total{plane="management",operation="activateRecipe",status="422"} 5
-vr01_http_requests_total{plane="management",operation="listAudit",status="403"} 1
+vr01_http_requests_total{plane="inference",operation="getActiveRecipe",status="200"} 3
+vr01_http_requests_total{plane="inference",operation="getInspectionResult",status="200"} 264
+vr01_http_requests_total{plane="inference",operation="getInspectionStatus",status="200"} 228
+vr01_http_requests_total{plane="inference",operation="getReadiness",status="200"} 85
+vr01_http_requests_total{plane="inference",operation="getReadiness",status="503"} 10
+vr01_http_requests_total{plane="inference",operation="listInspections",status="200"} 50
+vr01_http_requests_total{plane="inference",operation="submitInspection",status="202"} 268
+vr01_http_requests_total{plane="inference",operation="submitInspection",status="409"} 9
+vr01_http_requests_total{plane="inference",operation="submitInspection",status="503"} 1
+vr01_http_requests_total{plane="management",operation="activateRecipe",status="200"} 20
+vr01_http_requests_total{plane="management",operation="activateRecipe",status="422"} 2
 # HELP vr01_inspections_admitted_total So lan kiem da duoc nhan (ghi ben + pin model).
 # TYPE vr01_inspections_admitted_total counter
-vr01_inspections_admitted_total{model="model-a"} 4
-vr01_inspections_admitted_total{model="model-b"} 2
-vr01_inspections_admitted_total{model="model-heavy"} 6
+vr01_inspections_admitted_total{model="model-a"} 2
+vr01_inspections_admitted_total{model="model-b"} 1
+vr01_inspections_admitted_total{model="model-heavy"} 141
+vr01_inspections_admitted_total{model="model-heavy-b"} 124
 # HELP vr01_inspections_rejected_total So lan gui bi tu choi TRUOC admission, theo ma loi.
 # TYPE vr01_inspections_rejected_total counter
-vr01_inspections_rejected_total{code="IDEMPOTENCY_CONFLICT"} 1
-vr01_inspections_rejected_total{code="RECIPE_VERSION_MISMATCH"} 1
+vr01_inspections_rejected_total{code="NOT_READY"} 1
+vr01_inspections_rejected_total{code="RECIPE_VERSION_MISMATCH"} 9
 # HELP vr01_inspections_replayed_total So lan gui lai cung request_id (tra record cu, khong chay lai).
 # TYPE vr01_inspections_replayed_total counter
-vr01_inspections_replayed_total 1
 # HELP vr01_inspections_terminal_total So lan kiem da ket thuc theo trang thai va ly do.
 # TYPE vr01_inspections_terminal_total counter
-vr01_inspections_terminal_total{state="COMPLETED",reason="none"} 12
+vr01_inspections_terminal_total{state="COMPLETED",reason="none"} 268
 # HELP vr01_inspection_decisions_total So ket luan chat luong theo OK/NG/REVIEW.
 # TYPE vr01_inspection_decisions_total counter
-vr01_inspection_decisions_total{decision="NG"} 1
-vr01_inspection_decisions_total{decision="OK"} 5
-vr01_inspection_decisions_total{decision="REVIEW"} 6
+vr01_inspection_decisions_total{decision="OK"} 114
+vr01_inspection_decisions_total{decision="REVIEW"} 154
 # HELP vr01_inspections_cancelled_total So lan huy, theo viec da bat dau suy luan hay chua.
 # TYPE vr01_inspections_cancelled_total counter
 # HELP vr01_late_results_discarded_total Ket qua ve muon bi bo (sau TIMEOUT hoac sau khi huy).
 # TYPE vr01_late_results_discarded_total counter
 # HELP vr01_inference_seconds Thoi gian suy luan tren inference server, theo model.
 # TYPE vr01_inference_seconds histogram
-vr01_inference_seconds_bucket{model="model-a",le="0.005"} 2
-vr01_inference_seconds_bucket{model="model-a",le="0.01"} 3
-vr01_inference_seconds_bucket{model="model-a",le="0.025"} 4
-vr01_inference_seconds_bucket{model="model-a",le="0.05"} 4
-vr01_inference_seconds_bucket{model="model-a",le="0.1"} 4
-vr01_inference_seconds_bucket{model="model-a",le="0.25"} 4
-vr01_inference_seconds_bucket{model="model-a",le="0.5"} 4
-vr01_inference_seconds_bucket{model="model-a",le="1"} 4
-vr01_inference_seconds_bucket{model="model-a",le="2"} 4
-vr01_inference_seconds_bucket{model="model-a",le="5"} 4
-vr01_inference_seconds_bucket{model="model-a",le="10"} 4
-vr01_inference_seconds_bucket{model="model-a",le="30"} 4
-vr01_inference_seconds_bucket{model="model-a",le="+Inf"} 4
-vr01_inference_seconds_sum{model="model-a"} 0.030264
-vr01_inference_seconds_count{model="model-a"} 4
-vr01_inference_seconds_bucket{model="model-b",le="0.005"} 2
-vr01_inference_seconds_bucket{model="model-b",le="0.01"} 2
-vr01_inference_seconds_bucket{model="model-b",le="0.025"} 2
-vr01_inference_seconds_bucket{model="model-b",le="0.05"} 2
-vr01_inference_seconds_bucket{model="model-b",le="0.1"} 2
-vr01_inference_seconds_bucket{model="model-b",le="0.25"} 2
-vr01_inference_seconds_bucket{model="model-b",le="0.5"} 2
-vr01_inference_seconds_bucket{model="model-b",le="1"} 2
-vr01_inference_seconds_bucket{model="model-b",le="2"} 2
-vr01_inference_seconds_bucket{model="model-b",le="5"} 2
-vr01_inference_seconds_bucket{model="model-b",le="10"} 2
-vr01_inference_seconds_bucket{model="model-b",le="30"} 2
-vr01_inference_seconds_bucket{model="model-b",le="+Inf"} 2
-vr01_inference_seconds_sum{model="model-b"} 0.003894
-vr01_inference_seconds_count{model="model-b"} 2
+vr01_inference_seconds_bucket{model="model-a",le="0.005"} 1
+vr01_inference_seconds_bucket{model="model-a",le="0.01"} 1
+vr01_inference_seconds_bucket{model="model-a",le="0.025"} 2
+vr01_inference_seconds_bucket{model="model-a",le="0.05"} 2
+vr01_inference_seconds_bucket{model="model-a",le="0.1"} 2
+vr01_inference_seconds_bucket{model="model-a",le="0.25"} 2
+vr01_inference_seconds_bucket{model="model-a",le="0.5"} 2
+vr01_inference_seconds_bucket{model="model-a",le="1"} 2
+vr01_inference_seconds_bucket{model="model-a",le="2"} 2
+vr01_inference_seconds_bucket{model="model-a",le="5"} 2
+vr01_inference_seconds_bucket{model="model-a",le="10"} 2
+vr01_inference_seconds_bucket{model="model-a",le="30"} 2
+vr01_inference_seconds_bucket{model="model-a",le="+Inf"} 2
+vr01_inference_seconds_sum{model="model-a"} 0.02383
+vr01_inference_seconds_count{model="model-a"} 2
+vr01_inference_seconds_bucket{model="model-b",le="0.005"} 1
+vr01_inference_seconds_bucket{model="model-b",le="0.01"} 1
+vr01_inference_seconds_bucket{model="model-b",le="0.025"} 1
+vr01_inference_seconds_bucket{model="model-b",le="0.05"} 1
+vr01_inference_seconds_bucket{model="model-b",le="0.1"} 1
+vr01_inference_seconds_bucket{model="model-b",le="0.25"} 1
+vr01_inference_seconds_bucket{model="model-b",le="0.5"} 1
+vr01_inference_seconds_bucket{model="model-b",le="1"} 1
+vr01_inference_seconds_bucket{model="model-b",le="2"} 1
+vr01_inference_seconds_bucket{model="model-b",le="5"} 1
+vr01_inference_seconds_bucket{model="model-b",le="10"} 1
+vr01_inference_seconds_bucket{model="model-b",le="30"} 1
+vr01_inference_seconds_bucket{model="model-b",le="+Inf"} 1
+vr01_inference_seconds_sum{model="model-b"} 0.001658
+vr01_inference_seconds_count{model="model-b"} 1
 vr01_inference_seconds_bucket{model="model-heavy",le="0.005"} 0
 vr01_inference_seconds_bucket{model="model-heavy",le="0.01"} 0
 vr01_inference_seconds_bucket{model="model-heavy",le="0.025"} 0
 vr01_inference_seconds_bucket{model="model-heavy",le="0.05"} 0
-vr01_inference_seconds_bucket{model="model-heavy",le="0.1"} 6
-vr01_inference_seconds_bucket{model="model-heavy",le="0.25"} 6
-vr01_inference_seconds_bucket{model="model-heavy",le="0.5"} 6
-vr01_inference_seconds_bucket{model="model-heavy",le="1"} 6
-vr01_inference_seconds_bucket{model="model-heavy",le="2"} 6
-vr01_inference_seconds_bucket{model="model-heavy",le="5"} 6
-vr01_inference_seconds_bucket{model="model-heavy",le="10"} 6
-vr01_inference_seconds_bucket{model="model-heavy",le="30"} 6
-vr01_inference_seconds_bucket{model="model-heavy",le="+Inf"} 6
-vr01_inference_seconds_sum{model="model-heavy"} 0.533156
-vr01_inference_seconds_count{model="model-heavy"} 6
+vr01_inference_seconds_bucket{model="model-heavy",le="0.1"} 0
+vr01_inference_seconds_bucket{model="model-heavy",le="0.25"} 0
+vr01_inference_seconds_bucket{model="model-heavy",le="0.5"} 0
+vr01_inference_seconds_bucket{model="model-heavy",le="1"} 137
+vr01_inference_seconds_bucket{model="model-heavy",le="2"} 141
+vr01_inference_seconds_bucket{model="model-heavy",le="5"} 141
+vr01_inference_seconds_bucket{model="model-heavy",le="10"} 141
+vr01_inference_seconds_bucket{model="model-heavy",le="30"} 141
+vr01_inference_seconds_bucket{model="model-heavy",le="+Inf"} 141
+vr01_inference_seconds_sum{model="model-heavy"} 86.251217
+vr01_inference_seconds_count{model="model-heavy"} 141
+vr01_inference_seconds_bucket{model="model-heavy-b",le="0.005"} 0
+vr01_inference_seconds_bucket{model="model-heavy-b",le="0.01"} 0
+vr01_inference_seconds_bucket{model="model-heavy-b",le="0.025"} 0
+vr01_inference_seconds_bucket{model="model-heavy-b",le="0.05"} 0
+vr01_inference_seconds_bucket{model="model-heavy-b",le="0.1"} 0
+vr01_inference_seconds_bucket{model="model-heavy-b",le="0.25"} 0
+vr01_inference_seconds_bucket{model="model-heavy-b",le="0.5"} 0
+vr01_inference_seconds_bucket{model="model-heavy-b",le="1"} 124
+vr01_inference_seconds_bucket{model="model-heavy-b",le="2"} 124
+vr01_inference_seconds_bucket{model="model-heavy-b",le="5"} 124
+vr01_inference_seconds_bucket{model="model-heavy-b",le="10"} 124
+vr01_inference_seconds_bucket{model="model-heavy-b",le="30"} 124
+vr01_inference_seconds_bucket{model="model-heavy-b",le="+Inf"} 124
+vr01_inference_seconds_sum{model="model-heavy-b"} 74.663831
+vr01_inference_seconds_count{model="model-heavy-b"} 124
 # HELP vr01_queue_wait_seconds Thoi gian cho trong hang doi truoc khi suy luan.
 # TYPE vr01_queue_wait_seconds histogram
-vr01_queue_wait_seconds_bucket{le="0.005"} 11
-vr01_queue_wait_seconds_bucket{le="0.01"} 12
-vr01_queue_wait_seconds_bucket{le="0.025"} 12
-vr01_queue_wait_seconds_bucket{le="0.05"} 12
-vr01_queue_wait_seconds_bucket{le="0.1"} 12
-vr01_queue_wait_seconds_bucket{le="0.25"} 12
-vr01_queue_wait_seconds_bucket{le="0.5"} 12
-vr01_queue_wait_seconds_bucket{le="1"} 12
-vr01_queue_wait_seconds_bucket{le="2"} 12
-vr01_queue_wait_seconds_bucket{le="5"} 12
-vr01_queue_wait_seconds_bucket{le="10"} 12
-vr01_queue_wait_seconds_bucket{le="30"} 12
-vr01_queue_wait_seconds_bucket{le="+Inf"} 12
-vr01_queue_wait_seconds_sum 0.029256
-vr01_queue_wait_seconds_count 12
+vr01_queue_wait_seconds_bucket{le="0.005"} 3
+vr01_queue_wait_seconds_bucket{le="0.01"} 3
+vr01_queue_wait_seconds_bucket{le="0.025"} 266
+vr01_queue_wait_seconds_bucket{le="0.05"} 267
+vr01_queue_wait_seconds_bucket{le="0.1"} 267
+vr01_queue_wait_seconds_bucket{le="0.25"} 268
+vr01_queue_wait_seconds_bucket{le="0.5"} 268
+vr01_queue_wait_seconds_bucket{le="1"} 268
+vr01_queue_wait_seconds_bucket{le="2"} 268
+vr01_queue_wait_seconds_bucket{le="5"} 268
+vr01_queue_wait_seconds_bucket{le="10"} 268
+vr01_queue_wait_seconds_bucket{le="30"} 268
+vr01_queue_wait_seconds_bucket{le="+Inf"} 268
+vr01_queue_wait_seconds_sum 3.844221
+vr01_queue_wait_seconds_count 268
 # HELP vr01_inspection_total_seconds Thoi gian tu luc nhan toi luc ket thuc (COMPLETED).
 # TYPE vr01_inspection_total_seconds histogram
 vr01_inspection_total_seconds_bucket{le="0.005"} 1
-vr01_inspection_total_seconds_bucket{le="0.01"} 5
-vr01_inspection_total_seconds_bucket{le="0.025"} 6
-vr01_inspection_total_seconds_bucket{le="0.05"} 6
-vr01_inspection_total_seconds_bucket{le="0.1"} 12
-vr01_inspection_total_seconds_bucket{le="0.25"} 12
-vr01_inspection_total_seconds_bucket{le="0.5"} 12
-vr01_inspection_total_seconds_bucket{le="1"} 12
-vr01_inspection_total_seconds_bucket{le="2"} 12
-vr01_inspection_total_seconds_bucket{le="5"} 12
-vr01_inspection_total_seconds_bucket{le="10"} 12
-vr01_inspection_total_seconds_bucket{le="30"} 12
-vr01_inspection_total_seconds_bucket{le="+Inf"} 12
-vr01_inspection_total_seconds_sum 0.62712
-vr01_inspection_total_seconds_count 12
+vr01_inspection_total_seconds_bucket{le="0.01"} 2
+vr01_inspection_total_seconds_bucket{le="0.025"} 3
+vr01_inspection_total_seconds_bucket{le="0.05"} 3
+vr01_inspection_total_seconds_bucket{le="0.1"} 3
+vr01_inspection_total_seconds_bucket{le="0.25"} 3
+vr01_inspection_total_seconds_bucket{le="0.5"} 3
+vr01_inspection_total_seconds_bucket{le="1"} 264
+vr01_inspection_total_seconds_bucket{le="2"} 268
+vr01_inspection_total_seconds_bucket{le="5"} 268
+vr01_inspection_total_seconds_bucket{le="10"} 268
+vr01_inspection_total_seconds_bucket{le="30"} 268
+vr01_inspection_total_seconds_bucket{le="+Inf"} 268
+vr01_inspection_total_seconds_sum 165.260503
+vr01_inspection_total_seconds_count 268
 # HELP vr01_model_load_total So lan nap model, theo ket qua.
 # TYPE vr01_model_load_total counter
-vr01_model_load_total{model="model-a",result="ok"} 2
-vr01_model_load_total{model="model-b",result="failed"} 5
-vr01_model_load_total{model="model-b",result="ok"} 3
-vr01_model_load_total{model="model-heavy",result="ok"} 1
+vr01_model_load_total{model="model-a",result="ok"} 4
+vr01_model_load_total{model="model-b",result="failed"} 6
+vr01_model_load_total{model="model-b",result="ok"} 2
+vr01_model_load_total{model="model-heavy",result="ok"} 8
+vr01_model_load_total{model="model-heavy-b",result="ok"} 7
 # HELP vr01_model_unload_total So lan go model.
 # TYPE vr01_model_unload_total counter
-vr01_model_unload_total{model="model-a"} 2
-vr01_model_unload_total{model="model-b"} 1
-vr01_model_unload_total{model="model-heavy"} 1
+vr01_model_unload_total{model="model-a"} 4
+vr01_model_unload_total{model="model-heavy"} 8
+vr01_model_unload_total{model="model-heavy-b"} 7
 # HELP vr01_model_restored_total So lan tu nap lai model active (inference server mat model).
 # TYPE vr01_model_restored_total counter
 vr01_model_restored_total{model="model-b"} 1
 # HELP vr01_activations_total So lan chuyen recipe/rollback theo hanh dong va ket qua.
 # TYPE vr01_activations_total counter
+vr01_activations_total{action="activate",outcome="ACTIVATION_GOLDEN_FAILED"} 2
 vr01_activations_total{action="activate",outcome="NO_CHANGE"} 3
-vr01_activations_total{action="activate",outcome="OK"} 4
-vr01_activations_total{action="activate",outcome="PACKAGE_REJECTED"} 5
-vr01_activations_total{action="bootstrap_activation",outcome="OK"} 1
+vr01_activations_total{action="activate",outcome="OK"} 17
+vr01_activations_total{action="restore_active_recipe",outcome="OK"} 1
 # HELP vr01_auto_rollback_total So lan tu rollback sau cutover, theo ket qua.
 # TYPE vr01_auto_rollback_total counter
 # HELP vr01_auth_denied_total So request bi tu choi xac thuc/phan quyen.
 # TYPE vr01_auth_denied_total counter
-vr01_auth_denied_total{outcome="FORBIDDEN"} 3
-vr01_auth_denied_total{outcome="UNAUTHENTICATED"} 1
 # HELP vr01_storage_errors_total So lan ghi ledger that bai.
 # TYPE vr01_storage_errors_total counter
 # HELP vr01_stale_writes_ignored_total So lan ghi de trang thai ket thuc bi chan (compare-and-set).

@@ -1,1 +1,1 @@
-{"started_at": 1791710278, "duration_s": 28800, "rate_per_s": 0.267, "heavy_ms": 1500, "cutover_every_s": 300}
+{"started_at": 1791712088, "duration_s": 28800, "rate_per_s": 0.678, "heavy_ms": 589.56, "cutover_every_s": 300, "fixtures": {"slow": true, "heavy": "gpu-xl"}}

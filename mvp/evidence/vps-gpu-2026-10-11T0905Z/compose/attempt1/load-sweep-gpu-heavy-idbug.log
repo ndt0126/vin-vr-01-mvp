@@ -1,0 +1,5 @@
+rate    0.5/s  sent    20  completed    20  achieved    0.52/s  p95 611.615 ms  rejected {}  
+rate    1.0/s  sent    40  completed    40  achieved    1.01/s  p95 611.008 ms  rejected {}  
+rate    1.5/s  sent    60  completed    20  achieved    0.50/s  p95 621.015 ms  rejected {'409 IDEMPOTENCY_CONFLICT': 40}  SATURATED
+rate    2.0/s  sent    80  completed    74  achieved    1.67/s  p95 4731.707 ms  rejected {'429 QUEUE_FULL': 6}  SATURATED
+SWEEP done: max unsaturated 1.01 req/s, first saturated target 1.5  -> run/load-sweep-gpu-heavy-report.json

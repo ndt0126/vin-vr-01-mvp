@@ -19,62 +19,60 @@ HOST_UID=$(id -u) HOST_GID=$(id -g) INIT_EXTRA="--with-slow-fixture " docker com
 #5 DONE 0.0s
 
 #6 [internal] load build context
-#6 transferring context: 6.11kB 0.0s done
+#6 transferring context: 14.48kB done
 #6 DONE 0.0s
 
-#7 [ 2/14] RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+#7 [ 7/14] COPY packages packages
 #7 CACHED
 
-#8 [12/14] COPY deploy/k8s deploy/k8s
+#8 [ 3/14] WORKDIR /app
 #8 CACHED
 
-#9 [ 4/14] COPY backend/requirements.txt backend/requirements.txt
+#9 [ 6/14] COPY backend backend
 #9 CACHED
 
-#10 [ 8/14] COPY tools tools
+#10 [ 5/14] RUN pip install --no-cache-dir -r backend/requirements.txt
 #10 CACHED
 
-#11 [11/14] COPY deploy/observability deploy/observability
+#11 [ 4/14] COPY backend/requirements.txt backend/requirements.txt
 #11 CACHED
 
-#12 [ 9/14] COPY tests tests
+#12 [ 2/14] RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
 #12 CACHED
 
-#13 [ 6/14] COPY backend backend
+#13 [ 8/14] COPY tools tools
 #13 CACHED
 
-#14 [ 7/14] COPY packages packages
-#14 CACHED
+#14 [ 9/14] COPY tests tests
+#14 DONE 0.0s
 
-#15 [13/14] COPY deploy/.env.sample deploy/.env.sample
-#15 CACHED
+#15 [10/14] COPY docs docs
+#15 DONE 0.0s
 
-#16 [ 5/14] RUN pip install --no-cache-dir -r backend/requirements.txt
-#16 CACHED
+#16 [11/14] COPY deploy/observability deploy/observability
+#16 DONE 0.0s
 
-#17 [10/14] COPY docs docs
-#17 CACHED
+#17 [12/14] COPY deploy/k8s deploy/k8s
+#17 DONE 0.0s
 
-#18 [ 3/14] WORKDIR /app
-#18 CACHED
+#18 [13/14] COPY deploy/.env.sample deploy/.env.sample
+#18 DONE 0.0s
 
 #19 [14/14] RUN useradd --uid 10001 --create-home vr01 && mkdir -p /run-data && chown vr01 /run-data
-#19 CACHED
+#19 DONE 0.3s
 
 #20 exporting to image
-#20 exporting layers done
-#20 writing image sha256:c55e80ec35e5d306b7998f60c69b50d628c3b5aadeff20ec225373455d75d9e6 done
+#20 exporting layers 0.1s done
+#20 writing image sha256:498e426b9c6f7d55e14305782a50dab6ee872a5ae9397effd25348b1b0231307 done
 #20 naming to docker.io/library/vr01-mvp-api:0.1.0 done
-#20 DONE 0.0s
+#20 DONE 0.1s
 
 #21 resolving provenance for metadata file
 #21 DONE 0.0s
  Image vr01-mvp-api:0.1.0 Built 
 HOST_UID=$(id -u) HOST_GID=$(id -g) INIT_EXTRA="--with-slow-fixture " docker compose --env-file deploy/.env -f deploy/docker-compose.yml -f deploy/docker-compose.gpu.yml run --rm init
- Network vr01-mvp_default Creating 
- Network vr01-mvp_default Created 
- Container vr01-mvp-init-run-f308cd04fbc8 Creating 
- Container vr01-mvp-init-run-f308cd04fbc8 Created 
+ Container vr01-mvp-init-run-04c848206aa4 Creating 
+ Container vr01-mvp-init-run-04c848206aa4 Created 
 auth: kept existing lab principals
 tls: kept existing lab certificate
 examples: added TEST FIXTURES model-slow / recipe-slow, model-bad / recipe-bad
@@ -86,12 +84,9 @@ model: model-heavy@0.1.0 KIND_GPU digest a38da7342fd7
 model: model-heavy-b@0.1.0 KIND_GPU digest 20c43097224b
 model: model-slow@0.1.0 KIND_GPU digest 26384c166524
 HOST_UID=$(id -u) HOST_GID=$(id -g) INIT_EXTRA="--with-slow-fixture " docker compose --env-file deploy/.env -f deploy/docker-compose.yml -f deploy/docker-compose.gpu.yml up -d --wait triton api
- Container vr01-mvp-triton-1 Creating 
- Container vr01-mvp-triton-1 Created 
- Container vr01-mvp-api-1 Creating 
- Container vr01-mvp-api-1 Created 
- Container vr01-mvp-triton-1 Starting 
- Container vr01-mvp-triton-1 Started 
+ Container vr01-mvp-triton-1 Running 
+ Container vr01-mvp-api-1 Recreate 
+ Container vr01-mvp-api-1 Recreated 
  Container vr01-mvp-triton-1 Waiting 
  Container vr01-mvp-triton-1 Healthy 
  Container vr01-mvp-api-1 Starting 

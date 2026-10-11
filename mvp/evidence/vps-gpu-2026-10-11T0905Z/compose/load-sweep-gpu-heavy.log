@@ -1,1 +1,8 @@
-cannot activate recipe-heavy: 422 {'type': 'urn:vr01:problem:PACKAGE_REJECTED', 'title': 'Unprocessable content', 'status': 422, 'code': 'PACKAGE_REJECTED', 'detail': 'E_LIMIT: input larger than max_decoded_pixels', 'trace_id': '0a1a237186ee40d19fa3e61c579db80e', 'request_id': None, 'retryable': False, 'details': {'validator_code': 'E_LIMIT'}}
+rate    0.5/s  sent    20  completed    20  achieved    0.52/s  p95 604.91 ms  rejected {}  
+rate    1.0/s  sent    40  completed    40  achieved    1.01/s  p95 609.006 ms  rejected {}  
+rate    1.2/s  sent    50  completed    50  achieved    1.26/s  p95 612.751 ms  rejected {}  
+rate    1.5/s  sent    60  completed    60  achieved    1.50/s  p95 616.122 ms  rejected {}  
+rate    1.8/s  sent    70  completed    70  achieved    1.66/s  p95 2616.627 ms  rejected {}  
+rate    2.0/s  sent    80  completed    73  achieved    1.66/s  p95 4758.995 ms  rejected {'429 QUEUE_FULL': 7}  SATURATED
+rate    4.0/s  sent   160  completed    73  achieved    1.65/s  p95 4821.792 ms  rejected {'429 QUEUE_FULL': 87}  SATURATED
+SWEEP done: max unsaturated 1.66 req/s, first saturated target 2.0  -> run/load-sweep-gpu-heavy-report.json

@@ -1,1 +1,5 @@
 {"inference_port": 8443, "management_port": 9443, "metrics_port": 9090, "tls": true, "backend": "kserve-v2"}
+{"inference_port": 8443, "management_port": 9443, "metrics_port": 9090, "tls": true, "backend": "kserve-v2"}
+{"inference_port": 8443, "management_port": 9443, "metrics_port": 9090, "tls": true, "backend": "kserve-v2"}
+{"inference_port": 8443, "management_port": 9443, "metrics_port": 9090, "tls": true, "backend": "kserve-v2"}
+{"inference_port": 8443, "management_port": 9443, "metrics_port": 9090, "tls": true, "backend": "kserve-v2"}

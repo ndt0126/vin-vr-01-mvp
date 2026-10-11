@@ -1,0 +1,166 @@
+{
+  "run_id": "20261011T094229",
+  "recipe": "recipe-heavy@0.1.0",
+  "config": {
+    "rates": "0.5,1,1.25,1.5,1.75,2,4",
+    "step_seconds": 40.0,
+    "concurrency": 16,
+    "mode": "open loop, no retry on 429"
+  },
+  "max_unsaturated_rps": 1.66,
+  "first_saturated_target_rps": 2.0,
+  "steps": [
+    {
+      "target_rps": 0.5,
+      "sent": 20,
+      "accepted": 20,
+      "completed": 20,
+      "achieved_completed_rps": 0.52,
+      "rejected_or_failed": {},
+      "terminal_states": {
+        "COMPLETED": 20
+      },
+      "latency_total_ms": {
+        "p50": 603.477,
+        "p95": 604.91,
+        "p99": 629.809,
+        "max": 629.809
+      },
+      "inference_ms_p50": 588.53,
+      "queue_ms_p95": 13.713,
+      "client_send_lag_s_p95": 0.0,
+      "saturated": false
+    },
+    {
+      "target_rps": 1.0,
+      "sent": 40,
+      "accepted": 40,
+      "completed": 40,
+      "achieved_completed_rps": 1.01,
+      "rejected_or_failed": {},
+      "terminal_states": {
+        "COMPLETED": 40
+      },
+      "latency_total_ms": {
+        "p50": 605.462,
+        "p95": 609.006,
+        "p99": 613.198,
+        "max": 613.198
+      },
+      "inference_ms_p50": 591.015,
+      "queue_ms_p95": 14.155,
+      "client_send_lag_s_p95": 0.0,
+      "saturated": false
+    },
+    {
+      "target_rps": 1.25,
+      "sent": 50,
+      "accepted": 50,
+      "completed": 50,
+      "achieved_completed_rps": 1.26,
+      "rejected_or_failed": {},
+      "terminal_states": {
+        "COMPLETED": 50
+      },
+      "latency_total_ms": {
+        "p50": 608.541,
+        "p95": 612.751,
+        "p99": 616.178,
+        "max": 616.178
+      },
+      "inference_ms_p50": 593.717,
+      "queue_ms_p95": 18.015,
+      "client_send_lag_s_p95": 0.0,
+      "saturated": false
+    },
+    {
+      "target_rps": 1.5,
+      "sent": 60,
+      "accepted": 60,
+      "completed": 60,
+      "achieved_completed_rps": 1.5,
+      "rejected_or_failed": {},
+      "terminal_states": {
+        "COMPLETED": 60
+      },
+      "latency_total_ms": {
+        "p50": 612.365,
+        "p95": 616.122,
+        "p99": 616.234,
+        "max": 616.966
+      },
+      "inference_ms_p50": 596.515,
+      "queue_ms_p95": 18.737,
+      "client_send_lag_s_p95": 0.0,
+      "saturated": false
+    },
+    {
+      "target_rps": 1.75,
+      "sent": 70,
+      "accepted": 70,
+      "completed": 70,
+      "achieved_completed_rps": 1.66,
+      "rejected_or_failed": {},
+      "terminal_states": {
+        "COMPLETED": 70
+      },
+      "latency_total_ms": {
+        "p50": 1634.777,
+        "p95": 2616.627,
+        "p99": 2679.713,
+        "max": 2710.42
+      },
+      "inference_ms_p50": 599.122,
+      "queue_ms_p95": 2015.097,
+      "client_send_lag_s_p95": 0.0,
+      "saturated": false
+    },
+    {
+      "target_rps": 2.0,
+      "sent": 80,
+      "accepted": 73,
+      "completed": 73,
+      "achieved_completed_rps": 1.66,
+      "rejected_or_failed": {
+        "429 QUEUE_FULL": 7
+      },
+      "terminal_states": {
+        "COMPLETED": 73
+      },
+      "latency_total_ms": {
+        "p50": 4308.543,
+        "p95": 4758.995,
+        "p99": 4814.115,
+        "max": 4826.432
+      },
+      "inference_ms_p50": 600.736,
+      "queue_ms_p95": 4155.287,
+      "client_send_lag_s_p95": 0.0,
+      "saturated": true
+    },
+    {
+      "target_rps": 4.0,
+      "sent": 160,
+      "accepted": 73,
+      "completed": 73,
+      "achieved_completed_rps": 1.65,
+      "rejected_or_failed": {
+        "429 QUEUE_FULL": 87
+      },
+      "terminal_states": {
+        "COMPLETED": 73
+      },
+      "latency_total_ms": {
+        "p50": 4690.029,
+        "p95": 4821.792,
+        "p99": 4830.843,
+        "max": 4836.269
+      },
+      "inference_ms_p50": 602.013,
+      "queue_ms_p95": 4219.725,
+      "client_send_lag_s_p95": 0.0,
+      "saturated": true
+    }
+  ],
+  "caveat": "So do cua may va model dang chay. Voi model mau chay vai mili giay tren CPU, day KHONG phai nang luc cua may dich."
+}

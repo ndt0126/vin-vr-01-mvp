@@ -1,0 +1,11 @@
+PASS  K1 deploy from a clean namespace, rollout complete  8s
+PASS  K2 both containers Ready (api readiness = active recipe verified + model loaded)  ready=[true true]
+PASS  K3 vr01ctl status through NodePort  SAN SANG recipe active : recipe-a@0.1.0  (sha256 de9871c469e0) 
+PASS  K4 smoke flow through NodePort  SMOKE PASS  18/18  -> /root/k8s-evidence
+PASS  K5 from another pod: Triton 8000 closed, API 8443 open, metrics 9090 closed by NetworkPolicy  triton8000=closed api8443=open metrics9090=closed
+PASS  K6 pod deleted -> recreated, same active recipe  6s; recipe active : recipe-b@0.1.0  (sha256 6ee3711f1bf3)
+PASS  K7 update to a new release revision  rev 1 -> 2, 11s
+PASS  K8 rollback to the previous release (rollout undo)  release=0.1.0, 11s
+PASS  K9 model switch and model rollback  DA CHUYEN: recipe-b@0.1.0 -> recipe-a@0.1.0
+PASS  K10 smoke flow after update/rollback  SMOKE PASS  18/18  -> /root/k8s-evidence
+K8S CHECK PASS  10/10

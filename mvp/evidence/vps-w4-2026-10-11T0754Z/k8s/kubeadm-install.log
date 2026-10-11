@@ -1,0 +1,33 @@
+
+Running kernel seems to be up-to-date.
+
+No services need to be restarted.
+
+No containers need to be restarted.
+
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+
+Running kernel seems to be up-to-date.
+
+No services need to be restarted.
+
+No containers need to be restarted.
+
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+I1011 08:05:09.630166   51925 version.go:260] remote version is much newer: v1.37.1; falling back to: stable-1.34
+
+Then you can join any number of worker nodes by running the following on each as root:
+
+kubeadm join 46.225.33.250:6443 --token ul6xh4.syiy30a1k76k5sd2 \
+	--discovery-token-ca-cert-hash sha256:458d44fe21e376d3e3f065e6493fb0dc76170356c909b508a97461f740568eff 
+node/ubuntu-8gb-nbg1-1 untainted
+waiting for node Ready...
+node/ubuntu-8gb-nbg1-1 condition met
+NAME                STATUS   ROLES           AGE   VERSION    INTERNAL-IP     EXTERNAL-IP   OS-IMAGE           KERNEL-VERSION     CONTAINER-RUNTIME
+ubuntu-8gb-nbg1-1   Ready    control-plane   14s   v1.34.12   46.225.33.250   <none>        Ubuntu 26.04 LTS   7.0.0-29-generic   containerd://2.2.2
+v1.34.12
+containerd github.com/containerd/containerd/v2 2.2.2 

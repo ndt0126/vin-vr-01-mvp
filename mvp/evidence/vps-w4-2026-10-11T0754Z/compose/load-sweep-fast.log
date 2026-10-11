@@ -1,0 +1,6 @@
+rate   20.0/s  sent   300  completed   300  achieved   20.04/s  p95 5.61 ms  rejected {}  
+rate   50.0/s  sent   750  completed   750  achieved   50.02/s  p95 5.475 ms  rejected {}  
+rate  100.0/s  sent  1500  completed  1498  achieved   99.86/s  p95 10.642 ms  rejected {'429 QUEUE_FULL': 2}  
+rate  200.0/s  sent  3000  completed  1534  achieved   96.35/s  p95 129.49 ms  rejected {'429 QUEUE_FULL': 1466}  SATURATED
+rate  400.0/s  sent  6000  completed  2305  achieved   65.18/s  p95 127.026 ms  rejected {'429 QUEUE_FULL': 3682, '0 URLError': 13}  SATURATED
+SWEEP done: max unsaturated 99.86 req/s, first saturated target 200.0  -> run/load-sweep-fast-report.json

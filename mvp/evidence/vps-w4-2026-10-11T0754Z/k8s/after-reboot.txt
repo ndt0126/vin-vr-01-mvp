@@ -1,0 +1,8 @@
+uptime_s=65.83 waited_for_ready_s=45
+SAN SANG
+recipe active : recipe-b@0.1.0  (sha256 6ee3711f1bf3)
+model         : model-b@0.1.0  (sha256 dcf1542894dc)
+kich hoat luc : 2026-10-11T08:07:54.161Z
+SMOKE PASS  18/18  -> /root/k8s-evidence/smoke-after-reboot.json
+NAME                               READY   STATUS    RESTARTS      AGE   IP              NODE                NOMINATED NODE   READINESS GATES
+vr01-inspection-58bbbbc94b-d25fr   2/2     Running   2 (55s ago)   94s   10.244.204.12   ubuntu-8gb-nbg1-1   <none>           <none>

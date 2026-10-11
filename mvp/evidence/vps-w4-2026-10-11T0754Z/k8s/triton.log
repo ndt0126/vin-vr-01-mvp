@@ -1,0 +1,85 @@
+W1011 08:07:48.278134 1 pinned_memory_manager.cc:273] "Unable to allocate pinned system memory, pinned memory pool will not be available: CUDA driver version is insufficient for CUDA runtime version"
+E1011 08:07:48.278312 1 server.cc:248] "CudaDriverHelper has not been initialized."
+I1011 08:07:48.278230 1 cuda_memory_manager.cc:117] "CUDA memory pool disabled"
+I1011 08:07:48.278542 1 server.cc:611] 
++------------------+------+
+| Repository Agent | Path |
++------------------+------+
++------------------+------+
+
+I1011 08:07:48.278563 1 server.cc:638] 
++---------+------+--------+
+| Backend | Path | Config |
++---------+------+--------+
++---------+------+--------+
+
+I1011 08:07:48.278574 1 server.cc:681] 
++-------+---------+--------+
+| Model | Version | Status |
++-------+---------+--------+
++-------+---------+--------+
+
+W1011 08:07:48.281276 1 metrics.cc:832] "DCGM unable to get device info and count, GPU metrics will not be available: Cannot perform the requested operation because NVML doesn't exist on this system."
+I1011 08:07:48.281566 1 metrics.cc:782] "Collecting CPU metrics"
+I1011 08:07:48.281729 1 tritonserver.cc:2598] 
++----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Option                           | Value                                                                                                                                                                                                           |
++----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| server_id                        | triton                                                                                                                                                                                                          |
+| server_version                   | 2.60.0                                                                                                                                                                                                          |
+| server_extensions                | classification sequence model_repository model_repository(unload_dependents) schedule_policy model_configuration system_shared_memory cuda_shared_memory binary_tensor_data parameters statistics trace logging |
+| model_repository_path[0]         | /models                                                                                                                                                                                                         |
+| model_control_mode               | MODE_EXPLICIT                                                                                                                                                                                                   |
+| strict_model_config              | 0                                                                                                                                                                                                               |
+| model_config_name                |                                                                                                                                                                                                                 |
+| rate_limit                       | OFF                                                                                                                                                                                                             |
+| pinned_memory_pool_byte_size     | 268435456                                                                                                                                                                                                       |
+| min_supported_compute_capability | 6.0                                                                                                                                                                                                             |
+| strict_readiness                 | 1                                                                                                                                                                                                               |
+| exit_timeout                     | 30                                                                                                                                                                                                              |
+| cache_enabled                    | 0                                                                                                                                                                                                               |
++----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+I1011 08:07:48.282290 1 http_server.cc:4789] "Started HTTPService at 127.0.0.1:8000"
+I1011 08:07:48.324415 1 http_server.cc:358] "Started Metrics Service at 127.0.0.1:8002"
+I1011 08:07:48.729329 1 model_lifecycle.cc:473] "loading: model-b:1"
+I1011 08:07:48.731157 1 onnxruntime.cc:2914] "TRITONBACKEND_Initialize: onnxruntime"
+I1011 08:07:48.731208 1 onnxruntime.cc:2924] "Triton TRITONBACKEND API version: 1.19"
+I1011 08:07:48.731217 1 onnxruntime.cc:2930] "'onnxruntime' TRITONBACKEND API version: 1.19"
+I1011 08:07:48.731220 1 onnxruntime.cc:2960] "backend configuration:\n{\"cmdline\":{\"auto-complete-config\":\"true\",\"backend-directory\":\"/opt/tritonserver/backends\",\"min-compute-capability\":\"6.000000\",\"default-max-batch-size\":\"4\"}}"
+I1011 08:07:48.747775 1 onnxruntime.cc:3025] "TRITONBACKEND_ModelInitialize: model-b (version 1)"
+I1011 08:07:48.748374 1 onnxruntime.cc:1014] "skipping model configuration auto-complete for 'model-b': inputs and outputs already specified"
+I1011 08:07:48.749108 1 onnxruntime.cc:3090] "TRITONBACKEND_ModelInstanceInitialize: model-b_0_0 (CPU device 0)"
+I1011 08:07:48.760349 1 model_lifecycle.cc:849] "successfully loaded 'model-b'"
+I1011 08:07:53.647937 1 model_lifecycle.cc:473] "loading: model-a:1"
+I1011 08:07:53.648252 1 onnxruntime.cc:3025] "TRITONBACKEND_ModelInitialize: model-a (version 1)"
+I1011 08:07:53.648979 1 onnxruntime.cc:1014] "skipping model configuration auto-complete for 'model-a': inputs and outputs already specified"
+I1011 08:07:53.650585 1 onnxruntime.cc:3090] "TRITONBACKEND_ModelInstanceInitialize: model-a_0_0 (CPU device 0)"
+I1011 08:07:53.657618 1 model_lifecycle.cc:849] "successfully loaded 'model-a'"
+I1011 08:07:53.674209 1 onnxruntime.cc:3142] "TRITONBACKEND_ModelInstanceFinalize: delete instance state"
+I1011 08:07:53.676383 1 onnxruntime.cc:3066] "TRITONBACKEND_ModelFinalize: delete model state"
+I1011 08:07:53.676448 1 model_lifecycle.cc:636] "successfully unloaded 'model-b' version 1"
+I1011 08:07:53.767316 1 model_lifecycle.cc:473] "loading: model-b:1"
+I1011 08:07:53.767428 1 onnxruntime.cc:3025] "TRITONBACKEND_ModelInitialize: model-b (version 1)"
+I1011 08:07:53.767923 1 onnxruntime.cc:1014] "skipping model configuration auto-complete for 'model-b': inputs and outputs already specified"
+I1011 08:07:53.768583 1 onnxruntime.cc:3090] "TRITONBACKEND_ModelInstanceInitialize: model-b_0_0 (CPU device 0)"
+I1011 08:07:53.770298 1 model_lifecycle.cc:849] "successfully loaded 'model-b'"
+I1011 08:07:53.780197 1 onnxruntime.cc:3142] "TRITONBACKEND_ModelInstanceFinalize: delete instance state"
+I1011 08:07:53.782346 1 onnxruntime.cc:3066] "TRITONBACKEND_ModelFinalize: delete model state"
+I1011 08:07:53.782457 1 model_lifecycle.cc:636] "successfully unloaded 'model-a' version 1"
+I1011 08:07:53.869917 1 model_lifecycle.cc:473] "loading: model-a:1"
+I1011 08:07:53.870044 1 onnxruntime.cc:3025] "TRITONBACKEND_ModelInitialize: model-a (version 1)"
+I1011 08:07:53.870542 1 onnxruntime.cc:1014] "skipping model configuration auto-complete for 'model-a': inputs and outputs already specified"
+I1011 08:07:53.871258 1 onnxruntime.cc:3090] "TRITONBACKEND_ModelInstanceInitialize: model-a_0_0 (CPU device 0)"
+I1011 08:07:53.876204 1 model_lifecycle.cc:849] "successfully loaded 'model-a'"
+I1011 08:07:53.883292 1 onnxruntime.cc:3142] "TRITONBACKEND_ModelInstanceFinalize: delete instance state"
+I1011 08:07:53.884292 1 onnxruntime.cc:3066] "TRITONBACKEND_ModelFinalize: delete model state"
+I1011 08:07:53.884393 1 model_lifecycle.cc:636] "successfully unloaded 'model-b' version 1"
+I1011 08:07:54.155143 1 model_lifecycle.cc:473] "loading: model-b:1"
+I1011 08:07:54.155286 1 onnxruntime.cc:3025] "TRITONBACKEND_ModelInitialize: model-b (version 1)"
+I1011 08:07:54.155847 1 onnxruntime.cc:1014] "skipping model configuration auto-complete for 'model-b': inputs and outputs already specified"
+I1011 08:07:54.156786 1 onnxruntime.cc:3090] "TRITONBACKEND_ModelInstanceInitialize: model-b_0_0 (CPU device 0)"
+I1011 08:07:54.159643 1 model_lifecycle.cc:849] "successfully loaded 'model-b'"
+I1011 08:07:54.167228 1 onnxruntime.cc:3142] "TRITONBACKEND_ModelInstanceFinalize: delete instance state"
+I1011 08:07:54.169457 1 onnxruntime.cc:3066] "TRITONBACKEND_ModelFinalize: delete model state"
+I1011 08:07:54.169577 1 model_lifecycle.cc:636] "successfully unloaded 'model-a' version 1"

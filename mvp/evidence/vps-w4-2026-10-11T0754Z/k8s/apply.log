@@ -1,0 +1,8 @@
+namespace/vr01 created
+service/vr01-inference created
+service/vr01-management created
+service/vr01-metrics created
+persistentvolume/vr01-run created
+persistentvolumeclaim/vr01-run created
+deployment.apps/vr01-inspection created
+networkpolicy.networking.k8s.io/vr01-inspection created

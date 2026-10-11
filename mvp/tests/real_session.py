@@ -411,6 +411,7 @@ class Session:
             f'{prom}/api/v1/targets', timeout=10))['data']['activeTargets']} == {'vr01-api': 'up', 'triton': 'up'}, 90)
         self.step('P13a Prometheus scrapes API and Triton', up is not None, both_targets_up_after_s=up)
         self.activate('recipe-a')
+        time.sleep(11)  # cho Prometheus scrape xong trang thai "truoc" (2 chu ky 5 s)
         before = {'terminal': val('sum(vr01_inspections_terminal_total)'), 'act': val('sum(vr01_activations_total{outcome="OK"})'),
                   'triton_b': val('sum(nv_inference_request_success{model="model-b"})')}
         rid = self.rid('obs')
@@ -420,12 +421,17 @@ class Session:
         rid_b = self.rid('obs')
         self.submit(rid_b, 'recipe-b@0.1.0')
         self.wait_state(rid_b, TERMINAL, 60)
-        seen = wait(lambda: val('sum(vr01_inspections_terminal_total)') >= before['terminal'] + 2
-                    and val('sum(vr01_activations_total{outcome="OK"})') >= before['act'] + 1
-                    and val('sum(nv_inference_request_success{model="model-b"})') > before['triton_b'], 60)
+
+        def now():
+            return {'terminal': val('sum(vr01_inspections_terminal_total)'), 'act': val('sum(vr01_activations_total{outcome="OK"})'),
+                    'triton_b': val('sum(nv_inference_request_success{model="model-b"})')}
+        seen = wait(lambda: now()['terminal'] >= before['terminal'] + 2 and now()['act'] >= before['act'] + 1
+                    and now()['triton_b'] >= before['triton_b'] + 1, 60)
+        after = now()
         active = q('vr01_active_recipe_info')
         self.step('P13b one request and one model switch are observable in Prometheus', seen is not None
                   and len(active) == 1 and active[0]['metric']['recipe'] == 'recipe-b', visible_after_s=seen,
+                  counters_before=before, counters_after=after,
                   active_recipe_series=[a['metric'] for a in active],
                   p95_total_s=val('histogram_quantile(0.95, sum by (le) (rate(vr01_inspection_total_seconds_bucket[5m])))'))
         tr = subprocess.run([sys.executable, '-B', 'tools/trace_request.py', '--run-dir', str(self.run), rid, '--json'],
@@ -640,7 +646,7 @@ class Session:
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--phase', choices=['main', 'post-reboot', 'extra', 'obs', 'w4'], required=True)
+    ap.add_argument('--phase', choices=['main', 'post-reboot', 'extra', 'obs', 'w4', 'rerun'], required=True)
     ap.add_argument('--run-dir', type=Path, default=ROOT / 'run')
     ap.add_argument('--host', default='127.0.0.1')
     ap.add_argument('--inference-port', type=int, default=8443)
@@ -657,6 +663,11 @@ def main():
         s.report_path = s.run / 'session-obs-report.json'
         s.steps = []
         s.guarded('p13_observability', s.p13_observability)
+    elif args.phase == 'rerun':
+        s.report_path = s.run / 'session-rerun-report.json'
+        s.steps = []
+        for fn in (s.p13_observability, s.p18_heavy_image_model):
+            s.guarded(fn.__name__, fn)
     elif args.phase == 'w4':
         s.report_path = s.run / 'session-w4-report.json'
         s.steps = []

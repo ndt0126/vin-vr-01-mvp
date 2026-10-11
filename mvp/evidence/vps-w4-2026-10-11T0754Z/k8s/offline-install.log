@@ -1,0 +1,21 @@
+[1/4] kiem toan ven goi
+CANH BAO: goi CHUA KY (khong co SHA256SUMS.asc) - chi dung cho lab
+[2/4] nap image vao containerd
+docker.io/library/vr01-mvp-api:0.1.0
+docker.io/vr01-local/tritonserver:2.60.0-25.08
+[3/4] trien khai
+namespace/vr01 created
+service/vr01-inference created
+service/vr01-management created
+service/vr01-metrics created
+persistentvolume/vr01-run created
+persistentvolumeclaim/vr01-run created
+deployment.apps/vr01-inspection created
+networkpolicy.networking.k8s.io/vr01-inspection created
+Waiting for deployment "vr01-inspection" rollout to finish: 0 of 1 updated replicas are available...
+deployment "vr01-inspection" successfully rolled out
+[4/4] kiem tra
+SAN SANG
+recipe active : recipe-b@0.1.0  (sha256 6ee3711f1bf3)
+model         : model-b@0.1.0  (sha256 dcf1542894dc)
+kich hoat luc : 2026-10-11T08:09:20.316Z

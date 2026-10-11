@@ -64,9 +64,12 @@ def main():
     run = args.run_dir
     # Lua chon fixture duoc NHO lai trong run/init-options.json: `make start` ve sau khong lam mat model dang dung.
     opt_file = run / 'init-options.json'
-    if not (args.with_slow_fixture or args.with_heavy_fixture or args.reset_fixtures) and opt_file.is_file():
+    if not args.reset_fixtures and opt_file.is_file():
+        # Gop tung lua chon: co chi dinh thi dung gia tri moi, khong chi dinh thi giu lua chon cu.
+        # (Ban dau chi giu khi KHONG co co nao -> `make start SLOW=1` lam mat model-heavy; lo ra o phien VPS 11/10.)
         saved = json.loads(opt_file.read_text())
-        args.with_slow_fixture, args.with_heavy_fixture = saved.get('slow', False), saved.get('heavy')
+        args.with_slow_fixture = args.with_slow_fixture or saved.get('slow', False)
+        args.with_heavy_fixture = args.with_heavy_fixture or saved.get('heavy')
     (run / 'data').mkdir(parents=True, exist_ok=True)
     if (run / 'auth' / 'principals.json').is_file():
         print('auth: kept existing lab principals')

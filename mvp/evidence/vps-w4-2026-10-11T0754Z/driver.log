@@ -1,0 +1,81 @@
+[07:54:30] host facts
+[07:54:34] packages + source
+[07:54:44] == PHAN 1: Compose ==
+start exit=0
+PASS  P1 smoke flow  {"last": "SMOKE PASS  18/18  -> /root/vin-vr-01-mvp/mvp/run/session-smoke.json"}
+PASS  P13a Prometheus scrapes API and Triton  {"both_targets_up_after_s": 10.0}
+FAIL  P13b one request and one model switch are observable in Prometheus  {"visible_after_s": null, "active_recipe_series": [{"__name__": "vr01_active_recipe_info", "instance": "api:9090", "job": "vr01-api", "model": "model-b", "model_sha256": "dcf1542894dc", "model_version": "0.1.0", "recipe": "rec
+PASS  P13c full execution path of one request from its request_id (ledger + log)  {"events": ["request.admitted", "http.access", "inference.started", "inference.finished", "request.terminal"], "pinned_model": {"name": "model-a", "version": "0.1.0", "manifest_sha256": "a700dc698dfef898dda6ba046196ef3
+PASS  P13d alert VR01ModelUnavailable fires when Triton is stopped and clears after it is back  {"fired_after_stop_s": 20.0, "cleared_after_start_s": 6.0}
+PASS  P13e Grafana serves the provisioned dashboard  {"title": "VR-01 MVP — tổng quan vận hành", "panels": 18}
+PASS  P13f /metrics is reachable inside the compose network but not published on the host  {"series_lines": 93, "host_port_9090_http": "000"}
+PASS  P14 automatic rollback after 3 consecutive inference errors right after cutover  {"failed_requests": ["FAILED/BACKEND_ERROR", "FAILED/BACKEND_ERROR", "FAILED/BACKEND_ERROR"], "active_after": "recipe-a@0.1.0", "auto_rollback_logged": true, "failed_request_keeps_lineage": "model-bad", "request_a
+FAIL  p18_heavy_image_model  {"error": "AssertionError: activate recipe-heavy: 422 {'type': 'urn:vr01:problem:RECIPE_NOT_FOUND', 'title': 'Unprocessable content', 'status': 422, 'code': 'RECIPE_NOT_FOUND', 'detail': 'recipe recipe-heavy@0.1.0 is not registered', 'trace_id': '4236316af097408fb9f5aa0a
+PASS  P16 app image upgrade and rollback under load (Compose): no wrong result, active recipe kept  {"upgrade_s": 8.7, "image_after_upgrade": "vr01-mvp-api:0.1.1-test", "active_after_upgrade": "recipe-a@0.1.0", "rollback_s": 8.6, "image_after_rollback": "vr01-mvp-api:0.1.0", "sent": 901, "completed"
+PASS  P17 network cut between client and API for 10 s under load: retries with same request_id, no loss/duplicate  {"iptables_chains": ["INPUT", "DOCKER-USER", "OUTPUT"], "sent": 401, "completed": 401, "not_accepted": 0, "client_send_errors": 5, "wrong": 0, "duplicates": 0}
+PASS  P15 image store really full (64 KiB tmpfs): clean 503, no record for refused, recovery after space is back  {"accepted_before_full": 16, "refused": 5, "first_refusal": [503, "STORAGE_UNAVAILABLE"], "readyz": [503, {"ready": false, "reasons": ["STORAGE_UNAVAILABLE"]}], "refused_have_no_record":
+SESSION w4: FAIL  10/12 -> /root/vin-vr-01-mvp/mvp/run/session-w4-report.json
+[07:59:43] load sweep (model-slow, chi de kiem cong cu va duong cong; KHONG phai so do hieu nang may dich)
+rate    0.5/s  sent    10  completed    10  achieved    0.54/s  p95 957.111 ms  rejected {}  
+rate    1.0/s  sent    20  completed    20  achieved    1.02/s  p95 695.79 ms  rejected {}  
+rate    2.0/s  sent    40  completed    40  achieved    1.83/s  p95 2239.419 ms  rejected {}  
+rate    4.0/s  sent    80  completed    43  achieved    1.80/s  p95 4534.701 ms  rejected {'429 QUEUE_FULL': 37}  SATURATED
+rate    8.0/s  sent   160  completed    47  achieved    1.93/s  p95 4505.035 ms  rejected {'429 QUEUE_FULL': 113}  SATURATED
+SWEEP done: max unsaturated 1.83 req/s, first saturated target 4.0  -> run/load-sweep-report.json
+rate   20.0/s  sent   300  completed   300  achieved   20.04/s  p95 5.61 ms  rejected {}  
+rate   50.0/s  sent   750  completed   750  achieved   50.02/s  p95 5.475 ms  rejected {}  
+rate  100.0/s  sent  1500  completed  1498  achieved   99.86/s  p95 10.642 ms  rejected {'429 QUEUE_FULL': 2}  
+rate  200.0/s  sent  3000  completed  1534  achieved   96.35/s  p95 129.49 ms  rejected {'429 QUEUE_FULL': 1466}  SATURATED
+rate  400.0/s  sent  6000  completed  2305  achieved   65.18/s  p95 127.026 ms  rejected {'429 QUEUE_FULL': 3682, '0 URLError': 13}  SATURATED
+SWEEP done: max unsaturated 99.86 req/s, first saturated target 200.0  -> run/load-sweep-fast-report.json
+cannot activate recipe-heavy: 422 {'type': 'urn:vr01:problem:RECIPE_NOT_FOUND', 'title': 'Unprocessable content', 'status': 422, 'code': 'RECIPE_NOT_FOUND', 'detail': 'recipe recipe-heavy@0.1.0 is not
+diagnostic bundle: run/diag/vr01-diag-20261011T080413Z.tar.gz  (70929 bytes)
+Goi nay khong chua token, private key hay anh. Kiem tra lai truoc khi gui ra ngoai nha may.
+MVP tests: PASS  92/96 passed, static 11/11  -> /run-data/test-report-container.json
+0
+[08:04:49] == PHAN 2: Kubernetes (kubeadm lab, co Internet) ==
+kubeadm exit=0
+NAME                STATUS   ROLES           AGE   VERSION    INTERNAL-IP     EXTERNAL-IP   OS-IMAGE           KERNEL-VERSION     CONTAINER-RUNTIME
+ubuntu-8gb-nbg1-1   Ready    control-plane   14s   v1.34.12   46.225.33.250   <none>        Ubuntu 26.04 LTS   7.0.0-29-generic   containerd://2.2.2
+v1.34.12
+containerd github.com/containerd/containerd/v2 2.2.2 
+
+docker.io/library/vr01-mvp-api:0.1.0
+nvcr.io/nvidia/tritonserver@sha256:f836551575df7c9fb71144073845c6b3911de57db91a8c95e0687a4d2ac9f7a5
+PASS  K1 deploy from a clean namespace, rollout complete  8s
+PASS  K2 both containers Ready (api readiness = active recipe verified + model loaded)  ready=[true true]
+PASS  K3 vr01ctl status through NodePort  SAN SANG recipe active : recipe-a@0.1.0  (sha256 de9871c469e0) 
+PASS  K4 smoke flow through NodePort  SMOKE PASS  18/18  -> /root/k8s-evidence
+PASS  K5 from another pod: Triton 8000 closed, API 8443 open, metrics 9090 closed by NetworkPolicy  triton8000=closed api8443=open metrics9090=closed
+PASS  K6 pod deleted -> recreated, same active recipe  6s; recipe active : recipe-b@0.1.0  (sha256 6ee3711f1bf3)
+PASS  K7 update to a new release revision  rev 1 -> 2, 11s
+PASS  K8 rollback to the previous release (rollout undo)  release=0.1.0, 11s
+PASS  K9 model switch and model rollback  DA CHUYEN: recipe-b@0.1.0 -> recipe-a@0.1.0
+PASS  K10 smoke flow after update/rollback  SMOKE PASS  18/18  -> /root/k8s-evidence
+K8S CHECK PASS  10/10
+[08:07:55] reboot node
+uptime_s=65.83 waited_for_ready_s=45
+SAN SANG
+recipe active : recipe-b@0.1.0  (sha256 6ee3711f1bf3)
+model         : model-b@0.1.0  (sha256 dcf1542894dc)
+kich hoat luc : 2026-10-11T08:07:54.161Z
+SMOKE PASS  18/18  -> /root/k8s-evidence/smoke-after-reboot.json
+NAME                               READY   STATUS    RESTARTS      AGE   IP              NODE                NOMINATED NODE   READINESS GATES
+vr01-inspection-58bbbbc94b-d25fr   2/2     Running   2 (55s ago)   94s   10.244.204.12   ubuntu-8gb-nbg1-1   <none>           <none>
+[08:09:20] offline bundle (Internet se bi CAT tren node tu day)
+PASS  O1 build offline app bundle  size 7.0G, files 79
+FAIL  O2 Internet egress cut on the node  probe=open
+PASS  O3 app images removed from the node before offline install  left=0
+PASS  O4 install from the bundle with egress cut  122s; kich hoat luc : 2026-10-11T08:09:20.316Z
+PASS  O5 smoke flow on the offline-installed stack (tools from the bundle)  SMOKE PASS  18/18  -> /root/k8s-evidence
+PASS  O6 no image pull was attempted  pull events=0
+FAIL  O7 egress still cut at the end  probe=open
+OFFLINE CHECK FAIL  5/7  (egress stays cut; reboot or flush iptables to restore)
+[08:13:09] collect + pull evidence (khong lay token, private key, anh, image tar)
+token leaks outside auth/: []
+85 MANIFEST.sha256
+manifest checked: 85 files
+COMPOSE SESSION FAIL 10/12 failed: ['P13b one request and one model switch are observable in Prometheus', 'p18_heavy_image_model']
+K8S CHECK PASS  10/10
+OFFLINE CHECK FAIL  5/7  (egress stays cut; reboot or flush iptables to restore)
+[08:13:18] done -> /Users/amc/src/VIN/VIN - VR - 01/mvp/evidence/vps-w4-2026-10-11T0754Z   (VPS van bat, Internet tren node dang bi cat: terminate khi da xem ket qua)

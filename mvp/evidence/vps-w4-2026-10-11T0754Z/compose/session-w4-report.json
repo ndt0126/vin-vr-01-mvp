@@ -1,0 +1,162 @@
+{
+  "verdict": "FAIL",
+  "failed": [
+    "P13b one request and one model switch are observable in Prometheus",
+    "p18_heavy_image_model"
+  ],
+  "steps": [
+    {
+      "step": "P1 smoke flow",
+      "result": "PASS",
+      "at": "07:54:59",
+      "last": "SMOKE PASS  18/18  -> /root/vin-vr-01-mvp/mvp/run/session-smoke.json"
+    },
+    {
+      "step": "P13a Prometheus scrapes API and Triton",
+      "result": "PASS",
+      "at": "07:55:25",
+      "both_targets_up_after_s": 10.0
+    },
+    {
+      "step": "P13b one request and one model switch are observable in Prometheus",
+      "result": "FAIL",
+      "at": "07:56:26",
+      "visible_after_s": null,
+      "active_recipe_series": [
+        {
+          "__name__": "vr01_active_recipe_info",
+          "instance": "api:9090",
+          "job": "vr01-api",
+          "model": "model-b",
+          "model_sha256": "dcf1542894dc",
+          "model_version": "0.1.0",
+          "recipe": "recipe-b",
+          "recipe_sha256": "6ee3711f1bf3",
+          "recipe_version": "0.1.0"
+        }
+      ],
+      "p95_total_s": NaN
+    },
+    {
+      "step": "P13c full execution path of one request from its request_id (ledger + log)",
+      "result": "PASS",
+      "at": "07:56:26",
+      "events": [
+        "request.admitted",
+        "http.access",
+        "inference.started",
+        "inference.finished",
+        "request.terminal"
+      ],
+      "pinned_model": {
+        "name": "model-a",
+        "version": "0.1.0",
+        "manifest_sha256": "a700dc698dfef898dda6ba046196ef339dd7614ea360d041321c8becb6aecce1"
+      }
+    },
+    {
+      "step": "P13d alert VR01ModelUnavailable fires when Triton is stopped and clears after it is back",
+      "result": "PASS",
+      "at": "07:56:53",
+      "fired_after_stop_s": 20.0,
+      "cleared_after_start_s": 6.0
+    },
+    {
+      "step": "P13e Grafana serves the provisioned dashboard",
+      "result": "PASS",
+      "at": "07:56:53",
+      "title": "VR-01 MVP — tổng quan vận hành",
+      "panels": 18
+    },
+    {
+      "step": "P13f /metrics is reachable inside the compose network but not published on the host",
+      "result": "PASS",
+      "at": "07:56:53",
+      "series_lines": 93,
+      "host_port_9090_http": "000"
+    },
+    {
+      "step": "P14 automatic rollback after 3 consecutive inference errors right after cutover",
+      "result": "PASS",
+      "at": "07:56:54",
+      "failed_requests": [
+        "FAILED/BACKEND_ERROR",
+        "FAILED/BACKEND_ERROR",
+        "FAILED/BACKEND_ERROR"
+      ],
+      "active_after": "recipe-a@0.1.0",
+      "auto_rollback_logged": true,
+      "failed_request_keeps_lineage": "model-bad",
+      "request_after_rollback": "COMPLETED/NG"
+    },
+    {
+      "step": "p18_heavy_image_model",
+      "result": "FAIL",
+      "at": "07:56:54",
+      "error": "AssertionError: activate recipe-heavy: 422 {'type': 'urn:vr01:problem:RECIPE_NOT_FOUND', 'title': 'Unprocessable content', 'status': 422, 'code': 'RECIPE_NOT_FOUND', 'detail': 'recipe recipe-heavy@0.1.0 is not registered', 'trace_id': '4236316af097408fb9f5aa0ac57bab3f', 'request_id': None, 'retryable': False}"
+    },
+    {
+      "step": "P16 app image upgrade and rollback under load (Compose): no wrong result, active recipe kept",
+      "result": "PASS",
+      "at": "07:58:29",
+      "upgrade_s": 8.7,
+      "image_after_upgrade": "vr01-mvp-api:0.1.1-test",
+      "active_after_upgrade": "recipe-a@0.1.0",
+      "rollback_s": 8.6,
+      "image_after_rollback": "vr01-mvp-api:0.1.0",
+      "sent": 901,
+      "completed": 901,
+      "technical": {},
+      "not_accepted": 0,
+      "client_retries": {
+        "recipe_refresh_409": 0,
+        "queue_full_429": 0,
+        "not_ready_503": 0,
+        "send_errors": 49
+      },
+      "wrong": 0,
+      "duplicates": 0,
+      "note": "upgrade_s/rollback_s gom ca build image va cho healthy; khong phai thoi gian gian doan"
+    },
+    {
+      "step": "P17 network cut between client and API for 10 s under load: retries with same request_id, no loss/duplicate",
+      "result": "PASS",
+      "at": "07:59:11",
+      "iptables_chains": [
+        "INPUT",
+        "DOCKER-USER",
+        "OUTPUT"
+      ],
+      "sent": 401,
+      "completed": 401,
+      "not_accepted": 0,
+      "client_send_errors": 5,
+      "wrong": 0,
+      "duplicates": 0
+    },
+    {
+      "step": "P15 image store really full (64 KiB tmpfs): clean 503, no record for refused, recovery after space is back",
+      "result": "PASS",
+      "at": "07:59:43",
+      "accepted_before_full": 16,
+      "refused": 5,
+      "first_refusal": [
+        503,
+        "STORAGE_UNAVAILABLE"
+      ],
+      "readyz": [
+        503,
+        {
+          "ready": false,
+          "reasons": [
+            "STORAGE_UNAVAILABLE"
+          ]
+        }
+      ],
+      "refused_have_no_record": true,
+      "accepted_all_completed": true,
+      "ready_after_space_back_s": 0.0,
+      "request_after_recovery": "COMPLETED"
+    }
+  ]
+}

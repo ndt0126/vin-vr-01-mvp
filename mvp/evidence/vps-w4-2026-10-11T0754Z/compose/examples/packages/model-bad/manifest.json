@@ -1,0 +1,61 @@
+{
+  "schema_version": "w2-draft-v1",
+  "name": "model-bad",
+  "version": "0.1.0",
+  "purpose": "fixture",
+  "artifact": {
+    "path": "model.json",
+    "sha256": "3d736e1cfb4d464ccd1ee018771a17a9ea99fbc83f9f0e3ea168cd145128cb81"
+  },
+  "runtime": {
+    "backend": "reference-linear-score-v1",
+    "profile": "reference-cpu-v1",
+    "device": "cpu"
+  },
+  "io": {
+    "input": {
+      "name": "IMAGE",
+      "dtype": "FP32",
+      "shape": [
+        1,
+        1,
+        2,
+        2
+      ]
+    },
+    "output": {
+      "name": "SCORE",
+      "dtype": "FP32",
+      "shape": [
+        1
+      ]
+    }
+  },
+  "preprocess": "tensor-json-v1",
+  "postprocess": "normalized-score-v1",
+  "resources": {
+    "cpu_millicores": 100,
+    "ram_mib": 32,
+    "peak_vram_mib": 0,
+    "basis": "estimate"
+  },
+  "compatibility": {
+    "platform_contract": "w2-draft-v1",
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "warmup": {
+    "runs": 3,
+    "timeout_ms": 1000
+  },
+  "golden": {
+    "input": {
+      "path": "golden-input.json",
+      "sha256": "fc02e4249b96fcb45d584e2ec5c398b11e42c7f8d13ccba64ed3be0f9cac445c"
+    },
+    "expected_score": 0.375,
+    "atol": 1e-06,
+    "rtol": 1e-06
+  },
+  "rollback_candidates": []
+}

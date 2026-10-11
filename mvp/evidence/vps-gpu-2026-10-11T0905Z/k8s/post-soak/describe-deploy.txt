@@ -1,0 +1,108 @@
+Name:               vr01-inspection
+Namespace:          vr01
+CreationTimestamp:  Sun, 11 Oct 2026 17:53:32 +0000
+Labels:             app.kubernetes.io/name=vr01-inspection
+                    app.kubernetes.io/part-of=vr01
+Annotations:        deployment.kubernetes.io/revision: 1
+Selector:           app.kubernetes.io/name=vr01-inspection
+Replicas:           1 desired | 1 updated | 1 total | 1 available | 0 unavailable
+StrategyType:       Recreate
+MinReadySeconds:    0
+Pod Template:
+  Labels:       app.kubernetes.io/name=vr01-inspection
+                app.kubernetes.io/part-of=vr01
+  Annotations:  vr01.io/release: 0.1.0
+  Init Containers:
+   init:
+    Image:      vr01-mvp-api:0.1.0
+    Port:       <none>
+    Host Port:  <none>
+    Command:
+      sh
+      -c
+    Args:
+      python tools/init_lab.py --run-dir /run-data --instance-kind "$TRITON_INSTANCE_KIND" && chown -R 10001:10001 /run-data/data /run-data/auth /run-data/tls /run-data/examples && chmod -R a+rX /run-data/triton-repo
+    Environment:
+      TRITON_INSTANCE_KIND:  KIND_GPU
+      HOME:                  /tmp
+    Mounts:
+      /run-data from run (rw)
+  Containers:
+   triton:
+    Image:      nvcr.io/nvidia/tritonserver@sha256:f836551575df7c9fb71144073845c6b3911de57db91a8c95e0687a4d2ac9f7a5
+    Port:       8002/TCP (triton-metrics)
+    Host Port:  0/TCP (triton-metrics)
+    Command:
+      tritonserver
+    Args:
+      --model-repository=/models
+      --model-control-mode=explicit
+      --http-port=8000
+      --http-address=127.0.0.1
+      --allow-grpc=false
+      --allow-metrics=true
+      --metrics-port=8002
+    Limits:
+      cpu:             2
+      memory:          16Gi
+      nvidia.com/gpu:  1
+    Requests:
+      cpu:        500m
+      memory:     1Gi
+    Liveness:     exec [sh -c curl -sf http://127.0.0.1:8000/v2/health/live] delay=0s timeout=3s period=10s #success=1 #failure=3
+    Readiness:    exec [sh -c curl -sf http://127.0.0.1:8000/v2/health/ready] delay=0s timeout=3s period=5s #success=1 #failure=3
+    Startup:      exec [sh -c curl -sf http://127.0.0.1:8000/v2/health/ready] delay=0s timeout=1s period=5s #success=1 #failure=60
+    Environment:  <none>
+    Mounts:
+      /models from run (ro,path="triton-repo")
+   api:
+    Image:       vr01-mvp-api:0.1.0
+    Ports:       8443/TCP (inference), 9443/TCP (management), 9090/TCP (metrics)
+    Host Ports:  0/TCP (inference), 0/TCP (management), 0/TCP (metrics)
+    Command:
+      python
+      backend/inspection_api.py
+    Args:
+      --host=0.0.0.0
+      --data-dir=/run-data/data
+      --principals=/run-data/auth/principals.json
+      --tls-cert=/run-data/tls/server.crt
+      --tls-key=/run-data/tls/server.key
+      --examples=/run-data/examples
+      --kserve-url=http://127.0.0.1:8000
+      --metrics-port=9090
+    Limits:
+      cpu:     1
+      memory:  512Mi
+    Requests:
+      cpu:        100m
+      memory:     128Mi
+    Liveness:     http-get https://:inference/healthz delay=0s timeout=3s period=10s #success=1 #failure=3
+    Readiness:    http-get https://:inference/readyz delay=0s timeout=3s period=5s #success=1 #failure=3
+    Startup:      http-get https://:inference/readyz delay=0s timeout=1s period=5s #success=1 #failure=60
+    Environment:  <none>
+    Mounts:
+      /run-data from run (rw)
+      /tmp from tmp (rw)
+  Volumes:
+   run:
+    Type:       PersistentVolumeClaim (a reference to a PersistentVolumeClaim in the same namespace)
+    ClaimName:  vr01-run
+    ReadOnly:   false
+   tmp:
+    Type:          EmptyDir (a temporary directory that shares a pod's lifetime)
+    Medium:        
+    SizeLimit:     64Mi
+  Node-Selectors:  <none>
+  Tolerations:     <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+OldReplicaSets:  <none>
+NewReplicaSet:   vr01-inspection-84f994874b (1/1 replicas created)
+Events:
+  Type    Reason             Age   From                   Message
+  ----    ------             ----  ----                   -------
+  Normal  ScalingReplicaSet  34s   deployment-controller  Scaled up replica set vr01-inspection-84f994874b from 0 to 1

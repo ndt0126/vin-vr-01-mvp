@@ -1,0 +1,2 @@
+PASS  G6 GPU OOM in the middle of an inference (warmed-up model): that request FAILED without a decision, the model keeps serving, no restart  {"hog": {"total_mib": 48539, "held_mib": 47627, "free_mib": 199}, "vram_after_load": {"name": "NVIDIA RTX A6000", "used_mib": 446.0, "total_mib": 49140.0, "driver": "580.126.16"}, "big_image_under_pressure": "FAILED/BACKEND_ERROR", "decision": null, "small_image_under_pressure": "COMPLETED", "active
+SESSION gpu-post: PASS  1/1 -> /opt/vin-vr-01-mvp/mvp/run/session-gpu-post-report.json

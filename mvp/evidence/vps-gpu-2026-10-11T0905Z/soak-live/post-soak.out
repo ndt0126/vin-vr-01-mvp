@@ -1,0 +1,63 @@
+[17:50:50] soak da ve laptop an toan -> chay bai sau soak
+[17:50:54] == SAU SOAK A: G6 OOM giua luc suy luan ==
+823d87c
+start exit=0
+Read from remote host 64.247.196.50: Operation timed out
+client_loop: send disconnect: Broken pipe
+[17:53:21] == SAU SOAK B: Kubernetes GPU + reboot node ==
+docker.io/library/vr01-mvp-api:0.1.0
+nvcr.io/nvidia/tritonserver@sha256:f836551575df7c9fb71144073845c6b3911de57db91a8c95e0687a4d2ac9f7a5
+PASS  K1 deploy from a clean namespace, rollout complete  34s
+PASS  K2 both containers Ready (api readiness = active recipe verified + model loaded)  ready=[true true]
+PASS  K3 vr01ctl status through NodePort  SAN SANG recipe active : recipe-b@0.1.0  (sha256 6ee3711f1bf3) 
+PASS  K4 smoke flow through NodePort  SMOKE PASS  18/18  -> /root/k8s-evidence
+PASS  K5 from another pod: Triton 8000 closed, API 8443 open, metrics 9090 closed by NetworkPolicy  triton8000=closed api8443=open metrics9090=closed
+PASS  K6 pod deleted -> recreated, same active recipe  11s; recipe active : recipe-b@0.1.0  (sha256 6ee3711f1bf3)
+PASS  K7 update to a new release revision  rev 1 -> 2, 12s
+PASS  K8 rollback to the previous release (rollout undo)  release=0.1.0, 11s
+PASS  K9 model switch and model rollback  DA CHUYEN: recipe-b@0.1.0 -> recipe-a@0.1.0
+PASS  K10 smoke flow after update/rollback  SMOKE PASS  18/18  -> /root/k8s-evidence
+K8S CHECK PASS  10/10
+SAN SANG
+recipe active : recipe-b@0.1.0  (sha256 6ee3711f1bf3)
+uptime_s=466.18 waited_for_ready_s=452
+KHONG KET NOI DUOC API: <urlopen error [Errno 111] Connection refused>
+urllib.error.URLError: <urlopen error [Errno 111] Connection refused>
+The connection to the server 64.247.196.50:6443 was refused - did you specify the right host or port?
+error executing jsonpath "{.items[0].status.allocatable.nvidia\\.com/gpu}": Error executing template: array index out of bounds: index 0, length 0. Printing more information for debugging the template:
+	template was:
+		{.items[0].status.allocatable.nvidia\.com/gpu}
+	object given to jsonpath engine was:
+		map[string]interface {}{"apiVersion":"v1", "items":[]interface {}{}, "kind":"List", "metadata":map[string]interface {}{"resourceVersion":""}}
+
+
+
+allocatable_gpu=
+tritonserver, 380 MiB
+The connection to the server 64.247.196.50:6443 was refused - did you specify the right host or port?
+[18:03:04] == SAU SOAK C: goi offline tren node GPU (Internet se bi CAT tu day) ==
+PASS  O1 build offline app bundle  size 7.1G, files 89
+PASS  O2 Internet egress cut on the node (IPv4 + IPv6)  probe=blocked
+PASS  O3 app images removed from the node before offline install  left=0
+FAIL  O4 install from the bundle with egress cut  166s; error: error validating "/root/vr01-app-bundle/mvp/deploy/k8
+FAIL  O5 smoke flow on the offline-installed stack (tools from the bundle)  urllib.error.URLError: <urlopen error [E
+PASS  O6 no image pull was attempted  pull events=0
+PASS  O7 egress still cut at the end  probe=blocked
+OFFLINE CHECK FAIL  5/7  (egress stays cut; reboot or flush iptables to restore)
+The connection to the server 64.247.196.50:6443 was refused - did you specify the right host or port?
+error executing jsonpath "{.items[0].spec.containers[0].resources.limits.nvidia\\.com/gpu}": Error executing template: array index out of bounds: index 0, length 0. Printing more information for debugging the template:
+	template was:
+		{.items[0].spec.containers[0].resources.limits.nvidia\.com/gpu}
+	object given to jsonpath engine was:
+		map[string]interface {}{"apiVersion":"v1", "items":[]interface {}{}, "kind":"List", "metadata":map[string]interface {}{"resourceVersion":""}}
+
+
+
+triton_gpu_limit=
+tritonserver, 380 MiB
+[18:09:30] pull ket qua sau soak
+token leaks outside auth/: []
+138
+manifest: 138 files, mismatches=0 (partial)
+[18:09:44] xong. Xem: compose/session-gpu-post-report.json, k8s/post-soak/. Node dang bi cat Internet -> terminate khi da xem ket qua.
+post-soak exit=0 at 2026-10-11T18:09:44Z

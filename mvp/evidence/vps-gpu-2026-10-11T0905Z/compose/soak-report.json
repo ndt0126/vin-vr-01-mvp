@@ -1,0 +1,124 @@
+{
+  "samples": 964,
+  "duration_h": 8.03,
+  "series": {
+    "vr01_process_resident_memory_bytes": {
+      "unit": "MiB",
+      "min": 56.23,
+      "max": 111.14,
+      "first_window_avg": 88.74,
+      "last_window_avg": 98.16,
+      "slope_per_hour": 0.712,
+      "last_vs_first_pct": 10.61
+    },
+    "api_container_mem_bytes": {
+      "unit": "MiB",
+      "min": 40.37,
+      "max": 99.94,
+      "first_window_avg": 73.53,
+      "last_window_avg": 84.36,
+      "slope_per_hour": 0.903,
+      "last_vs_first_pct": 14.73
+    },
+    "triton_container_mem_bytes": {
+      "unit": "MiB",
+      "min": 1458.18,
+      "max": 1690.62,
+      "first_window_avg": 1565.53,
+      "last_window_avg": 1641.62,
+      "slope_per_hour": 10.652,
+      "last_vs_first_pct": 4.86
+    },
+    "gpu_mem_used_mib": {
+      "unit": "MiB",
+      "min": 2572.0,
+      "max": 6810.0,
+      "first_window_avg": 4621.18,
+      "last_window_avg": 4621.18,
+      "slope_per_hour": -0.117,
+      "last_vs_first_pct": 0.0
+    },
+    "gpu_util_pct": {
+      "unit": "%",
+      "min": 0.0,
+      "max": 100.0,
+      "first_window_avg": 39.98,
+      "last_window_avg": 37.11,
+      "slope_per_hour": -0.024,
+      "last_vs_first_pct": -7.17
+    },
+    "gpu_temp_c": {
+      "unit": "C",
+      "min": 35.0,
+      "max": 63.0,
+      "first_window_avg": 58.96,
+      "last_window_avg": 58.71,
+      "slope_per_hour": 0.001,
+      "last_vs_first_pct": -0.42
+    },
+    "vr01_queue_depth": {
+      "unit": "request",
+      "min": 0.0,
+      "max": 1.0,
+      "first_window_avg": 0.43,
+      "last_window_avg": 0.42,
+      "slope_per_hour": -0.002,
+      "last_vs_first_pct": -3.85
+    }
+  },
+  "container_restart_counts_seen": [
+    [
+      "0",
+      "1"
+    ]
+  ],
+  "process_start_times_seen": [
+    1791712082.579
+  ],
+  "not_ready_samples": 0,
+  "load": {
+    "verdict": "PASS",
+    "requests": {
+      "sent": 19528,
+      "with_terminal_result": 19528,
+      "completed": 19528,
+      "by_recipe": {
+        "recipe-heavy@0.1.0": 9796,
+        "recipe-heavy-b@0.1.0": 9732
+      },
+      "missing_or_wrong": 0,
+      "duplicate_or_extra_products": 0,
+      "technical_states": {},
+      "not_accepted": 0
+    },
+    "cutovers": {
+      "requested": 95,
+      "succeeded": 95,
+      "max_gap_s": 1.674
+    },
+    "latency_total_ms": {
+      "p50": 607.099,
+      "p95": 611.585,
+      "max": 1245.562
+    },
+    "client_retries": {
+      "recipe_refresh_409": 95,
+      "queue_full_429": 0,
+      "not_ready_503": 20,
+      "send_errors": 0
+    },
+    "config": {
+      "rate_per_s": 0.678,
+      "duration_s": 28800.0,
+      "cutover_every_s": 300.0,
+      "send_period_s": 1.4749
+    }
+  },
+  "memory_growth_over_10pct": [
+    "vr01_process_resident_memory_bytes",
+    "api_container_mem_bytes"
+  ],
+  "no_restart_during_soak": true,
+  "verdict": "REVIEW",
+  "note": "PASS = tai dat + khong restart + khong chuoi bo nho nao tang qua 10% (gio cuoi so voi gio dau). REVIEW = can nguoi xem; khong tu dong la FAIL."
+}

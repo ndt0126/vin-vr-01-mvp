@@ -7,7 +7,7 @@ K8S_MINOR="${K8S_MINOR:-v1.34}"; POD_CIDR="${POD_CIDR:-10.244.0.0/16}"
 export DEBIAN_FRONTEND=noninteractive
 nvidia-smi --query-gpu=name,driver_version --format=csv,noheader
 command -v nvidia-ctk >/dev/null || { echo "thieu NVIDIA Container Toolkit (nvidia-ctk)"; exit 1; }
-swapoff -a; sed -i '/ swap / s/^/#/' /etc/fstab || true
+swapoff -a; sed -i -E '/[[:space:]]swap[[:space:]]/ s/^/#/' /etc/fstab || true
 modprobe overlay; modprobe br_netfilter
 printf 'overlay\nbr_netfilter\n' > /etc/modules-load.d/k8s.conf
 printf 'net.bridge.bridge-nf-call-iptables=1\nnet.bridge.bridge-nf-call-ip6tables=1\nnet.ipv4.ip_forward=1\n' > /etc/sysctl.d/k8s.conf

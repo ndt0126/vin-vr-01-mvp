@@ -1,0 +1,15 @@
+-P OUTPUT ACCEPT
+-A OUTPUT -o lo -j ACCEPT
+-A OUTPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A OUTPUT -d 10.0.0.0/8 -j ACCEPT
+-A OUTPUT -d 172.16.0.0/12 -j ACCEPT
+-A OUTPUT -d 192.168.0.0/16 -j ACCEPT
+-A OUTPUT -d 64.247.196.50/32 -j ACCEPT
+-A OUTPUT -j REJECT --reject-with icmp-port-unreachable
+--- ip6tables
+-P OUTPUT ACCEPT
+-A OUTPUT -o lo -j ACCEPT
+-A OUTPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A OUTPUT -d fe80::/10 -j ACCEPT
+-A OUTPUT -d fc00::/7 -j ACCEPT
+-A OUTPUT -j REJECT --reject-with icmp6-port-unreachable

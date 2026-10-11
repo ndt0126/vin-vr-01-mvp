@@ -1,0 +1,524 @@
+{
+  "verdict": "PASS",
+  "run_id": "20261011T094808",
+  "recipes": [
+    "recipe-heavy",
+    "recipe-heavy-b"
+  ],
+  "score_recomputed_by_client_for": 0,
+  "config": {
+    "rate_per_s": 0.678,
+    "duration_s": 28800.0,
+    "cutover_every_s": 300.0,
+    "send_period_s": 1.4749
+  },
+  "requests": {
+    "sent": 19528,
+    "with_terminal_result": 19528,
+    "completed": 19528,
+    "by_recipe": {
+      "recipe-heavy@0.1.0": 9796,
+      "recipe-heavy-b@0.1.0": 9732
+    },
+    "missing_or_wrong": 0,
+    "duplicate_or_extra_products": 0,
+    "technical_states": {},
+    "not_accepted": 0
+  },
+  "cutovers": {
+    "requested": 95,
+    "succeeded": 95,
+    "detail": [
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.976,
+        "gap_last_old_to_first_new_s": 1.533
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.976,
+        "gap_last_old_to_first_new_s": 1.474
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.135,
+        "gap_last_old_to_first_new_s": 1.371
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 1.318,
+        "gap_last_old_to_first_new_s": 1.137
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.397,
+        "gap_last_old_to_first_new_s": 1.486
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.907,
+        "gap_last_old_to_first_new_s": 1.546
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.924,
+        "gap_last_old_to_first_new_s": 1.649
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.956,
+        "gap_last_old_to_first_new_s": 1.561
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.91,
+        "gap_last_old_to_first_new_s": 1.536
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 1.009,
+        "gap_last_old_to_first_new_s": 1.472
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.052,
+        "gap_last_old_to_first_new_s": 1.385
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 1.289,
+        "gap_last_old_to_first_new_s": 1.187
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.482,
+        "gap_last_old_to_first_new_s": 1.494
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.948,
+        "gap_last_old_to_first_new_s": 1.562
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.921,
+        "gap_last_old_to_first_new_s": 1.667
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.912,
+        "gap_last_old_to_first_new_s": 1.651
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.902,
+        "gap_last_old_to_first_new_s": 1.564
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.973,
+        "gap_last_old_to_first_new_s": 1.515
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.112,
+        "gap_last_old_to_first_new_s": 1.437
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 1.226,
+        "gap_last_old_to_first_new_s": 1.564
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.513,
+        "gap_last_old_to_first_new_s": 0.867
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.931,
+        "gap_last_old_to_first_new_s": 1.483
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.916,
+        "gap_last_old_to_first_new_s": 1.552
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.931,
+        "gap_last_old_to_first_new_s": 1.659
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.923,
+        "gap_last_old_to_first_new_s": 1.659
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.921,
+        "gap_last_old_to_first_new_s": 1.547
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.003,
+        "gap_last_old_to_first_new_s": 1.517
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 1.088,
+        "gap_last_old_to_first_new_s": 1.399
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.303,
+        "gap_last_old_to_first_new_s": 1.19
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 1.474,
+        "gap_last_old_to_first_new_s": 1.485
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.959,
+        "gap_last_old_to_first_new_s": 1.674
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.907,
+        "gap_last_old_to_first_new_s": 1.658
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.921,
+        "gap_last_old_to_first_new_s": 1.552
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 1.036,
+        "gap_last_old_to_first_new_s": 1.492
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.049,
+        "gap_last_old_to_first_new_s": 1.4
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 1.207,
+        "gap_last_old_to_first_new_s": 1.243
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.423,
+        "gap_last_old_to_first_new_s": 0.925
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 1.043,
+        "gap_last_old_to_first_new_s": 1.474
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.922,
+        "gap_last_old_to_first_new_s": 1.564
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.933,
+        "gap_last_old_to_first_new_s": 1.672
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.917,
+        "gap_last_old_to_first_new_s": 1.663
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.9,
+        "gap_last_old_to_first_new_s": 1.553
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.883,
+        "gap_last_old_to_first_new_s": 1.551
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.914,
+        "gap_last_old_to_first_new_s": 1.549
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.906,
+        "gap_last_old_to_first_new_s": 1.536
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.961,
+        "gap_last_old_to_first_new_s": 1.499
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.011,
+        "gap_last_old_to_first_new_s": 1.447
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 1.134,
+        "gap_last_old_to_first_new_s": 1.311
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.441,
+        "gap_last_old_to_first_new_s": 1.048
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 1.156,
+        "gap_last_old_to_first_new_s": 1.482
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.928,
+        "gap_last_old_to_first_new_s": 1.563
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.912,
+        "gap_last_old_to_first_new_s": 1.554
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.912,
+        "gap_last_old_to_first_new_s": 1.662
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.9,
+        "gap_last_old_to_first_new_s": 1.666
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.934,
+        "gap_last_old_to_first_new_s": 1.563
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.982,
+        "gap_last_old_to_first_new_s": 1.52
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.207,
+        "gap_last_old_to_first_new_s": 1.338
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 1.381,
+        "gap_last_old_to_first_new_s": 1.1
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.288,
+        "gap_last_old_to_first_new_s": 1.508
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.891,
+        "gap_last_old_to_first_new_s": 1.549
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.907,
+        "gap_last_old_to_first_new_s": 1.552
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.931,
+        "gap_last_old_to_first_new_s": 1.561
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.918,
+        "gap_last_old_to_first_new_s": 1.666
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.919,
+        "gap_last_old_to_first_new_s": 1.561
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.929,
+        "gap_last_old_to_first_new_s": 1.544
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.884,
+        "gap_last_old_to_first_new_s": 1.537
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.906,
+        "gap_last_old_to_first_new_s": 1.524
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.979,
+        "gap_last_old_to_first_new_s": 1.482
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.121,
+        "gap_last_old_to_first_new_s": 1.376
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 1.23,
+        "gap_last_old_to_first_new_s": 1.195
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.485,
+        "gap_last_old_to_first_new_s": 1.468
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.938,
+        "gap_last_old_to_first_new_s": 1.563
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.897,
+        "gap_last_old_to_first_new_s": 1.552
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.909,
+        "gap_last_old_to_first_new_s": 1.658
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.921,
+        "gap_last_old_to_first_new_s": 1.674
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.93,
+        "gap_last_old_to_first_new_s": 1.56
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.013,
+        "gap_last_old_to_first_new_s": 1.486
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 1.075,
+        "gap_last_old_to_first_new_s": 1.395
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.317,
+        "gap_last_old_to_first_new_s": 1.179
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 1.444,
+        "gap_last_old_to_first_new_s": 1.461
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.926,
+        "gap_last_old_to_first_new_s": 1.561
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.921,
+        "gap_last_old_to_first_new_s": 1.66
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.896,
+        "gap_last_old_to_first_new_s": 1.662
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.917,
+        "gap_last_old_to_first_new_s": 1.558
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.899,
+        "gap_last_old_to_first_new_s": 1.548
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.914,
+        "gap_last_old_to_first_new_s": 1.541
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.944,
+        "gap_last_old_to_first_new_s": 1.479
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.997,
+        "gap_last_old_to_first_new_s": 1.453
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.14,
+        "gap_last_old_to_first_new_s": 1.34
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 1.449,
+        "gap_last_old_to_first_new_s": 1.046
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 1.185,
+        "gap_last_old_to_first_new_s": 1.481
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.9,
+        "gap_last_old_to_first_new_s": 1.556
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.915,
+        "gap_last_old_to_first_new_s": 1.559
+      },
+      {
+        "to": "recipe-heavy@0.1.0",
+        "activation_s": 0.929,
+        "gap_last_old_to_first_new_s": 1.659
+      },
+      {
+        "to": "recipe-heavy-b@0.1.0",
+        "activation_s": 0.909,
+        "gap_last_old_to_first_new_s": 1.662
+      }
+    ],
+    "max_gap_s": 1.674,
+    "gap_resolution_note": "gap khong the nho hon chu ky gui 1.475 s; day khong phai so do downtime"
+  },
+  "client_retries_same_request_id": {
+    "recipe_refresh_409": 95,
+    "queue_full_429": 0,
+    "not_ready_503": 20,
+    "send_errors": 0
+  },
+  "latency_total_ms": {
+    "p50": 607.099,
+    "p95": 611.585,
+    "max": 1245.562
+  },
+  "problems": [],
+  "duplicates": []
+}

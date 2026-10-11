@@ -1,0 +1,2 @@
+NAME                               READY   STATUS    RESTARTS   AGE   IP              NODE                  NOMINATED NODE   READINESS GATES
+vr01-inspection-84f994874b-5v6wg   2/2     Running   0          34s   10.244.204.10   0006-kci-prxmx10075   <none>           <none>

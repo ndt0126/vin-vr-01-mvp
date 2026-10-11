@@ -1,0 +1,37 @@
+{
+  "verdict": "PASS",
+  "failed": [],
+  "steps": [
+    {
+      "step": "G6 GPU OOM in the middle of an inference (warmed-up model): that request FAILED without a decision, the model keeps serving, no restart",
+      "result": "PASS",
+      "at": "17:51:59",
+      "hog": {
+        "total_mib": 48539,
+        "held_mib": 47627,
+        "free_mib": 199
+      },
+      "vram_after_load": {
+        "name": "NVIDIA RTX A6000",
+        "used_mib": 446.0,
+        "total_mib": 49140.0,
+        "driver": "580.126.16"
+      },
+      "big_image_under_pressure": "FAILED/BACKEND_ERROR",
+      "decision": null,
+      "small_image_under_pressure": "COMPLETED",
+      "active_after": "recipe-vram@0.1.0",
+      "readyz": 200,
+      "triton_same_pid": true,
+      "same_image_after_vram_freed": "COMPLETED",
+      "oom_in_triton_log": true,
+      "vram_end": {
+        "name": "NVIDIA RTX A6000",
+        "used_mib": 12912.0,
+        "total_mib": 49140.0,
+        "driver": "580.126.16"
+      },
+      "triton_error_lines": []
+    }
+  ]
+}

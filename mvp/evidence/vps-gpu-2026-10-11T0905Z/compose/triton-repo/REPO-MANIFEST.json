@@ -88,6 +88,21 @@
         "1/model.onnx": "19930b8a91c16dc450189529717dde379da664eeff9548896ba9127d01092ccd",
         "config.pbtxt": "5e24815990800f868b8f27dd7ac3ddf9d3204025fce27886e15c5603638e2edc"
       }
+    },
+    {
+      "name": "model-vram",
+      "version": "0.1.0",
+      "manifest_sha256": "5ee7860c2b866a988574c1eefe407c787858ddd43a2bfc788a01a9e71b0ff1ea",
+      "burn": null,
+      "fail_above_mean": null,
+      "instance_kind": "KIND_GPU",
+      "backend": "triton-onnx-v1",
+      "golden_expected": 0.499534,
+      "golden_onnx": null,
+      "files": {
+        "1/model.onnx": "5bfc82e7a3d641a73c90996eafb62a36e3a072a182cf6d5749ede62f63498b5d",
+        "config.pbtxt": "1cd2ecee556b45d7a65d9a0073fb7948f6df4261d3ba14cc8e977904d2684217"
+      }
     }
   ],
   "rejected": [],

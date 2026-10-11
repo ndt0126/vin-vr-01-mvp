@@ -1,0 +1,7 @@
+[1/4] kiem toan ven goi
+CANH BAO: goi CHUA KY (khong co SHA256SUMS.asc) - chi dung cho lab
+[2/4] nap image vao containerd
+docker.io/library/vr01-mvp-api:0.1.0
+docker.io/vr01-local/tritonserver:2.60.0-25.08
+[3/4] trien khai
+error: error validating "/root/vr01-app-bundle/mvp/deploy/k8s/overlays/offline-gpu": error validating data: failed to download openapi: Get "https://64.247.196.50:6443/openapi/v2?timeout=32s": dial tcp 64.247.196.50:6443: connect: connection refused; if you choose to ignore these errors, turn validation off with --validate=false

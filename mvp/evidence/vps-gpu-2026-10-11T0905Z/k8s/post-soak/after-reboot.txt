@@ -1,0 +1,15 @@
+uptime_s=466.18 waited_for_ready_s=452
+KHONG KET NOI DUOC API: <urlopen error [Errno 111] Connection refused>
+urllib.error.URLError: <urlopen error [Errno 111] Connection refused>
+The connection to the server 64.247.196.50:6443 was refused - did you specify the right host or port?
+error executing jsonpath "{.items[0].status.allocatable.nvidia\\.com/gpu}": Error executing template: array index out of bounds: index 0, length 0. Printing more information for debugging the template:
+	template was:
+		{.items[0].status.allocatable.nvidia\.com/gpu}
+	object given to jsonpath engine was:
+		map[string]interface {}{"apiVersion":"v1", "items":[]interface {}{}, "kind":"List", "metadata":map[string]interface {}{"resourceVersion":""}}
+
+
+
+allocatable_gpu=
+tritonserver, 380 MiB
+The connection to the server 64.247.196.50:6443 was refused - did you specify the right host or port?

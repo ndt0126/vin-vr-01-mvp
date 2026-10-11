@@ -1,0 +1,1 @@
+2026-10-12 00:50:13  soak-finished: Ket qua SOAK da ve laptop, MANIFEST khop: terminate VPS luc nay KHONG mat ket qua soak. Neu bai sau soak dang chay (~40 phut, tools/gpu_post_soak_when_done.sh) thi cho file soak-live/POST-SOAK-DONE de co them G6/reboot/offline tren GPU. manifest: 102 files, mismatches=0 (final)

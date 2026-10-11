@@ -1,0 +1,8 @@
+{"verdict": "REVIEW", "duration_h": 8.03, "samples": 964, "memory_growth_over_10pct": ["vr01_process_resident_memory_bytes", "api_container_mem_bytes"], "no_restart_during_soak": true}
+  vr01_process_resident_memory_bytes          88.74 ->      98.16 MiB      slope 0.712/h
+  api_container_mem_bytes                     73.53 ->      84.36 MiB      slope 0.903/h
+  triton_container_mem_bytes                1565.53 ->    1641.62 MiB      slope 10.652/h
+  gpu_mem_used_mib                          4621.18 ->    4621.18 MiB      slope -0.117/h
+  gpu_util_pct                                39.98 ->      37.11 %        slope -0.024/h
+  gpu_temp_c                                  58.96 ->      58.71 C        slope 0.001/h
+  vr01_queue_depth                             0.43 ->       0.42 request  slope -0.002/h

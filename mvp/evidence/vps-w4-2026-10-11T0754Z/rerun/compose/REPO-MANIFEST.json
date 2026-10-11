@@ -1,0 +1,80 @@
+{
+  "models": [
+    {
+      "name": "model-a",
+      "version": "0.1.0",
+      "manifest_sha256": "a700dc698dfef898dda6ba046196ef339dd7614ea360d041321c8becb6aecce1",
+      "burn": null,
+      "fail_above_mean": null,
+      "instance_kind": "KIND_CPU",
+      "golden_expected": 0.375,
+      "golden_onnx": null,
+      "files": {
+        "1/model.onnx": "4d2e14144139b9cd546c282a6a356e56ac8ea7f5becdb2c3d206ce0bc7353e78",
+        "config.pbtxt": "8debb09cdb6a75d998033899565880ac42770c33d0d8c6fcdd146007520149a4"
+      }
+    },
+    {
+      "name": "model-b",
+      "version": "0.1.0",
+      "manifest_sha256": "dcf1542894dc2dad0c8a71c5289b56e92db2cc39718158053967c0831a9d3e15",
+      "burn": null,
+      "fail_above_mean": null,
+      "instance_kind": "KIND_CPU",
+      "golden_expected": 0.3125,
+      "golden_onnx": null,
+      "files": {
+        "1/model.onnx": "0999c39cdd034ee6713b942ce9439b8b5fdaa861704248cdb2cc30435649dafd",
+        "config.pbtxt": "f917c6f22920b81a3b6e5a983930d82b3fce954125c6dcf034ce94feba7f4626"
+      }
+    },
+    {
+      "name": "model-bad",
+      "version": "0.1.0",
+      "manifest_sha256": "1b20488423dbf187bb369a8da39d1d605534aee8575449ee53d31cf1981912cd",
+      "burn": null,
+      "fail_above_mean": 0.5,
+      "instance_kind": "KIND_CPU",
+      "golden_expected": 0.375,
+      "golden_onnx": null,
+      "files": {
+        "1/model.onnx": "308eddf7fbe33418fd458838f15b213d90c9949f6ef36568d7a8effd9e7e1d37",
+        "config.pbtxt": "8d41fb3d0a5a9500ba4f4d8022bda050ca2a7229ff5def8b658fd55fe31386fe"
+      }
+    },
+    {
+      "name": "model-heavy",
+      "version": "0.1.0",
+      "manifest_sha256": "54e050e7db77fd9ab799c07cbf7f88c89887396bc9ffcf365675c5a86f365b0c",
+      "burn": null,
+      "fail_above_mean": null,
+      "instance_kind": "KIND_CPU",
+      "backend": "triton-onnx-v1",
+      "golden_expected": 0.425518,
+      "golden_onnx": null,
+      "files": {
+        "1/model.onnx": "dd7d7ed85ee9cff2aad57c12bcc5d2713888c52cd069d185dd8f707bd74c42db",
+        "config.pbtxt": "42c7f7674a0694f881b222de2890365b630942c07e8be0f200e3a348d7573a34"
+      }
+    },
+    {
+      "name": "model-slow",
+      "version": "0.1.0",
+      "manifest_sha256": "26384c166524758229b1000a3d9e97d7dd795061c7e6c831b57f9999392dc3a4",
+      "burn": {
+        "n": 1024,
+        "rounds": 64
+      },
+      "fail_above_mean": null,
+      "instance_kind": "KIND_CPU",
+      "golden_expected": 0.375,
+      "golden_onnx": null,
+      "files": {
+        "1/model.onnx": "19930b8a91c16dc450189529717dde379da664eeff9548896ba9127d01092ccd",
+        "config.pbtxt": "d2ecf035d61daf0ac7cb28698c80c7fff91bc7224993bc2f57dc36916f098fc3"
+      }
+    }
+  ],
+  "rejected": [],
+  "golden_checked_with_onnxruntime": false
+}

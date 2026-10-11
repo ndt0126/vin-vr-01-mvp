@@ -1,0 +1,2 @@
+NAME                               READY   STATUS    RESTARTS   AGE   IP              NODE                NOMINATED NODE   READINESS GATES
+vr01-inspection-64f49764fc-j2898   2/2     Running   0          32s   10.244.204.14   ubuntu-8gb-nbg1-1   <none>           <none>

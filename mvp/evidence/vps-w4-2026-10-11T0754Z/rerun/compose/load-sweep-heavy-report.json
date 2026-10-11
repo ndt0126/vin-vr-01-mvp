@@ -1,0 +1,145 @@
+{
+  "run_id": "20261011T081835",
+  "recipe": "recipe-heavy@0.1.0",
+  "config": {
+    "rates": "1,2,4,8,16,32",
+    "step_seconds": 20.0,
+    "concurrency": 16,
+    "mode": "open loop, no retry on 429"
+  },
+  "max_unsaturated_rps": 7.98,
+  "first_saturated_target_rps": 16.0,
+  "steps": [
+    {
+      "target_rps": 1.0,
+      "sent": 20,
+      "accepted": 20,
+      "completed": 20,
+      "achieved_completed_rps": 1.04,
+      "rejected_or_failed": {},
+      "terminal_states": {
+        "COMPLETED": 20
+      },
+      "latency_total_ms": {
+        "p50": 144.766,
+        "p95": 194.675,
+        "p99": 195.05,
+        "max": 195.05
+      },
+      "inference_ms_p50": 141.618,
+      "queue_ms_p95": 2.022,
+      "client_send_lag_s_p95": 0.0,
+      "saturated": false
+    },
+    {
+      "target_rps": 2.0,
+      "sent": 40,
+      "accepted": 40,
+      "completed": 40,
+      "achieved_completed_rps": 2.03,
+      "rejected_or_failed": {},
+      "terminal_states": {
+        "COMPLETED": 40
+      },
+      "latency_total_ms": {
+        "p50": 154.137,
+        "p95": 199.171,
+        "p99": 214.697,
+        "max": 214.697
+      },
+      "inference_ms_p50": 149.978,
+      "queue_ms_p95": 2.66,
+      "client_send_lag_s_p95": 0.0,
+      "saturated": false
+    },
+    {
+      "target_rps": 4.0,
+      "sent": 80,
+      "accepted": 80,
+      "completed": 80,
+      "achieved_completed_rps": 4.01,
+      "rejected_or_failed": {},
+      "terminal_states": {
+        "COMPLETED": 80
+      },
+      "latency_total_ms": {
+        "p50": 131.124,
+        "p95": 177.115,
+        "p99": 210.393,
+        "max": 218.158
+      },
+      "inference_ms_p50": 128.165,
+      "queue_ms_p95": 2.07,
+      "client_send_lag_s_p95": 0.0,
+      "saturated": false
+    },
+    {
+      "target_rps": 8.0,
+      "sent": 160,
+      "accepted": 160,
+      "completed": 160,
+      "achieved_completed_rps": 7.98,
+      "rejected_or_failed": {},
+      "terminal_states": {
+        "COMPLETED": 160
+      },
+      "latency_total_ms": {
+        "p50": 130.117,
+        "p95": 307.076,
+        "p99": 329.327,
+        "max": 338.264
+      },
+      "inference_ms_p50": 108.546,
+      "queue_ms_p95": 171.567,
+      "client_send_lag_s_p95": 0.001,
+      "saturated": false
+    },
+    {
+      "target_rps": 16.0,
+      "sent": 320,
+      "accepted": 175,
+      "completed": 175,
+      "achieved_completed_rps": 8.34,
+      "rejected_or_failed": {
+        "429 QUEUE_FULL": 145
+      },
+      "terminal_states": {
+        "COMPLETED": 175
+      },
+      "latency_total_ms": {
+        "p50": 905.43,
+        "p95": 1033.029,
+        "p99": 1134.388,
+        "max": 1141.764
+      },
+      "inference_ms_p50": 112.718,
+      "queue_ms_p95": 900.738,
+      "client_send_lag_s_p95": 0.001,
+      "saturated": true
+    },
+    {
+      "target_rps": 32.0,
+      "sent": 640,
+      "accepted": 167,
+      "completed": 167,
+      "achieved_completed_rps": 7.92,
+      "rejected_or_failed": {
+        "429 QUEUE_FULL": 473
+      },
+      "terminal_states": {
+        "COMPLETED": 167
+      },
+      "latency_total_ms": {
+        "p50": 962.14,
+        "p95": 1157.165,
+        "p99": 1183.761,
+        "max": 1210.46
+      },
+      "inference_ms_p50": 116.997,
+      "queue_ms_p95": 1017.323,
+      "client_send_lag_s_p95": 0.0,
+      "saturated": true
+    }
+  ],
+  "caveat": "So do cua may va model dang chay. Voi model mau chay vai mili giay tren CPU, day KHONG phai nang luc cua may dich."
+}

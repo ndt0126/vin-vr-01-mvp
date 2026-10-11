@@ -1,0 +1,13 @@
+LAST SEEN   TYPE     REASON              OBJECT                                  MESSAGE
+47s         Normal   Scheduled           pod/vr01-inspection-64f49764fc-j2898    Successfully assigned vr01/vr01-inspection-64f49764fc-j2898 to ubuntu-8gb-nbg1-1
+47s         Normal   Pulled              pod/vr01-inspection-64f49764fc-j2898    Container image "vr01-mvp-api:0.1.0" already present on machine
+47s         Normal   Created             pod/vr01-inspection-64f49764fc-j2898    Created container: init
+47s         Normal   Started             pod/vr01-inspection-64f49764fc-j2898    Started container init
+46s         Normal   Pulled              pod/vr01-inspection-64f49764fc-j2898    Container image "vr01-local/tritonserver:2.60.0-25.08" already present on machine
+46s         Normal   Created             pod/vr01-inspection-64f49764fc-j2898    Created container: triton
+45s         Normal   Started             pod/vr01-inspection-64f49764fc-j2898    Started container triton
+45s         Normal   Pulled              pod/vr01-inspection-64f49764fc-j2898    Container image "vr01-mvp-api:0.1.0" already present on machine
+45s         Normal   Created             pod/vr01-inspection-64f49764fc-j2898    Created container: api
+45s         Normal   Started             pod/vr01-inspection-64f49764fc-j2898    Started container api
+47s         Normal   SuccessfulCreate    replicaset/vr01-inspection-64f49764fc   Created pod: vr01-inspection-64f49764fc-j2898
+47s         Normal   ScalingReplicaSet   deployment/vr01-inspection              Scaled up replica set vr01-inspection-64f49764fc from 0 to 1

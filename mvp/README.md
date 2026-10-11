@@ -56,7 +56,18 @@ make stop
 
 Lệnh khác: `make backup`, `make restore BACKUP=run/backup/<tên>`, `make load`, `make logs`, `make down`, `make digests`, `make clean` (xóa `run/`).
 
-## Observability (W4-01, W4-02) — bản đầu, chưa chạy trên stack thật
+## Phiên VPS Tuần 4 (11/10/2026, CPU) — tóm tắt
+
+Trên một VPS mới 4 vCPU / 8 GB, Triton thật, model chạy CPU. Chi tiết, số liệu và giới hạn: `evidence/vps-w4-2026-10-11T0754Z/README.md`.
+
+- **Runbook (W4-05):** một agent AI độc lập làm trọn 8 việc theo runbook, không can thiệp (`evidence/person-b-2026-10-11-runbook/`).
+- **Observability (W4-01, W4-02):** scrape API và Triton; cảnh báo model-unavailable bật 20 giây sau khi dừng Triton và tắt sau 4–6 giây; truy vết một request từ `request_id`.
+- **Độ bền:** tự rollback khi model mới lỗi 3 lần; nâng cấp và quay lại image app dưới tải (901 request, 0 sai/mất); cắt mạng 10 giây (0 mất/trùng); ổ ảnh đầy thật (503 sạch, tự phục vụ lại).
+- **Kubernetes (W4-03):** kubeadm v1.34.12 + Calico: bài kiểm 10/10, reboot node tự lên lại, gói offline lớp ứng dụng cài được khi IPv4 và IPv6 đều bị chặn (7/7).
+- **Model ảnh thật** (`triton-onnx-v1`): golden qua Triton đạt, khoảng 104 ms/lần; quét tải bão hòa ở khoảng 8 request/giây với 1 worker.
+- Lượt chính có 4 bước hỏng, đều do script kiểm của tác giả (2 bước) hoặc bước cắt mạng chưa chặn IPv6 (2 bước); đã sửa và chạy lại đạt. **Chưa chạy GPU; kubeadm cài có Internet; gói offline chưa ký.**
+
+## Observability (W4-01, W4-02)
 
 ```bash
 make obs-start
@@ -64,14 +75,14 @@ make obs-start
 
 Bật thêm Prometheus (`http://127.0.0.1:9091`) và Grafana (`http://127.0.0.1:3000`, chỉ xem). API có cổng `/metrics` riêng (9090, chỉ trong mạng Compose) với 30 metric: request theo trạng thái/kết luận/mã lỗi, độ trễ từng pha, hàng đợi, vòng đời model, readiness kèm lý do, recipe/model đang active kèm digest, RAM/CPU tiến trình, ổ trống. Có 10 luật cảnh báo, dashboard 18 panel, log JSON xoay vòng có trần dung lượng, và `make trace ID=<request_id>` để lấy toàn bộ đường đi của một request. Chi tiết: `docs/OBSERVABILITY.md` (sinh tự động).
 
-Đã kiểm (11/10, laptop): 6 test metrics/log trong bộ 79 test; `make alerts-test` (promtool) chứng minh 5 cảnh báo chính bật khi có sự cố và tắt khi hết; Prometheus và Grafana thật chạy trong Docker, scrape được API chạy với inference server **giả**, truy vấn ra số và dashboard được nạp. **Chưa kiểm:** trên stack Compose có Triton thật (scrape Triton, cảnh báo bật/tắt bằng sự cố thật); đã có sẵn bước `tests/real_session.py --phase obs`.
+Đã kiểm (11/10, laptop): 6 test metrics/log trong bộ 79 test; `make alerts-test` (promtool) chứng minh 5 cảnh báo chính bật khi có sự cố và tắt khi hết; Prometheus và Grafana thật chạy trong Docker, scrape được API chạy với inference server **giả**, truy vấn ra số và dashboard được nạp. Trên stack có Triton thật (11/10): 6/6 bước của `tests/real_session.py --phase obs` đạt. **Chưa có:** Alertmanager, metric mức container/node, ngưỡng do Operations duyệt.
 
-## Kubernetes (W4-03) và runbook (W4-05) — đã viết, chưa chạy trên cluster
+## Kubernetes (W4-03) và runbook (W4-05)
 
-- `deploy/k8s/`: manifests kustomize (base + overlay CPU, GPU, offline), script dựng kubeadm lab, nạp image, bài kiểm 10 bước, và bộ script gói offline cho lớp ứng dụng. Đã chạy thử 10/10 bước trên một cluster k3s trong Docker với inference server **giả**. **Chưa chạy trên kubeadm, chưa chạy với Triton thật, gói offline chưa thử.** Xem `deploy/k8s/README.md`.
-- `docs/RUNBOOK.md`: cài/bật/dừng, đổi và rollback model, sao lưu và khôi phục, nâng cấp, cây xử lý sự cố, gói chẩn đoán, giới hạn đã biết. Mỗi quy trình ghi rõ đã chạy thật, mới chạy trên laptop, hay chưa diễn tập. **Chưa có ai khác tự làm theo runbook.**
-- Kịch bản đã viết cho phiên VPS, chưa chạy trên Triton thật: tự rollback bằng fixture `model-bad` (qua golden nhưng lỗi trên ảnh sáng), ổ lưu ảnh đầy thật, nâng cấp và quay lại phiên bản app khi đang có tải, cắt mạng 10 giây (`tests/real_session.py --phase w4`); `tests/load_sweep.py` quét tải tới bão hòa.
-- **Model ảnh thật theo chuẩn package** (`docs/MODEL-PACKAGES.md`): backend `triton-onnx-v1` mà schema W2-05 đã khai báo nay được hiện thực (validator, tiền xử lý RGB theo package đã pin, gửi tensor dạng binary sang Triton, model repository). `make start HEAVY=cpu|gpu|gpu-xl` thêm fixture `model-heavy`: mạng tích chập sâu với trọng số tất định, là tải tính toán thật cho bài hiệu năng, **không phải model QC**. Đã kiểm trên laptop (10 test, chạy trọn luồng và quét tải qua inference server giả có onnxruntime); **chưa chạy trên Triton thật, chưa chạy GPU**.
+- `deploy/k8s/`: manifests kustomize (base + overlay CPU, GPU, offline), script dựng kubeadm lab, nạp image, bài kiểm 10 bước, và bộ script gói offline cho lớp ứng dụng. Đã chạy 10/10 bước trên **kubeadm thật với Triton thật** (11/10), reboot node, và gói offline 7/7 với Internet bị chặn. Chưa có GPU, lớp nền Kubernetes vẫn cài online, gói chưa ký. Xem `deploy/k8s/README.md`.
+- `docs/RUNBOOK.md`: cài/bật/dừng, đổi và rollback model, sao lưu và khôi phục, nâng cấp, cây xử lý sự cố, gói chẩn đoán, giới hạn đã biết. Mỗi quy trình ghi rõ đã chạy thật, mới chạy trên laptop, hay chưa diễn tập. Một agent AI độc lập đã làm trọn runbook không can thiệp; chưa có người vận hành tự làm.
+- Kịch bản đã chạy trên Triton thật ngày 11/10: tự rollback bằng fixture `model-bad` (qua golden nhưng lỗi trên ảnh sáng), ổ lưu ảnh đầy thật, nâng cấp và quay lại phiên bản app khi đang có tải, cắt mạng 10 giây (`tests/real_session.py --phase w4`); `tests/load_sweep.py` quét tải tới bão hòa.
+- **Model ảnh thật theo chuẩn package** (`docs/MODEL-PACKAGES.md`): backend `triton-onnx-v1` mà schema W2-05 đã khai báo nay được hiện thực (validator, tiền xử lý RGB theo package đã pin, gửi tensor dạng binary sang Triton, model repository). `make start HEAVY=cpu|gpu|gpu-xl` thêm fixture `model-heavy`: mạng tích chập sâu với trọng số tất định, là tải tính toán thật cho bài hiệu năng, **không phải model QC**. Đã kiểm trên laptop (10 test) và trên Triton thật bản CPU (golden đạt, quét tải); **chưa chạy GPU**.
 - Công cụ mới: `tools/vr01ctl.py` (status, activate, rollback, history, audit, pending, result) và `make diag` (gói chẩn đoán không chứa secret).
 
 ## Phiên kiểm trên stack thật

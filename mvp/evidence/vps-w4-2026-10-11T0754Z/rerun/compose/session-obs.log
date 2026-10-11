@@ -1,0 +1,7 @@
+PASS  P13a Prometheus scrapes API and Triton  {"both_targets_up_after_s": 0.0}
+PASS  P13b one request and one model switch are observable in Prometheus  {"visible_after_s": 4.0, "counters_before": {"terminal": 0.0, "act": 1.0, "triton_b": 0.0}, "counters_after": {"terminal": 2.0, "act": 2.0, "triton_b": 2.0}, "active_recipe_series": [{"__name__": "vr01_active_recipe_info", "instance": "api:9090", "job": "vr01-api", "model": "model-b", "model_sha256"
+PASS  P13c full execution path of one request from its request_id (ledger + log)  {"events": ["request.admitted", "http.access", "inference.started", "inference.finished", "request.terminal"], "pinned_model": {"name": "model-a", "version": "0.1.0", "manifest_sha256": "a700dc698dfef898dda6ba046196ef339dd7614ea360d041321c8becb6aecce1"}}
+PASS  P13d alert VR01ModelUnavailable fires when Triton is stopped and clears after it is back  {"fired_after_stop_s": 20.0, "cleared_after_start_s": 4.0}
+PASS  P13e Grafana serves the provisioned dashboard  {"title": "VR-01 MVP — tổng quan vận hành", "panels": 18}
+PASS  P13f /metrics is reachable inside the compose network but not published on the host  {"series_lines": 93, "host_port_9090_http": "000"}
+SESSION obs: PASS  6/6 -> /root/vin-vr-01-mvp/mvp/run/session-obs-report.json

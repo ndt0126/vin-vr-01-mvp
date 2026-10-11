@@ -1,6 +1,6 @@
 # VR-01 MVP trên Kubernetes (W4-03)
 
-Trạng thái 11/10/2026: **manifests đã chạy thử trên một cluster k3s trong Docker với inference server giả (10/10 bước). CHƯA triển khai lên kubeadm, chưa chạy với Triton thật.**
+Trạng thái 11/10/2026: **đã triển khai trên kubeadm v1.34.12 thật (containerd 2.2.2, Calico) với Triton thật, model CPU: bài kiểm 10/10, reboot node, gói offline 7/7 với Internet bị chặn.** Chưa GPU; kubeadm cài có Internet; gói offline chưa ký. Kết quả: `../../evidence/vps-w4-2026-10-11T0754Z/README.md`.
 
 ## Thiết kế
 
@@ -66,7 +66,8 @@ Gói hiện **chưa ký**: private key ký chỉ nằm ở laptop, nên chữ k�
 - **Kiểm tĩnh (laptop, 11/10):** `kubectl kustomize` render được 4 overlay; `kubeconform -strict` schema 1.34 hợp lệ; `tests/test_k8s_manifests.py` 7 test.
 - **Chạy thử (laptop, 11/10):** cluster **k3s v1.34.1 trong Docker** + overlay `local-fake` (inference server giả thay Triton): `k8s_check.sh` đạt 10/10, ba lượt liên tiếp. Log ở `evidence/local-k3s-2026-10-11/`. Lần chạy thử này sửa được hai lỗi: pod bị PodSecurity chặn vì hostPath, và bài kiểm gọi cổng quản trị trước khi Service kịp cập nhật.
 - **Chạy thử gói offline (laptop, 11/10):** trên cùng cluster k3s, `k8s_offline_check.sh` đạt 7/7 với overlay `local-fake-offline` và **bỏ qua bước cắt Internet** (`SKIP_EGRESS_CUT=1`): tạo gói, xóa image và namespace, nạp image từ gói, cài, smoke bằng công cụ trong gói, không có lần kéo image nào; gói bị sửa một byte thì bị từ chối ở bước kiểm hash. Lượt này sửa hai lỗi script (đường dẫn file image, và xuất/nạp image phải đi qua stream). Nó **không** chứng minh cài offline, vì mạng không bị cắt và image là image giả.
-- **Chưa kiểm:** kubeadm thật, Triton thật trên Kubernetes, `lab-kubeadm-cpu.sh`, `load-images.sh`, gói offline với Internet bị cắt thật và image Triton thật (20 GB), overlay GPU, reboot node, thời gian gián đoạn thật khi cập nhật (trên cluster thử mỗi lần tạo lại pod mất 31–40 giây, phần lớn do inference server giả không xử lý tín hiệu dừng).
+- **Trên VPS (11/10):** `lab-kubeadm-cpu.sh`, `load-images.sh`, `k8s_check.sh` 10/10 (deploy 8 giây khi image đã có, xóa pod → 6 giây, cập nhật revision và `rollout undo` mỗi lần 11 giây), reboot node (sẵn sàng sau khoảng 45 giây), `k8s_offline_check.sh` 7/7 với IPv4 + IPv6 bị chặn (gói 7,0 GB, cài 122 giây). Lượt đầu của bài offline chỉ chặn IPv4 nên Docker Hub vẫn vào được qua IPv6; đã sửa rồi chạy lại.
+- **Chưa kiểm:** overlay GPU, gói offline đã ký, lớp nền Kubernetes offline cho MVP này, reboot node, thời gian gián đoạn thật khi cập nhật (trên cluster thử mỗi lần tạo lại pod mất 31–40 giây, phần lớn do inference server giả không xử lý tín hiệu dừng).
 
 ## Khác gì nếu dùng K3s
 

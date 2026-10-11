@@ -1,0 +1,80 @@
+{
+  "verdict": "PASS",
+  "failed": [],
+  "steps": [
+    {
+      "step": "P13a Prometheus scrapes API and Triton",
+      "result": "PASS",
+      "at": "08:17:37",
+      "both_targets_up_after_s": 0.0
+    },
+    {
+      "step": "P13b one request and one model switch are observable in Prometheus",
+      "result": "PASS",
+      "at": "08:17:52",
+      "visible_after_s": 4.0,
+      "counters_before": {
+        "terminal": 0.0,
+        "act": 1.0,
+        "triton_b": 0.0
+      },
+      "counters_after": {
+        "terminal": 2.0,
+        "act": 2.0,
+        "triton_b": 2.0
+      },
+      "active_recipe_series": [
+        {
+          "__name__": "vr01_active_recipe_info",
+          "instance": "api:9090",
+          "job": "vr01-api",
+          "model": "model-b",
+          "model_sha256": "dcf1542894dc",
+          "model_version": "0.1.0",
+          "recipe": "recipe-b",
+          "recipe_sha256": "6ee3711f1bf3",
+          "recipe_version": "0.1.0"
+        }
+      ],
+      "p95_total_s": 0.0
+    },
+    {
+      "step": "P13c full execution path of one request from its request_id (ledger + log)",
+      "result": "PASS",
+      "at": "08:17:52",
+      "events": [
+        "request.admitted",
+        "http.access",
+        "inference.started",
+        "inference.finished",
+        "request.terminal"
+      ],
+      "pinned_model": {
+        "name": "model-a",
+        "version": "0.1.0",
+        "manifest_sha256": "a700dc698dfef898dda6ba046196ef339dd7614ea360d041321c8becb6aecce1"
+      }
+    },
+    {
+      "step": "P13d alert VR01ModelUnavailable fires when Triton is stopped and clears after it is back",
+      "result": "PASS",
+      "at": "08:18:17",
+      "fired_after_stop_s": 20.0,
+      "cleared_after_start_s": 4.0
+    },
+    {
+      "step": "P13e Grafana serves the provisioned dashboard",
+      "result": "PASS",
+      "at": "08:18:17",
+      "title": "VR-01 MVP — tổng quan vận hành",
+      "panels": 18
+    },
+    {
+      "step": "P13f /metrics is reachable inside the compose network but not published on the host",
+      "result": "PASS",
+      "at": "08:18:17",
+      "series_lines": 93,
+      "host_port_9090_http": "000"
+    }
+  ]
+}

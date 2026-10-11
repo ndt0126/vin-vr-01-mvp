@@ -1,0 +1,39 @@
+{
+  "verdict": "FAIL",
+  "failed": [
+    "p13_observability"
+  ],
+  "steps": [
+    {
+      "step": "p13_observability",
+      "result": "FAIL",
+      "at": "08:16:21",
+      "error": "CalledProcessError: Command '('make', 'obs-start', 'SLOW=1')' returned non-zero exit status 2."
+    },
+    {
+      "step": "P18 real image model (triton-onnx-v1): golden on the inference server, score depends on the image",
+      "result": "PASS",
+      "at": "08:16:21",
+      "golden": {
+        "expected": 0.425518,
+        "actual": 0.42551758885383606,
+        "passed": true
+      },
+      "scores": {
+        "dark": 0.386864,
+        "mid": 0.427575,
+        "bright": 0.468253
+      },
+      "inference_ms": [
+        104.446,
+        103.175,
+        111.761
+      ],
+      "model": {
+        "name": "model-heavy",
+        "version": "0.1.0",
+        "manifest_sha256": "54e050e7db77fd9ab799c07cbf7f88c89887396bc9ffcf365675c5a86f365b0c"
+      }
+    }
+  ]
+}

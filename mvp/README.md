@@ -1,12 +1,12 @@
 # VR-01 MVP — Inspection API + lifecycle + Triton (W3-01 → W3-05)
 
-Trạng thái 10/10/2026: **bản đầu, đã chạy với Triton thật (CPU) trên một VPS amd64**. Chưa GPU, chưa Kubernetes, chưa được mentor review.
+Trạng thái 11/10/2026: **bản đầu, đã chạy với Triton thật (CPU) trên VPS amd64**. Chưa GPU, chưa Kubernetes, chưa được mentor review.
 
 ## Cấu trúc
 
 | Thư mục | Nội dung |
 |---|---|
-| `backend/` | `inspection_api.py` (business API hai cổng + lifecycle controller), `openapi.v1.yaml` (hợp đồng, bản 1.1.0-draft.1), `requirements.txt` (pin version) |
+| `backend/` | `inspection_api.py` (business API hai cổng + lifecycle controller), `openapi.v1.yaml` (hợp đồng, bản 1.2.0-draft.1), `requirements.txt` (pin version) |
 | `packages/` | Chuẩn ModelPackage/Recipe của W2-05: validator, schema, 2 package + 2 recipe mẫu |
 | `tools/` | `build_triton_repo.py` (package → Triton model repository), `init_lab.py` (token, chứng chỉ TLS lab, model repository) |
 | `deploy/` | `Dockerfile`, `docker-compose.yml`, `.env.sample` |
@@ -16,26 +16,42 @@ Trạng thái 10/10/2026: **bản đầu, đã chạy với Triton thật (CPU) 
 
 ## Quick start
 
-Cần Docker có Compose v2, `make`, và `python3` trên host cho bước smoke (chỉ dùng thư viện chuẩn).
+**Máy cần có:** Linux amd64 (đã chạy trên Ubuntu 26.04), tối thiểu 2 vCPU, 4 GB RAM và khoảng 30 GB ổ trống (image Triton 20 GB sau khi bung). Cần Docker có Compose v2, `make`, `git` và `python3`. Trên Ubuntu mới cài:
+
+```bash
+apt-get update && apt-get install -y docker.io docker-compose-v2 make git
+```
+
+**Lấy mã nguồn và vào thư mục `mvp/`** (mọi lệnh `make` bên dưới chạy trong thư mục này):
+
+```bash
+git clone https://github.com/ndt0126/vin-vr-01-mvp.git && cd vin-vr-01-mvp/mvp
+```
+
+**Bật stack:**
 
 ```bash
 make start
 ```
 
-Lệnh này build image API, tạo token + chứng chỉ TLS lab + model repository trong `run/`, bật Triton và API, rồi chờ tới khi cả hai healthy. Lần đầu phải tải image Triton (khoảng 7 GiB nén, 20 GB sau khi bung; cần ổ trống tối thiểu khoảng 30 GB).
+Lệnh này build image API, tạo token + chứng chỉ TLS lab + model repository trong `run/`, bật Triton và API, rồi chờ tới khi cả hai healthy. Lần đầu phải tải image Triton (khoảng 7 GiB nén; vài phút tùy đường truyền). Thành công khi lệnh thoát với mã 0 và hai dòng cuối là `Container vr01-mvp-triton-1  Healthy` và `Container vr01-mvp-api-1  Healthy`. Cảnh báo `buildx isn't installed` của Compose là vô hại.
+
+**Smoke flow** (stack phải đang chạy). Dòng cuối mong đợi: `SMOKE PASS  18/18  -> run/smoke-report.json`.
 
 ```bash
 make smoke
 ```
 
-```bash
-make stop
-```
-
-Chạy toàn bộ test trong container (không cần Triton):
+**Toàn bộ test trong container** (không cần Triton, chạy được khi stack đang bật hoặc tắt). Dòng cuối mong đợi: `MVP tests: PASS  72/73 passed, static 11/11` (1 test bỏ qua vì image không cài `onnxruntime`); báo cáo ghi ở `run/test-report-container.json`.
 
 ```bash
 make test
+```
+
+**Dừng** (giữ dữ liệu trong `run/`):
+
+```bash
+make stop
 ```
 
 Lệnh khác: `make logs`, `make down`, `make digests`, `make clean` (xóa `run/`).
@@ -65,7 +81,7 @@ Hợp đồng đang ở 1.2.0-draft.1. Các thay đổi đều là bổ sung: `c
 
 ## Đã kiểm chứng (10/10/2026)
 
-**VPS Hetzner amd64, Ubuntu 26.04.1, 4 vCPU / 8 GB, Docker 29.1.3, Triton 2.60.0 (image `25.08-py3`), model chạy CPU.** Log và báo cáo ở `evidence/vps-2026-10-10/` (không gồm token và private key).
+**Lượt 10/10 (bản code ngày 10/10: smoke khi đó có 16 bước, bộ test 65):** VPS Hetzner amd64, Ubuntu 26.04.1, 4 vCPU / 8 GB, Docker 29.1.3, Triton 2.60.0 (image `25.08-py3`), model chạy CPU. Log và báo cáo ở `evidence/vps-2026-10-10/` (không gồm token và private key).
 
 | # | Kịch bản | Kết quả |
 |---|---|---|
@@ -97,7 +113,7 @@ Số liệu chi tiết và file nguồn: `TEST-REPORT.md` (sinh bằng `make rep
 ## Chưa kiểm chứng
 
 - **GPU:** model mới chạy `KIND_CPU`. `KIND_GPU` chỉ được ghi vào `config.pbtxt`; Compose chưa có cấu hình GPU cho Triton.
-- **Máy sạch bởi người khác:** lượt VPS do tác giả chạy, cài Docker bằng `apt install docker.io docker-compose-v2 make`. Chưa có reviewer tự làm theo README.
+- **Máy sạch bởi người khác:** ngày 11/10 một agent AI độc lập (không phải người) chỉ đọc README đã cài Docker, clone, `make start` và `make smoke` 18/18 trên VPS mới 2 vCPU / 4 GB; nó phải đoán 3 bước README khi đó chưa ghi (cài Docker, clone, thư mục chạy) và phát hiện `make test` trong container báo FAIL do image thiếu `docs/`. Cả hai đã sửa; biên bản ở `evidence/person-b-2026-10-11/`. Chưa có **người** reviewer tự làm, và bản README đã sửa chưa được chạy độc lập lại.
 - Chuyển model **dưới tải liên tục** trên Triton thật: `make load` đã sẵn sàng nhưng mới chạy với inference server giả. Bản sửa lỗi thứ 3 cũng chưa chạy với Triton thật.
 - Reboot cả máy; đầy ổ; mất Triton lâu hơn vài giây.
 - **Cancellation chưa chạy với Triton thật** (7 test với backend stub; smoke trên VPS ngày 10/10 là bản 16 bước, chưa có 2 bước hủy). Hủy không giải phóng GPU: inference đang chạy vẫn chạy hết.

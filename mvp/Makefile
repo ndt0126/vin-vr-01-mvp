@@ -42,7 +42,8 @@ report:             ## sinh TEST-REPORT.md tu cac file JSON/log trong evidence/
 	$(PY) tools/make_test_report.py
 
 test: build         ## toan bo unit/contract/integration test, chay trong container
-	$(COMPOSE) run --rm --no-deps -w /app/tests init python run_tests.py --output /tmp/test-report.json
+	@mkdir -p run
+	$(COMPOSE) run --rm --no-deps -w /app/tests init python run_tests.py --output /run-data/test-report-container.json
 
 test-local:         ## nhu tren nhung dung python tren host (can pip install -r backend/requirements.txt)
 	cd tests && $(PY) -B run_tests.py --output ../run/test-report.json

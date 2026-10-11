@@ -55,6 +55,10 @@ def main():
               'meaning': 'Unit/contract/integration voi backend stub va inference server gia. '
                          'Khong chung minh Triton/GPU that; xem smoke.py.'}
     Path(args.output).write_text(json.dumps(report, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+    if not docs_ok:
+        print('FAIL: docs/API.md is missing or differs from the spec (run tools/gen_api_docs.py)')
+    for name in static_fail:
+        print('FAIL: static OpenAPI check', name)
     total = sum(s['run'] for s in suites.values())
     print(f"MVP tests: {report['verdict']}  {sum(s['passed'] for s in suites.values())}/{total} passed, "
           f"static {len(static['checks']) - len(static_fail)}/{len(static['checks'])}  -> {args.output}")

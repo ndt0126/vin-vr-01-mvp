@@ -11,6 +11,7 @@ COPY packages packages
 COPY tools tools
 COPY tests tests
 COPY docs docs
+COPY deploy/observability deploy/observability
 RUN useradd --uid 10001 --create-home vr01 && mkdir -p /run-data && chown vr01 /run-data
 USER 10001
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PYTHONPATH=/app/backend

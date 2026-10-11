@@ -378,6 +378,84 @@ class Session:
                   outage_s=round(marks['started'] - marks['stopped'], 1), ready_after_start_s=ready_s,
                   request_after_recovery=after_state, active_recipe=self.active())
 
+    def p13_observability(self):
+        """W4-01/W4-02 tren stack that: scrape, mot request + mot lan chuyen model nhin thay qua Prometheus,
+        canh bao BAT khi dung Triton va TAT khi bat lai, truy vet mot request tu log."""
+        import urllib.parse
+        import urllib.request
+        prom = 'http://127.0.0.1:9091'
+
+        def q(expr):
+            url = f'{prom}/api/v1/query?query=' + urllib.parse.quote(expr)
+            return json.load(urllib.request.urlopen(url, timeout=10))['data']['result']
+
+        def val(expr, default=0.0):
+            r = q(expr)
+            return float(r[0]['value'][1]) if r else default
+
+        def firing(name):
+            return any(a['labels']['alertname'] == name and a['state'] == 'firing' for a in json.load(
+                urllib.request.urlopen(f'{prom}/api/v1/alerts', timeout=10))['data']['alerts'])
+
+        def wait(cond, timeout):
+            t0 = time.time()
+            while time.time() - t0 < timeout:
+                if cond():
+                    return round(time.time() - t0, 1)
+                time.sleep(2)
+            return None
+
+        self.sh('make', 'obs-start', 'SLOW=1')
+        self.wait_ready()
+        up = wait(lambda: {x['labels']['job']: x['health'] for x in json.load(urllib.request.urlopen(
+            f'{prom}/api/v1/targets', timeout=10))['data']['activeTargets']} == {'vr01-api': 'up', 'triton': 'up'}, 90)
+        self.step('P13a Prometheus scrapes API and Triton', up is not None, both_targets_up_after_s=up)
+        self.activate('recipe-a')
+        before = {'terminal': val('sum(vr01_inspections_terminal_total)'), 'act': val('sum(vr01_activations_total{outcome="OK"})'),
+                  'triton_b': val('sum(nv_inference_request_success{model="model-b"})')}
+        rid = self.rid('obs')
+        self.submit(rid, 'recipe-a@0.1.0')
+        self.wait_state(rid, TERMINAL, 60)
+        self.activate('recipe-b')
+        rid_b = self.rid('obs')
+        self.submit(rid_b, 'recipe-b@0.1.0')
+        self.wait_state(rid_b, TERMINAL, 60)
+        seen = wait(lambda: val('sum(vr01_inspections_terminal_total)') >= before['terminal'] + 2
+                    and val('sum(vr01_activations_total{outcome="OK"})') >= before['act'] + 1
+                    and val('sum(nv_inference_request_success{model="model-b"})') > before['triton_b'], 60)
+        active = q('vr01_active_recipe_info')
+        self.step('P13b one request and one model switch are observable in Prometheus', seen is not None
+                  and len(active) == 1 and active[0]['metric']['recipe'] == 'recipe-b', visible_after_s=seen,
+                  active_recipe_series=[a['metric'] for a in active],
+                  p95_total_s=val('histogram_quantile(0.95, sum by (le) (rate(vr01_inspection_total_seconds_bucket[5m])))'))
+        tr = subprocess.run([sys.executable, '-B', 'tools/trace_request.py', '--run-dir', str(self.run), rid, '--json'],
+                            cwd=ROOT, capture_output=True, text=True)
+        t = json.loads(tr.stdout) if tr.returncode == 0 else {}
+        events = [e['event'] for e in t.get('events', [])]
+        need = ['request.admitted', 'inference.started', 'inference.finished', 'request.terminal']
+        self.step('P13c full execution path of one request from its request_id (ledger + log)',
+                  all(x in events for x in need) and t['request']['state'] == 'COMPLETED'
+                  and t['pinned']['model']['name'] == 'model-a', events=events, pinned_model=t.get('pinned', {}).get('model'))
+        self.sh('docker', 'stop', '-t', '0', TRITON)
+        fired = wait(lambda: firing('VR01ModelUnavailable'), 120)
+        self.sh('docker', 'start', TRITON)
+        self.wait_ready()
+        cleared = wait(lambda: not firing('VR01ModelUnavailable'), 120)
+        self.step('P13d alert VR01ModelUnavailable fires when Triton is stopped and clears after it is back',
+                  fired is not None and cleared is not None, fired_after_stop_s=fired, cleared_after_start_s=cleared)
+        g = json.load(urllib.request.urlopen('http://127.0.0.1:3000/api/dashboards/uid/vr01-overview', timeout=10))
+        self.step('P13e Grafana serves the provisioned dashboard', len(g['dashboard']['panels']) >= 10,
+                  title=g['dashboard']['title'], panels=len(g['dashboard']['panels']))
+        m = subprocess.run(['docker', 'exec', API, 'python', '-c',
+                            "import urllib.request as u;print(u.urlopen('http://localhost:9090/metrics',timeout=5).read().decode())"],
+                           capture_output=True, text=True).stdout
+        (self.run / 'metrics-snapshot.txt').write_text(m)
+        host = subprocess.run(['sh', '-c', 'curl -s -m 3 -o /dev/null -w "%{http_code}" http://127.0.0.1:9090/metrics || true'],
+                              capture_output=True, text=True).stdout.strip()
+        self.step('P13f /metrics is reachable inside the compose network but not published on the host',
+                  'vr01_ready' in m and host in ('000', ''), series_lines=len([x for x in m.splitlines() if x and x[0] != '#']),
+                  host_port_9090_http=host or 'refused')
+
     def p10_state_for_reboot(self):
         probe = self.rid('reboot')
         self.submit(probe, self.active())
@@ -404,7 +482,7 @@ class Session:
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--phase', choices=['main', 'post-reboot', 'extra'], required=True)
+    ap.add_argument('--phase', choices=['main', 'post-reboot', 'extra', 'obs'], required=True)
     ap.add_argument('--run-dir', type=Path, default=ROOT / 'run')
     ap.add_argument('--host', default='127.0.0.1')
     ap.add_argument('--inference-port', type=int, default=8443)
@@ -417,7 +495,11 @@ def main():
     if rounds_file.is_file():
         os.environ['VR01_SLOW_ROUNDS'] = rounds_file.read_text().strip()
     s = Session(args)
-    if args.phase == 'extra':
+    if args.phase == 'obs':
+        s.report_path = s.run / 'session-obs-report.json'
+        s.steps = []
+        s.guarded('p13_observability', s.p13_observability)
+    elif args.phase == 'extra':
         if s.report_path.is_file():
             s.report_path = s.run / 'session-extra-report.json'
         for fn in (s.p9_backup_restore, s.p11_execution_timeout, s.p12_long_triton_outage):

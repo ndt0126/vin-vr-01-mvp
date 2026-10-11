@@ -1,0 +1,79 @@
+# Luat canh bao cho VR-01 MVP. Nguong la DE XUAT cho lab, cho Operations chot (xem docs/OBSERVABILITY.md).
+# Kiem thu offline: deploy/observability/alerts.test.yml (promtool test rules).
+groups:
+  - name: vr01-availability
+    rules:
+      - alert: VR01ApiDown
+        expr: up{job="vr01-api"} == 0
+        for: 15s
+        labels: {severity: critical}
+        annotations:
+          summary: "Khong scrape duoc Inspection API"
+          action: "Kiem tra container api (make logs). San pham trong luc nay CHUA duoc kiem."
+      - alert: VR01ModelUnavailable
+        expr: vr01_ready == 0
+        for: 15s
+        labels: {severity: critical}
+        annotations:
+          summary: "He thong chua san sang: khong nhan anh moi"
+          action: "Xem vr01_not_ready_reason. WARMUP_FAILED/BACKEND_UNAVAILABLE: kiem tra Triton; he thong tu nap lai model active khi Triton len."
+      - alert: VR01RestartLoop
+        expr: changes(vr01_process_start_time_seconds[10m]) >= 3
+        labels: {severity: critical}
+        annotations:
+          summary: "API khoi dong lai >= 3 lan trong 10 phut"
+          action: "Xem log api truoc moi lan restart; request do dang se la INDETERMINATE."
+  - name: vr01-quality-of-service
+    rules:
+      - alert: VR01TechnicalFailureRatioHigh
+        expr: |
+          sum(rate(vr01_inspections_terminal_total{state=~"FAILED|TIMEOUT|INDETERMINATE"}[2m]))
+            / clamp_min(sum(rate(vr01_inspections_terminal_total[2m])), 0.001) > 0.05
+          and sum(rate(vr01_inspections_terminal_total[2m])) > 0.05
+        for: 30s
+        labels: {severity: warning}
+        annotations:
+          summary: "Hon 5% lan kiem ket thuc bang loi ky thuat (2 phut gan nhat)"
+          action: "Cac san pham do CHUA co ket luan. Xem Lich su > Loi ky thuat; kiem tra Triton/GPU."
+      - alert: VR01LatencySLOBreach
+        expr: histogram_quantile(0.95, sum by (le) (rate(vr01_inspection_total_seconds_bucket[2m]))) > 5
+        for: 1m
+        labels: {severity: warning}
+        annotations:
+          summary: "p95 thoi gian kiem > 5 s (2 phut gan nhat)"
+          action: "Xem vr01_queue_depth va vr01_inference_seconds theo model."
+      - alert: VR01QueueSaturated
+        expr: vr01_queue_depth >= vr01_queue_capacity
+        for: 30s
+        labels: {severity: warning}
+        annotations:
+          summary: "Hang doi day: request moi bi 429"
+          action: "Giam toc do gui hoac kiem tra thoi gian suy luan."
+      - alert: VR01AutoRollback
+        expr: increase(vr01_auto_rollback_total[10m]) > 0
+        labels: {severity: warning}
+        annotations:
+          summary: "He thong da tu rollback sau khi chuyen recipe"
+          action: "Recipe moi loi lien tiep ngay sau cutover. Kiem lai cac san pham FAILED; khong kich hoat lai recipe do truoc khi tim ra nguyen nhan."
+  - name: vr01-resources
+    rules:
+      - alert: VR01MemoryPressure
+        expr: vr01_process_resident_memory_bytes > 1.5e9
+        for: 2m
+        labels: {severity: warning}
+        annotations:
+          summary: "RAM tien trinh API > 1,5 GB"
+          action: "Theo doi xu huong; neu tang deu la dau hieu ro ri bo nho."
+      - alert: VR01StorageLow
+        expr: vr01_storage_free_bytes < 5e9
+        for: 1m
+        labels: {severity: warning}
+        annotations:
+          summary: "O du lieu con duoi 5 GB"
+          action: "Don theo retention; duoi 64 MiB he thong tu ngung nhan request (503)."
+      - alert: VR01StorageErrors
+        expr: increase(vr01_storage_errors_total[5m]) > 0
+        labels: {severity: critical}
+        annotations:
+          summary: "Ghi ledger that bai"
+          action: "He thong ngung nhan request moi. Kiem tra o dia."

@@ -1,0 +1,83 @@
+# promtool test rules alerts.test.yml  -  moi canh bao chinh phai BAT khi co su co va TAT khi het.
+rule_files:
+  - alerts.yml
+evaluation_interval: 5s
+tests:
+  - interval: 5s
+    input_series:
+      - series: 'vr01_ready'
+        values: '1x6 0x12 1x12'          # 0-30s ok, 35-90s chua san sang, sau do ok
+      - series: 'up{job="vr01-api"}'
+        values: '1x30'
+    alert_rule_test:
+      - eval_time: 30s
+        alertname: VR01ModelUnavailable
+        exp_alerts: []
+      - eval_time: 60s
+        alertname: VR01ModelUnavailable
+        exp_alerts:
+          - exp_labels: {severity: critical}
+            exp_annotations:
+              summary: "He thong chua san sang: khong nhan anh moi"
+              action: "Xem vr01_not_ready_reason. WARMUP_FAILED/BACKEND_UNAVAILABLE: kiem tra Triton; he thong tu nap lai model active khi Triton len."
+      - eval_time: 120s
+        alertname: VR01ModelUnavailable
+        exp_alerts: []
+  - interval: 5s
+    input_series:
+      - series: 'vr01_inspections_terminal_total{state="COMPLETED",reason="none"}'
+        values: '0+5x24 120+5x12 180+5x48'    # 1 request/s deu
+      - series: 'vr01_inspections_terminal_total{state="FAILED",reason="BACKEND_ERROR"}'
+        values: '0x24 0+5x12 60x48'           # tu 2:00 den 3:00: loi 1/s (50%), sau do het
+    alert_rule_test:
+      - eval_time: 1m30s
+        alertname: VR01TechnicalFailureRatioHigh
+        exp_alerts: []
+      - eval_time: 3m
+        alertname: VR01TechnicalFailureRatioHigh
+        exp_alerts:
+          - exp_labels: {severity: warning}
+            exp_annotations:
+              summary: "Hon 5% lan kiem ket thuc bang loi ky thuat (2 phut gan nhat)"
+              action: "Cac san pham do CHUA co ket luan. Xem Lich su > Loi ky thuat; kiem tra Triton/GPU."
+      - eval_time: 6m30s
+        alertname: VR01TechnicalFailureRatioHigh
+        exp_alerts: []
+  - interval: 5s
+    input_series:
+      - series: 'vr01_queue_depth'
+        values: '2x6 8x12 1x12'
+      - series: 'vr01_queue_capacity'
+        values: '8x30'
+      - series: 'vr01_auto_rollback_total{result="ok"}'
+        values: '0x6 1x60'
+      - series: 'vr01_process_start_time_seconds'
+        values: '100x6 200x6 300x6 400x60'
+    alert_rule_test:
+      - eval_time: 75s
+        alertname: VR01QueueSaturated
+        exp_alerts:
+          - exp_labels: {severity: warning}
+            exp_annotations:
+              summary: "Hang doi day: request moi bi 429"
+              action: "Giam toc do gui hoac kiem tra thoi gian suy luan."
+      - eval_time: 120s
+        alertname: VR01QueueSaturated
+        exp_alerts: []
+      - eval_time: 60s
+        alertname: VR01AutoRollback
+        exp_alerts:
+          - exp_labels: {severity: warning, result: ok}
+            exp_annotations:
+              summary: "He thong da tu rollback sau khi chuyen recipe"
+              action: "Recipe moi loi lien tiep ngay sau cutover. Kiem lai cac san pham FAILED; khong kich hoat lai recipe do truoc khi tim ra nguyen nhan."
+      - eval_time: 90s
+        alertname: VR01RestartLoop
+        exp_alerts: []          # moi 2 lan restart
+      - eval_time: 120s
+        alertname: VR01RestartLoop
+        exp_alerts:
+          - exp_labels: {severity: critical}
+            exp_annotations:
+              summary: "API khoi dong lai >= 3 lan trong 10 phut"
+              action: "Xem log api truoc moi lan restart; request do dang se la INDETERMINATE."

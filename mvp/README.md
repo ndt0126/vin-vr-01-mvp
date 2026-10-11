@@ -42,7 +42,7 @@ Lệnh này build image API, tạo token + chứng chỉ TLS lab + model reposit
 make smoke
 ```
 
-**Toàn bộ test trong container** (không cần Triton, chạy được khi stack đang bật hoặc tắt). Dòng cuối mong đợi bắt đầu bằng `MVP tests: PASS  72/73 passed, static 11/11` (1 test bỏ qua vì image không cài `onnxruntime`); báo cáo ghi ở `run/test-report-container.json`.
+**Toàn bộ test trong container** (không cần Triton, chạy được khi stack đang bật hoặc tắt). Dòng cuối mong đợi bắt đầu bằng `MVP tests: PASS  78/79 passed, static 11/11` (1 test bỏ qua vì image không cài `onnxruntime`); báo cáo ghi ở `run/test-report-container.json`.
 
 ```bash
 make test
@@ -55,6 +55,16 @@ make stop
 ```
 
 Lệnh khác: `make backup`, `make restore BACKUP=run/backup/<tên>`, `make load`, `make logs`, `make down`, `make digests`, `make clean` (xóa `run/`).
+
+## Observability (W4-01, W4-02) — bản đầu, chưa chạy trên stack thật
+
+```bash
+make obs-start
+```
+
+Bật thêm Prometheus (`http://127.0.0.1:9091`) và Grafana (`http://127.0.0.1:3000`, chỉ xem). API có cổng `/metrics` riêng (9090, chỉ trong mạng Compose) với 30 metric: request theo trạng thái/kết luận/mã lỗi, độ trễ từng pha, hàng đợi, vòng đời model, readiness kèm lý do, recipe/model đang active kèm digest, RAM/CPU tiến trình, ổ trống. Có 10 luật cảnh báo, dashboard 18 panel, log JSON xoay vòng có trần dung lượng, và `make trace ID=<request_id>` để lấy toàn bộ đường đi của một request. Chi tiết: `docs/OBSERVABILITY.md` (sinh tự động).
+
+Đã kiểm (11/10, laptop): 6 test metrics/log trong bộ 79 test; `make alerts-test` (promtool) chứng minh 5 cảnh báo chính bật khi có sự cố và tắt khi hết; Prometheus và Grafana thật chạy trong Docker, scrape được API chạy với inference server **giả**, truy vấn ra số và dashboard được nạp. **Chưa kiểm:** trên stack Compose có Triton thật (scrape Triton, cảnh báo bật/tắt bằng sự cố thật); đã có sẵn bước `tests/real_session.py --phase obs`.
 
 ## Phiên kiểm trên stack thật
 

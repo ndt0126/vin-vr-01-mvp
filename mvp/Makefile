@@ -5,7 +5,7 @@ INIT_EXTRA = $(if $(SLOW),--with-slow-fixture,)
 COMPOSE = HOST_UID=$$(id -u) HOST_GID=$$(id -g) INIT_EXTRA="$(INIT_EXTRA)" docker compose --env-file deploy/.env -f deploy/docker-compose.yml $(if $(GPU),-f deploy/docker-compose.gpu.yml,)
 PY ?= python3
 
-.PHONY: env build init start stop down logs smoke load docs report backup restore test test-local digests clean
+.PHONY: env build init start stop down logs smoke load docs report backup restore obs-start obs-stop alerts-test trace test test-local digests clean
 
 env:
 	@test -f deploy/.env || cp deploy/.env.sample deploy/.env
@@ -35,8 +35,10 @@ smoke:              ## smoke flow tren stack dang chay (can python3 tren host, c
 load:               ## chuyen recipe duoi tai lien tuc tren stack dang chay (W3-04)
 	$(PY) tests/load_cutover.py --run-dir run --rate 10 --duration 120 --cutover-every 10
 
-docs:               ## sinh lai docs/API.md tu openapi.v1.yaml
+docs:               ## sinh lai docs/API.md, docs/OBSERVABILITY.md va dashboard Grafana
 	$(PY) tools/gen_api_docs.py
+	$(PY) tools/gen_observability_docs.py
+	$(PY) tools/gen_dashboard.py
 
 report:             ## sinh TEST-REPORT.md tu cac file JSON/log trong evidence/
 	$(PY) tools/make_test_report.py
@@ -49,6 +51,18 @@ restore:            ## make restore BACKUP=run/backup/backup-...  (dung stack, k
 	$(COMPOSE) stop
 	$(PY) tools/backup.py restore --run-dir run --from $(BACKUP)
 	$(COMPOSE) up -d --wait triton api
+
+obs-start: start    ## bat them Prometheus (:9091) va Grafana (:3000) - chi loopback
+	$(COMPOSE) --profile obs up -d prometheus grafana
+
+obs-stop:
+	$(COMPOSE) --profile obs stop prometheus grafana
+
+alerts-test: env    ## kiem luat canh bao bang promtool (offline, khong can stack)
+	$(COMPOSE) --profile obs run --rm --no-deps -v "$(CURDIR)/deploy/observability:/w" -w /w --entrypoint promtool prometheus test rules alerts.test.yml
+
+trace:              ## make trace ID=<request_id>: toan bo duong di cua mot request (ledger + log + audit)
+	@$(PY) tools/trace_request.py --run-dir run $(ID)
 
 test: build         ## toan bo unit/contract/integration test, chay trong container
 	@mkdir -p run

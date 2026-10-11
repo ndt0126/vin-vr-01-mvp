@@ -38,10 +38,18 @@ def main():
     sys.path.insert(0, str(HERE.parent / 'tools'))
     import gen_api_docs
     docs_ok = gen_api_docs.OUT.is_file() and gen_api_docs.OUT.read_text(encoding='utf-8') == gen_api_docs.render()
+    import gen_dashboard
+    import gen_observability_docs
+    generated = {'docs/API.md': docs_ok,
+                 'docs/OBSERVABILITY.md': gen_observability_docs.OUT.is_file()
+                 and gen_observability_docs.OUT.read_text(encoding='utf-8') == gen_observability_docs.render(),
+                 'grafana dashboard': gen_dashboard.OUT.is_file()
+                 and json.loads(gen_dashboard.OUT.read_text(encoding='utf-8')) == gen_dashboard.build()}
+    docs_ok = all(generated.values())
     suites = {}
     ok = not static_fail and docs_ok
     t0 = time.monotonic()
-    for mod in ('test_contract', 'test_mvp', 'test_models'):
+    for mod in ('test_contract', 'test_mvp', 'test_models', 'test_observability'):
         suite = unittest.defaultTestLoader.loadTestsFromName(mod)
         res = unittest.TextTestRunner(resultclass=Collect, verbosity=1).run(suite)
         suites[mod] = {'run': res.testsRun, 'passed': len(res.passed), 'failed': len(res.failures),
@@ -56,7 +64,7 @@ def main():
                          'Khong chung minh Triton/GPU that; xem smoke.py.'}
     Path(args.output).write_text(json.dumps(report, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
     if not docs_ok:
-        print('FAIL: docs/API.md is missing or differs from the spec (run tools/gen_api_docs.py)')
+        print('FAIL: generated file missing or stale (run make docs):', [k for k, v in generated.items() if not v])
     for name in static_fail:
         print('FAIL: static OpenAPI check', name)
     total = sum(s['run'] for s in suites.values())

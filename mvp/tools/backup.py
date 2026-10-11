@@ -44,8 +44,8 @@ def backup(run, dest):
     src.close()
     if integrity != 'ok':
         raise SystemExit(f'backup integrity_check failed: {integrity}')
-    if (data / 'trace.jsonl').is_file():
-        shutil.copy2(data / 'trace.jsonl', out / 'trace.jsonl')
+    for tf in sorted(data.glob('trace.jsonl*')):  # ca cac file da xoay vong
+        shutil.copy2(tf, out / tf.name)
     if (data / 'images').is_dir():
         shutil.copytree(data / 'images', out / 'images', ignore=shutil.ignore_patterns('.*.tmp'))
     m = manifest(out)

@@ -1,0 +1,767 @@
+{
+ "uid": "vr01-overview",
+ "title": "VR-01 MVP — tổng quan vận hành",
+ "schemaVersion": 39,
+ "version": 1,
+ "timezone": "browser",
+ "refresh": "5s",
+ "time": {
+  "from": "now-15m",
+  "to": "now"
+ },
+ "tags": [
+  "vr01"
+ ],
+ "editable": true,
+ "panels": [
+  {
+   "id": 1,
+   "title": "Trạng thái hệ thống",
+   "type": "stat",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "vr01-prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 0,
+    "w": 5,
+    "h": 4
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "vr01_ready",
+     "legendFormat": "",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     },
+     "instant": true,
+     "range": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "mappings": [
+      {
+       "type": "value",
+       "options": {
+        "0": {
+         "text": "CHƯA SẴN SÀNG",
+         "color": "red"
+        },
+        "1": {
+         "text": "SẴN SÀNG",
+         "color": "green"
+        }
+       }
+      }
+     ]
+    },
+    "overrides": []
+   },
+   "options": {},
+   "description": "readyz: 1 = nhận ảnh mới; 0 = không nhận (sản phẩm lúc này chưa được kiểm)"
+  },
+  {
+   "id": 2,
+   "title": "Recipe / model đang active",
+   "type": "stat",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "vr01-prom"
+   },
+   "gridPos": {
+    "x": 5,
+    "y": 0,
+    "w": 9,
+    "h": 4
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "vr01_active_recipe_info",
+     "legendFormat": "{{recipe}}@{{recipe_version}} · {{model}} · {{model_sha256}}",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     },
+     "instant": true,
+     "range": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {},
+    "overrides": []
+   },
+   "options": {
+    "textMode": "name",
+    "colorMode": "none"
+   }
+  },
+  {
+   "id": 3,
+   "title": "Lý do chưa sẵn sàng",
+   "type": "stat",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "vr01-prom"
+   },
+   "gridPos": {
+    "x": 14,
+    "y": 0,
+    "w": 5,
+    "h": 4
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "vr01_not_ready_reason == 1",
+     "legendFormat": "{{reason}}",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     },
+     "instant": true,
+     "range": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "không có"
+    },
+    "overrides": []
+   },
+   "options": {
+    "textMode": "name",
+    "colorMode": "background"
+   }
+  },
+  {
+   "id": 4,
+   "title": "Cảnh báo đang bật",
+   "type": "stat",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "vr01-prom"
+   },
+   "gridPos": {
+    "x": 19,
+    "y": 0,
+    "w": 5,
+    "h": 4
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "count(ALERTS{alertstate=\"firing\"}) or vector(0)",
+     "legendFormat": "",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     },
+     "instant": true,
+     "range": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "red",
+        "value": 1
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {}
+  },
+  {
+   "id": 5,
+   "title": "Lần kiểm kết thúc mỗi giây, theo trạng thái",
+   "type": "timeseries",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "vr01-prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 4,
+    "w": 12,
+    "h": 7
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum by (state) (rate(vr01_inspections_terminal_total[1m]))",
+     "legendFormat": "{{state}}",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "reqps"
+    },
+    "overrides": []
+   },
+   "options": {}
+  },
+  {
+   "id": 6,
+   "title": "Kết luận chất lượng mỗi giây (OK / NG / REVIEW)",
+   "type": "timeseries",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "vr01-prom"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 4,
+    "w": 12,
+    "h": 7
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum by (decision) (rate(vr01_inspection_decisions_total[1m]))",
+     "legendFormat": "{{decision}}",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "reqps"
+    },
+    "overrides": []
+   },
+   "options": {}
+  },
+  {
+   "id": 7,
+   "title": "Thời gian một lần kiểm (nhận → kết thúc)",
+   "type": "timeseries",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "vr01-prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 11,
+    "w": 12,
+    "h": 7
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "histogram_quantile(0.5, sum by (le) (rate(vr01_inspection_total_seconds_bucket[1m])))",
+     "legendFormat": "p50",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    },
+    {
+     "refId": "B",
+     "expr": "histogram_quantile(0.95, sum by (le) (rate(vr01_inspection_total_seconds_bucket[1m])))",
+     "legendFormat": "p95",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    },
+    {
+     "refId": "C",
+     "expr": "histogram_quantile(0.99, sum by (le) (rate(vr01_inspection_total_seconds_bucket[1m])))",
+     "legendFormat": "p99",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s"
+    },
+    "overrides": []
+   },
+   "options": {}
+  },
+  {
+   "id": 8,
+   "title": "Thời gian suy luận p95 theo model",
+   "type": "timeseries",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "vr01-prom"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 11,
+    "w": 12,
+    "h": 7
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "histogram_quantile(0.95, sum by (le, model) (rate(vr01_inference_seconds_bucket[1m])))",
+     "legendFormat": "{{model}}",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    },
+    {
+     "refId": "B",
+     "expr": "histogram_quantile(0.95, sum by (le) (rate(vr01_queue_wait_seconds_bucket[1m])))",
+     "legendFormat": "chờ hàng đợi",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s"
+    },
+    "overrides": []
+   },
+   "options": {}
+  },
+  {
+   "id": 9,
+   "title": "Hàng đợi",
+   "type": "timeseries",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "vr01-prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 18,
+    "w": 8,
+    "h": 6
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "vr01_queue_depth",
+     "legendFormat": "đang chờ + đang chạy",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    },
+    {
+     "refId": "B",
+     "expr": "vr01_queue_capacity",
+     "legendFormat": "giới hạn",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {},
+    "overrides": []
+   },
+   "options": {}
+  },
+  {
+   "id": 10,
+   "title": "Bị từ chối trước admission, theo mã lỗi",
+   "type": "timeseries",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "vr01-prom"
+   },
+   "gridPos": {
+    "x": 8,
+    "y": 18,
+    "w": 8,
+    "h": 6
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum by (code) (rate(vr01_inspections_rejected_total[1m]))",
+     "legendFormat": "{{code}}",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "reqps"
+    },
+    "overrides": []
+   },
+   "options": {}
+  },
+  {
+   "id": 11,
+   "title": "HTTP theo mã trả về",
+   "type": "timeseries",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "vr01-prom"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 18,
+    "w": 8,
+    "h": 6
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum by (status) (rate(vr01_http_requests_total[1m]))",
+     "legendFormat": "{{status}}",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "reqps"
+    },
+    "overrides": []
+   },
+   "options": {}
+  },
+  {
+   "id": 12,
+   "title": "Vòng đời model (số sự kiện trong 5 phút)",
+   "type": "timeseries",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "vr01-prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 24,
+    "w": 12,
+    "h": 6
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum by (model, result) (increase(vr01_model_load_total[5m]))",
+     "legendFormat": "nạp {{model}} {{result}}",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    },
+    {
+     "refId": "B",
+     "expr": "sum by (model) (increase(vr01_model_unload_total[5m]))",
+     "legendFormat": "gỡ {{model}}",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    },
+    {
+     "refId": "C",
+     "expr": "sum by (action, outcome) (increase(vr01_activations_total[5m]))",
+     "legendFormat": "{{action}} {{outcome}}",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    },
+    {
+     "refId": "D",
+     "expr": "sum(increase(vr01_auto_rollback_total[5m]))",
+     "legendFormat": "tự rollback",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    },
+    {
+     "refId": "E",
+     "expr": "sum by (model) (increase(vr01_model_restored_total[5m]))",
+     "legendFormat": "tự nạp lại {{model}}",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {},
+    "overrides": []
+   },
+   "options": {}
+  },
+  {
+   "id": 13,
+   "title": "Hủy và kết quả về muộn bị bỏ (5 phút)",
+   "type": "timeseries",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "vr01-prom"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 24,
+    "w": 12,
+    "h": 6
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum by (was_started) (increase(vr01_inspections_cancelled_total[5m]))",
+     "legendFormat": "hủy, đã chạy={{was_started}}",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    },
+    {
+     "refId": "B",
+     "expr": "sum by (cause) (increase(vr01_late_results_discarded_total[5m]))",
+     "legendFormat": "kết quả muộn bị bỏ: {{cause}}",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {},
+    "overrides": []
+   },
+   "options": {}
+  },
+  {
+   "id": 14,
+   "title": "API: RAM và CPU",
+   "type": "timeseries",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "vr01-prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 30,
+    "w": 8,
+    "h": 6
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "vr01_process_resident_memory_bytes",
+     "legendFormat": "RSS",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes"
+    },
+    "overrides": []
+   },
+   "options": {}
+  },
+  {
+   "id": 15,
+   "title": "API: CPU (lõi)",
+   "type": "timeseries",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "vr01-prom"
+   },
+   "gridPos": {
+    "x": 8,
+    "y": 30,
+    "w": 8,
+    "h": 6
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "rate(vr01_process_cpu_seconds_total[1m])",
+     "legendFormat": "CPU",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {},
+    "overrides": []
+   },
+   "options": {}
+  },
+  {
+   "id": 16,
+   "title": "Ổ dữ liệu còn trống",
+   "type": "timeseries",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "vr01-prom"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 30,
+    "w": 8,
+    "h": 6
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "vr01_storage_free_bytes",
+     "legendFormat": "trống",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes"
+    },
+    "overrides": []
+   },
+   "options": {}
+  },
+  {
+   "id": 17,
+   "title": "Triton: request thành công / lỗi mỗi giây, theo model",
+   "type": "timeseries",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "vr01-prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 36,
+    "w": 12,
+    "h": 6
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum by (model) (rate(nv_inference_request_success[1m]))",
+     "legendFormat": "{{model}} ok",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    },
+    {
+     "refId": "B",
+     "expr": "sum by (model) (rate(nv_inference_request_failure[1m]))",
+     "legendFormat": "{{model}} lỗi",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "reqps"
+    },
+    "overrides": []
+   },
+   "options": {}
+  },
+  {
+   "id": 18,
+   "title": "Triton: CPU, RAM, GPU",
+   "type": "timeseries",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "vr01-prom"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 36,
+    "w": 12,
+    "h": 6
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "nv_cpu_utilization",
+     "legendFormat": "CPU (0-1)",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    },
+    {
+     "refId": "B",
+     "expr": "nv_cpu_memory_used_bytes / nv_cpu_memory_total_bytes",
+     "legendFormat": "RAM (0-1)",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    },
+    {
+     "refId": "C",
+     "expr": "nv_gpu_utilization",
+     "legendFormat": "GPU {{gpu_uuid}} (0-1)",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    },
+    {
+     "refId": "D",
+     "expr": "nv_gpu_memory_used_bytes / nv_gpu_memory_total_bytes",
+     "legendFormat": "VRAM {{gpu_uuid}} (0-1)",
+     "datasource": {
+      "type": "prometheus",
+      "uid": "vr01-prom"
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percentunit"
+    },
+    "overrides": []
+   },
+   "options": {},
+   "description": "Chuỗi GPU chỉ xuất hiện khi Triton chạy trên máy có GPU"
+  }
+ ],
+ "templating": {
+  "list": []
+ },
+ "annotations": {
+  "list": []
+ }
+}

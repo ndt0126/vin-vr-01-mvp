@@ -22,6 +22,7 @@ def main():
     ap.add_argument('--run-dir', type=Path, default=Path('run'))
     ap.add_argument('--inference-port', default='8443')
     ap.add_argument('--management-port', default='9443')
+    ap.add_argument('--metrics-port', default='9090')
     args = ap.parse_args()
     run = args.run_dir
     pk = run / 'examples' / 'packages'
@@ -31,6 +32,7 @@ def main():
                              '--data-dir', str(run / 'data'), '--principals', str(run / 'auth' / 'principals.json'),
                              '--tls-cert', str(run / 'tls' / 'server.crt'), '--tls-key', str(run / 'tls' / 'server.key'),
                              '--inference-port', args.inference_port, '--management-port', args.management_port,
+                             '--metrics-port', args.metrics_port, '--host', '0.0.0.0' if args.metrics_port != '9090' else '127.0.0.1',
                              '--examples', str(run / 'examples'), '--kserve-url', fake.url])
     print(f'FAKE inference server at {fake.url}; API starting (pid {proc.pid})', flush=True)
     signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))  # kill wrapper -> van tat API con

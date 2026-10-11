@@ -54,6 +54,9 @@ def find_w205_root():
     raise SystemExit('cannot find W2-05 validate_design.py/examples')
 
 
+sys.path.insert(0, str(HERE))
+from metrics import Metrics  # noqa: E402
+
 W205 = find_w205_root()
 sys.path.insert(0, str(W205))
 import validate_design  # noqa: E402  (W2-05 validator, khong sua)
@@ -369,7 +372,9 @@ class App:
                  default_recipe=('recipe-a', '0.1.0')):
         self.spec = spec or Spec()
         self.limits = {**self.spec.limits, 'min_free_bytes': 64 * 1024 * 1024, 'rollback_window_s': 60,
-                       'rollback_error_threshold': 3, 'drain_timeout_s': 30, **(overrides or {})}
+                       'rollback_error_threshold': 3, 'drain_timeout_s': 30,
+                       'trace_max_bytes': 64 * 1024 * 1024, 'trace_keep_files': 5, **(overrides or {})}
+        self.metrics = Metrics(self.spec.doc['info']['version'])
         self.registry = registry or Registry()
         self.backend = backend or StubBackend()
         self.data_dir = Path(data_dir)
@@ -405,8 +410,46 @@ class App:
     # ---------- logging / audit
     def trace(self, event, **fields):
         line = json.dumps({'at': now_iso(), 'event': event, **fields}, ensure_ascii=False, sort_keys=True)
-        with self.trace_lock, open(self.trace_path, 'a', encoding='utf-8') as fh:
-            fh.write(line + '\n')
+        with self.trace_lock:
+            self._rotate_trace()
+            with open(self.trace_path, 'a', encoding='utf-8') as fh:
+                fh.write(line + '\n')
+        self.metrics.observe(event, fields)
+
+    def _rotate_trace(self):
+        """Gioi han dung luong log: trace.jsonl -> trace.jsonl.1 ... .N, ban cu nhat bi xoa (goi khi da giu trace_lock)."""
+        try:
+            if self.trace_path.stat().st_size < self.limits['trace_max_bytes']:
+                return
+        except OSError:
+            return
+        keep = self.limits['trace_keep_files']
+        for i in range(keep, 0, -1):
+            src = self.trace_path if i == 1 else self.trace_path.with_name(f'{self.trace_path.name}.{i - 1}')
+            dst = self.trace_path.with_name(f'{self.trace_path.name}.{i}')
+            if src.exists():
+                os.replace(src, dst)
+
+    def metric_gauges(self):
+        """Gia tri tuc thoi cho /metrics (tinh luc Prometheus scrape)."""
+        reasons = self.readiness()
+        g = {('vr01_ready', ()): 0 if reasons else 1,
+             ('vr01_queue_capacity', ()): self.limits['queue_capacity'],
+             ('vr01_storage_free_bytes', ()): self._free_bytes()}
+        for r in ('BACKEND_UNAVAILABLE', 'STORAGE_UNAVAILABLE', 'ACTIVE_RECIPE_UNVERIFIED', 'WARMUP_FAILED',
+                  'SHUTTING_DOWN'):
+            g[('vr01_not_ready_reason', (r,))] = 1 if r in reasons else 0
+        with self.pending_lock:
+            g[('vr01_queue_depth', ())] = self.pending
+            for name, n in self.inflight.items():
+                g[('vr01_inflight_requests', (name,))] = max(0, n)
+        with self.active_lock:
+            act = self.active
+        if act is not None:
+            g[('vr01_active_recipe_info', (act['recipe']['name'], act['recipe']['version'], act['model']['name'],
+                                           act['model']['version'], act['recipe']['sha256'][:12],
+                                           act['model']['manifest_sha256'][:12]))] = 1
+        return g
 
     def audit(self, principal, action, target, outcome, trace_id, **details):
         actor = principal['id'] if principal else 'anonymous'
@@ -731,7 +774,8 @@ class App:
             self.trace('request.persist_failed', request_id=rid, trace_id=trace_id, error=str(exc))
             return
         self.trace('request.terminal', request_id=rid, trace_id=trace_id, state=state, decision=decision,
-                   reason=reason, score=score)
+                   reason=reason, score=score, total_ms=round(total, 3),
+                   inference_ms=None if inference_ms is None else round(inference_ms, 3))
 
     def _process(self, rid, enq, params, tensor):
         row = self.ledger.one('SELECT * FROM inspections WHERE request_id=?', (rid,))
@@ -760,7 +804,7 @@ class App:
             self.trace('request.persist_failed', request_id=rid, trace_id=trace_id, error=str(exc))
             return model_name
         self.trace('inference.started', request_id=rid, trace_id=trace_id, model=pin['model'],
-                   backend=self.backend.name)
+                   backend=self.backend.name, queue_ms=round(queue_ms, 3))
         box = {}
 
         def run():
@@ -796,7 +840,8 @@ class App:
             decision = 'NG'
         else:
             decision = 'OK'
-        self.trace('inference.finished', request_id=rid, trace_id=trace_id, model=pin['model'], score=score)
+        self.trace('inference.finished', request_id=rid, trace_id=trace_id, model=pin['model'], score=score,
+                   inference_ms=round(inference_ms, 3))
         self._finish(rid, trace_id, 'COMPLETED', decision, None, score, ts, enq, inference_ms)
         self._after_inference(pin, ok=True)
         return model_name
@@ -1237,6 +1282,7 @@ def make_handler(app, plane, routes):
             if not TRACE_RE.match(trace_id):
                 trace_id = uuid.uuid4().hex
             body_read = method == 'GET'
+            op, t_start = None, time.monotonic()
             try:
                 url = urlsplit(self.path)
                 op, roles, params = self._route(method, url.path)
@@ -1256,7 +1302,7 @@ def make_handler(app, plane, routes):
                 status, payload, problem, headers = 500, ApiError(500, 'INTERNAL_ERROR', 'internal error').body(
                     trace_id), True, {}
             app.trace('http.access', plane=plane, method=method, path=urlsplit(self.path).path, status=status,
-                      trace_id=trace_id)
+                      trace_id=trace_id, operation=op, duration_ms=round((time.monotonic() - t_start) * 1000, 3))
             self._send(status, payload, trace_id, headers, problem, close=not body_read)
 
         def _handle(self, op, p, q, body, principal, trace_id):
@@ -1332,6 +1378,28 @@ def make_handler(app, plane, routes):
     return Handler
 
 
+def make_metrics_handler(app):
+    class MetricsHandler(BaseHTTPRequestHandler):
+        protocol_version = 'HTTP/1.1'
+
+        def log_message(self, *a):
+            pass
+
+        def do_GET(self):
+            if urlsplit(self.path).path != '/metrics':
+                data, status, ctype = b'not found\n', 404, 'text/plain'
+            else:
+                data = app.metrics.render(app.metric_gauges()).encode()
+                status, ctype = 200, 'text/plain; version=0.0.4; charset=utf-8'
+            self.send_response(status)
+            self.send_header('Content-Type', ctype)
+            self.send_header('Content-Length', str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+
+    return MetricsHandler
+
+
 class _HTTPServer(ThreadingHTTPServer):
     daemon_threads = True
     app = None
@@ -1347,9 +1415,15 @@ class _HTTPServer(ThreadingHTTPServer):
 class Server:
     """Hai listener: inference va management. Port 0 = cong ngau nhien (test)."""
 
-    def __init__(self, app, host='127.0.0.1', inference_port=8443, management_port=9443, tls=None):
+    def __init__(self, app, host='127.0.0.1', inference_port=8443, management_port=9443, tls=None,
+                 metrics_port=None):
         self.app = app
         self.httpd = {}
+        if metrics_port is not None:
+            # Cong rieng cho Prometheus: HTTP thuong, khong token, chi GET /metrics; khong co du lieu tung san pham.
+            msrv = _HTTPServer((host, metrics_port), make_metrics_handler(app))
+            msrv.app, msrv.plane = app, 'metrics'
+            self.httpd['metrics'] = msrv
         for plane, port, routes in (('inference', inference_port, INFERENCE_ROUTES),
                                     ('management', management_port, MANAGEMENT_ROUTES)):
             srv = _HTTPServer((host, port), make_handler(app, plane, routes))
@@ -1411,6 +1485,7 @@ def main():
     ap.add_argument('--host', default='127.0.0.1')
     ap.add_argument('--inference-port', type=int, default=8443)
     ap.add_argument('--management-port', type=int, default=9443)
+    ap.add_argument('--metrics-port', type=int, help='cong /metrics cho Prometheus (HTTP, khong token); bo trong = tat')
     ap.add_argument('--tls-cert')
     ap.add_argument('--tls-key')
     ap.add_argument('--kserve-url', help='URL noi bo cua inference server KServe v2/Triton; bo trong = stub')
@@ -1431,8 +1506,9 @@ def main():
     if overrides:
         app.trace('config.limit_overrides', overrides=overrides)
     tls = {'cert': args.tls_cert, 'key': args.tls_key} if args.tls_cert else None
-    srv = Server(app, args.host, args.inference_port, args.management_port, tls)
+    srv = Server(app, args.host, args.inference_port, args.management_port, tls, metrics_port=args.metrics_port)
     print(json.dumps({'inference_port': srv.port('inference'), 'management_port': srv.port('management'),
+                      'metrics_port': srv.port('metrics') if args.metrics_port is not None else None,
                       'tls': bool(tls), 'backend': backend.name}), flush=True)
     try:
         threading.Event().wait()

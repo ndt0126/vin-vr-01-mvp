@@ -1,0 +1,40 @@
+{
+  "verdict": "PASS",
+  "python": "3.12.15",
+  "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.41",
+  "seconds": 23.7,
+  "openapi_static": {
+    "checks": 11,
+    "failed": []
+  },
+  "api_docs_match_spec": true,
+  "suites": {
+    "test_contract": {
+      "run": 45,
+      "passed": 45,
+      "failed": 0,
+      "errors": 0,
+      "skipped": [],
+      "failing": []
+    },
+    "test_mvp": {
+      "run": 22,
+      "passed": 22,
+      "failed": 0,
+      "errors": 0,
+      "skipped": [],
+      "failing": []
+    },
+    "test_models": {
+      "run": 6,
+      "passed": 5,
+      "failed": 0,
+      "errors": 0,
+      "skipped": [
+        "test_models.TestTritonRepo.test_onnx_output_equals_package_formula: onnxruntime not installed"
+      ],
+      "failing": []
+    }
+  },
+  "meaning": "Unit/contract/integration voi backend stub va inference server gia. Khong chung minh Triton/GPU that; xem smoke.py."
+}

@@ -1,0 +1,375 @@
+"""Mot phien kiem tren stack THAT (Triton that), chay ngay tren may co stack. Chi dung thu vien chuan.
+
+Usage (trong thu muc mvp/, stack da `make start SLOW=1`):
+    python3 tests/real_session.py --phase main          # P1..P10, ghi run/session-state.json
+    (reboot may)
+    python3 tests/real_session.py --phase post-reboot   # R1..R3
+--no-docker: bo cac buoc can docker/make (kill, backup/restore) de thu script voi tests/local_stack.py.
+
+Moi buoc ghi PASS/FAIL + so lieu vao run/session-report.json. Script KHONG sua ket qua: buoc nao sai thi FAIL.
+"""
+import argparse
+import base64
+import hashlib
+import json
+import os
+import shutil
+import sqlite3
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(HERE))
+from load_cutover import Client, png, STATION, TERMINAL  # noqa: E402
+
+ROOT = HERE.parent
+API, TRITON = 'vr01-mvp-api-1', 'vr01-mvp-triton-1'
+
+
+class Session:
+    def __init__(self, args):
+        self.a, self.run = args, args.run_dir
+        tokens = {v['role']: v['token'] for v in
+                  json.loads((self.run / 'auth' / 'lab-tokens.secret.json').read_text()).values()}
+        self.c = Client(args.host, {'inference': args.inference_port, 'management': args.management_port}, tokens,
+                        self.run / 'tls' / 'ca.crt')
+        self.id = time.strftime('%Y%m%dT%H%M%S')
+        self.steps, self.n = [], 0
+        self.report_path = self.run / 'session-report.json'
+        if self.report_path.is_file() and args.phase == 'post-reboot':
+            self.steps = json.loads(self.report_path.read_text())['steps']
+
+    # ---------- helpers
+    def step(self, name, ok, **detail):
+        self.steps.append({'step': name, 'result': 'PASS' if ok else 'FAIL', 'at': time.strftime('%H:%M:%S'), **detail})
+        print(f"{'PASS' if ok else 'FAIL'}  {name}  {json.dumps(detail, ensure_ascii=False)[:300]}", flush=True)
+        self.save()
+
+    def save(self):
+        failed = [s['step'] for s in self.steps if s['result'] != 'PASS']
+        self.report_path.write_text(json.dumps({'verdict': 'FAIL' if failed else 'PASS', 'failed': failed,
+                                                'steps': self.steps}, indent=2, ensure_ascii=False) + '\n')
+
+    def rid(self, tag):
+        self.n += 1
+        return f'sess-{self.id}-{tag}-{self.n:03d}'
+
+    def body(self, rid, recipe, gray=40, retry_of=None, product=None):
+        return {'request_id': rid, 'product_id': product or f'PCB1-SESS-{self.n:03d}', 'product_type': 'PCB1',
+                'recipe_version': recipe, 'captured_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+                'station_id': STATION, 'retry_of': retry_of,
+                'image': {'content_type': 'image/png', 'data_base64': base64.b64encode(png(gray)).decode()}}
+
+    def submit(self, rid, recipe, **kw):
+        return self.c.call('POST', '/v1/inspections', 'operator', self.body(rid, recipe, **kw))
+
+    def status(self, rid):
+        return self.c.call('GET', f'/v1/inspections/{rid}', 'viewer')[1]
+
+    def wait_state(self, rid, states, timeout=30):
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            s = self.status(rid)
+            if s and s.get('state') in states:
+                return s
+            time.sleep(0.02)
+        raise AssertionError(f'{rid} did not reach {states} within {timeout}s (now {s})')
+
+    def result(self, rid):
+        return self.c.call('GET', f'/v1/inspections/{rid}/result', 'viewer')[1]
+
+    def activate(self, name, expect=200):
+        s, b = self.c.call('POST', f'/v1/admin/stations/{STATION}/activation', 'admin',
+                           {'recipe_name': name, 'recipe_version': '0.1.0', 'reason': f'session {self.id}'}, 'management')
+        if s != expect:
+            raise AssertionError(f'activate {name}: {s} {b}')
+        return b
+
+    def active(self):
+        return self.c.call('GET', f'/v1/stations/{STATION}/active-recipe', 'viewer')[1]['recipe_version']
+
+    def trace(self, rid=None):
+        out = []
+        for line in (self.run / 'data' / 'trace.jsonl').read_text().splitlines():
+            e = json.loads(line)
+            if rid is None or e.get('request_id') == rid:
+                out.append(e)
+        return out
+
+    def wait_ready(self, timeout=180):
+        t0 = time.time()
+        while time.time() - t0 < timeout:
+            try:
+                if self.c.call('GET', '/readyz')[0] == 200:
+                    return round(time.time() - t0, 1)
+            except OSError:
+                pass
+            time.sleep(0.5)
+        raise AssertionError(f'not ready after {timeout}s')
+
+    def sh(self, *cmd, check=True):
+        return subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, check=check)
+
+    def tool(self, script, *extra):
+        p = subprocess.run([sys.executable, '-B', str(HERE / script), '--run-dir', str(self.run), '--host', self.a.host,
+                            '--inference-port', str(self.a.inference_port),
+                            '--management-port', str(self.a.management_port), *extra],
+                           cwd=ROOT, capture_output=True, text=True)
+        return p.returncode, p.stdout.strip().splitlines()[-1] if p.stdout.strip() else p.stderr[-300:]
+
+    def pid(self, container):
+        return int(self.sh('docker', 'inspect', '-f', '{{.State.Pid}}', container).stdout.strip())
+
+    def guarded(self, name, fn):
+        try:
+            fn()
+        except Exception as exc:  # noqa: BLE001 - mot buoc hong khong duoc lam mat cac buoc sau
+            self.step(name, False, error=f'{type(exc).__name__}: {exc}'[:400])
+
+    # ---------- main phase
+    def p0_calibrate_slow(self):
+        """Chinh so vong lap cua model-slow de moi lan suy luan ~1,2 s tren may nay (can cho P4-P8)."""
+        self.activate('recipe-slow')
+        rid = self.rid('calib')
+        self.submit(rid, 'recipe-slow@0.1.0')
+        self.wait_state(rid, TERMINAL, 120)
+        res = self.result(rid)
+        ms = res['timing_ms']['inference'] or (15000 if res['state'] == 'TIMEOUT' else 1)
+        rounds = 64
+        if not 800 <= ms <= 1800:
+            rounds = max(4, min(2000, round(64 * 1200 / ms)))
+            os.environ['VR01_SLOW_ROUNDS'] = str(rounds)
+            self.activate('recipe-a')
+            deadline = time.time() + 60
+            while time.time() < deadline and not any(
+                    e['event'] == 'lifecycle.unloaded' and e['model']['name'] == 'model-slow' for e in self.trace()):
+                time.sleep(0.5)
+            self.sh('make', 'init', 'SLOW=1')
+        (self.run / 'session-slow-rounds.txt').write_text(str(rounds))
+        self.step('P0 calibrate slow fixture for this machine', True, first_measure_ms=ms, rounds=rounds)
+
+    def p1_smoke(self):
+        rc, last = self.tool('smoke.py', '--output', str(self.run / 'session-smoke.json'))
+        self.step('P1 smoke flow', rc == 0, last=last)
+
+    def p2_load_cutover(self):
+        rc, last = self.tool('load_cutover.py', '--rate', str(self.a.rate), '--duration', str(self.a.duration),
+                             '--cutover-every', '5', '--output', str(self.run / 'session-load-cutover.json'))
+        r = json.loads((self.run / 'session-load-cutover.json').read_text())
+        self.step('P2 cutover A<->B under continuous load', rc == 0, sent=r['requests']['sent'],
+                  missing_or_wrong=r['requests']['missing_or_wrong'], duplicates=r['requests']['duplicate_or_extra_products'],
+                  cutovers=f"{r['cutovers']['succeeded']}/{r['cutovers']['requested']}", max_gap_s=r['cutovers']['max_gap_s'],
+                  p95_ms=r['latency_total_ms']['p95'])
+
+    def p3_slow_model(self):
+        self.activate('recipe-slow')
+        rid = self.rid('slow')
+        self.submit(rid, 'recipe-slow@0.1.0')
+        self.wait_state(rid, TERMINAL, 60)
+        res = self.result(rid)
+        self.slow_ms = res['timing_ms']['inference'] or 0
+        ok = res['state'] == 'COMPLETED' and res['lineage']['model']['name'] == 'model-slow'
+        self.step('P3 slow fixture model runs on the inference server', ok and self.slow_ms >= 300,
+                  inference_ms=self.slow_ms, score=res['score'], decision=res['decision'],
+                  note='can >= 300 ms de cac buoc P4-P8 bat duoc trang thai PROCESSING')
+
+    def p4_cancel_processing(self):
+        rid = self.rid('cancelrun')
+        self.submit(rid, 'recipe-slow@0.1.0')
+        self.wait_state(rid, {'PROCESSING'}, 10)
+        s, b = self.c.call('POST', f'/v1/inspections/{rid}/cancel', 'operator', {'reason': 'session: cancel while running'})
+        nxt = self.rid('aftercancel')
+        self.submit(nxt, 'recipe-slow@0.1.0')
+        after = self.wait_state(nxt, TERMINAL, 60)
+        res = self.result(rid)
+        ev = [e['event'] for e in self.trace(rid)]
+        ok = (s, res['state'], res['decision'], res['score']) == (200, 'CANCELLED', None, None) \
+            and 'inference.result_discarded_after_cancel' in ev and after['state'] == 'COMPLETED'
+        self.step('P4 cancel while PROCESSING: late result discarded', ok, cancel_http=s, state=res['state'],
+                  discarded_logged='inference.result_discarded_after_cancel' in ev, next_request=after['state'])
+
+    def p5_cancel_queued(self):
+        ids = [self.rid('q') for _ in range(3)]
+        for r in ids:
+            self.submit(r, 'recipe-slow@0.1.0')
+        s, b = self.c.call('POST', f'/v1/inspections/{ids[2]}/cancel', 'operator', {'reason': 'session: cancel while queued'})
+        finals = [self.wait_state(r, TERMINAL, 90)['state'] for r in ids]
+        ev = [e['event'] for e in self.trace(ids[2])]
+        ok = s == 200 and finals == ['COMPLETED', 'COMPLETED', 'CANCELLED'] and 'inference.started' not in ev \
+            and 'request.dequeued_already_terminal' in ev
+        self.step('P5 cancel while queued: never sent to the inference server', ok, cancel_http=s, finals=finals,
+                  inference_started_for_cancelled='inference.started' in ev)
+
+    def p6_drain_before_unload(self):
+        rid = self.rid('drain')
+        self.submit(rid, 'recipe-slow@0.1.0')
+        self.wait_state(rid, {'PROCESSING'}, 10)
+        self.activate('recipe-a')
+        fast = self.rid('fast')
+        self.submit(fast, 'recipe-a@0.1.0')
+        res_slow = self.wait_state(rid, TERMINAL, 60)
+        res_fast = self.wait_state(fast, TERMINAL, 60)
+        deadline = time.time() + 30
+        order = []
+        while time.time() < deadline:
+            order = [(e['event'], e.get('request_id') or (e.get('model') or {}).get('name')) for e in self.trace()
+                     if e['event'] in ('request.terminal', 'lifecycle.unloaded')]
+            if ('lifecycle.unloaded', 'model-slow') in order[order.index(('request.terminal', rid)):]:
+                break
+            time.sleep(0.2)
+        idx_done = order.index(('request.terminal', rid))
+        unloaded_after = ('lifecycle.unloaded', 'model-slow') in order[idx_done:]
+        lin = self.result(rid)['lineage']['model']['name']
+        ok = res_slow['state'] == 'COMPLETED' and lin == 'model-slow' and res_fast['state'] == 'COMPLETED' and unloaded_after
+        self.step('P6 cutover drains the in-flight request before unloading the old model', ok,
+                  in_flight_final=res_slow['state'], in_flight_model=lin, new_recipe_request=res_fast['state'],
+                  old_model_unloaded_after_request_finished=unloaded_after)
+
+    def p7_kill_api(self):
+        self.activate('recipe-slow')
+        ids = [self.rid('kill') for _ in range(3)]
+        for r in ids:
+            self.submit(r, 'recipe-slow@0.1.0')
+        self.wait_state(ids[0], {'PROCESSING'}, 10)
+        before = [self.status(r)['state'] for r in ids]
+        os.kill(self.pid(API), 9)
+        time.sleep(1)
+        back = self.wait_ready()
+        finals = [self.status(r) for r in ids]
+        active = self.active()
+        retry = self.rid('retry')
+        self.submit(retry, 'recipe-slow@0.1.0', retry_of=ids[0], product=self.status(ids[0])['product_id'])
+        retry_final = self.wait_state(retry, TERMINAL, 60)['state']
+        ok = all(f['state'] == 'INDETERMINATE' and f['decision'] is None for f in finals) \
+            and active == 'recipe-slow@0.1.0' and retry_final == 'COMPLETED'
+        self.step('P7 kill -9 API with 1 running + 2 queued', ok, before_kill=before,
+                  after_restart=[f['state'] for f in finals], ready_again_s=back, active_recipe=active,
+                  retry_with_new_id=retry_final)
+
+    def p8_kill_triton_under_load(self):
+        self.activate('recipe-a')
+        out = self.run / 'session-load-triton-kill.json'
+        proc = subprocess.Popen([sys.executable, '-B', str(HERE / 'load_cutover.py'), '--run-dir', str(self.run),
+                                 '--host', self.a.host, '--inference-port', str(self.a.inference_port),
+                                 '--management-port', str(self.a.management_port), '--rate', '10', '--duration', '50',
+                                 '--cutover-every', '8', '--allow-technical', '--output', str(out)],
+                                cwd=ROOT, stdout=subprocess.PIPE, text=True)
+        time.sleep(12)
+        os.kill(self.pid(TRITON), 9)
+        killed_at = time.time()
+        proc.wait(600)
+        ready_s = self.wait_ready()
+        r = json.loads(out.read_text())
+        ok = r['requests']['missing_or_wrong'] == 0 and r['requests']['duplicate_or_extra_products'] == 0 \
+            and r['requests']['completed'] > 0
+        self.step('P8 kill -9 Triton under load: no wrong/duplicate result, service recovers', ok,
+                  sent=r['requests']['sent'], completed=r['requests']['completed'],
+                  technical=r['requests'].get('technical_states'), not_accepted=r['requests'].get('not_accepted'),
+                  wrong=r['requests']['missing_or_wrong'], duplicates=r['requests']['duplicate_or_extra_products'],
+                  cutovers=f"{r['cutovers']['succeeded']}/{r['cutovers']['requested']}",
+                  ready_after_load_s=ready_s, active_recipe=self.active(),
+                  seconds_from_kill_to_end=round(time.time() - killed_at, 1))
+
+    def p9_backup_restore(self):
+        probe = self.rid('keep')
+        self.submit(probe, self.active())
+        self.wait_state(probe, TERMINAL, 60)
+        before, active = self.result(probe), self.active()
+        data = self.run / 'data'
+        bdir = self.run / 'backup'
+        bdir.mkdir(exist_ok=True)
+        dst = bdir / f'ledger-{self.id}.sqlite3'
+        t0 = time.time()
+        src = sqlite3.connect(str(data / 'ledger.sqlite3'))
+        bak = sqlite3.connect(str(dst))
+        src.backup(bak)  # online backup API: khong can dung service
+        integrity = bak.execute('PRAGMA integrity_check').fetchone()[0]
+        rows = bak.execute('SELECT COUNT(*) FROM inspections').fetchone()[0]
+        bak.close()
+        src.close()
+        backup_s = round(time.time() - t0, 2)
+        digest = hashlib.sha256(dst.read_bytes()).hexdigest()
+        self.sh('make', 'stop')
+        lost = self.run / f'data.lost-{self.id}'
+        shutil.move(str(data), str(lost))  # gia lap mat du lieu
+        data.mkdir()
+        self.sh('make', 'start', 'SLOW=1')
+        self.wait_ready()
+        gone = self.c.call('GET', f'/v1/inspections/{probe}/result', 'viewer')[0]
+        t1 = time.time()
+        self.sh('make', 'stop')
+        shutil.rmtree(data)
+        data.mkdir()
+        shutil.copy(dst, data / 'ledger.sqlite3')
+        shutil.copytree(lost / 'images', data / 'images')
+        self.sh('make', 'start', 'SLOW=1')
+        self.wait_ready()
+        rto = round(time.time() - t1, 1)
+        after = self.result(probe)
+        ok = integrity == 'ok' and gone == 404 and after == before and self.active() == active
+        self.step('P9 ledger backup -> simulated data loss -> restore', ok, backup_integrity=integrity, backup_rows=rows,
+                  backup_seconds=backup_s, backup_sha256=digest[:16], lookup_after_loss_http=gone,
+                  result_identical_after_restore=after == before, active_recipe_restored=self.active() == active,
+                  restore_rto_s_lab=rto, note='backup nam tren cung may; anh lay lai tu thu muc cu (chua co backup anh rieng)')
+
+    def p10_state_for_reboot(self):
+        probe = self.rid('reboot')
+        self.submit(probe, self.active())
+        self.wait_state(probe, TERMINAL, 60)
+        state = {'probe': probe, 'result': self.result(probe), 'active': self.active(), 'saved_at': time.time()}
+        (self.run / 'session-state.json').write_text(json.dumps(state))
+        enabled = self.sh('systemctl', 'is-enabled', 'docker', check=False).stdout.strip()
+        self.step('P10 state saved for reboot; docker starts on boot', enabled == 'enabled', docker_service=enabled,
+                  active_recipe=state['active'])
+
+    # ---------- post-reboot phase
+    def post_reboot(self):
+        st = json.loads((self.run / 'session-state.json').read_text())
+        up = float(Path('/proc/uptime').read_text().split()[0]) if Path('/proc/uptime').exists() else None
+        ready = self.wait_ready(300)
+        res = self.result(st['probe'])
+        ok = res == st['result'] and self.active() == st['active'] and (up is None or up < 900)
+        self.step('R1 after full machine reboot: stack back by itself, active recipe and old result intact', ok,
+                  machine_uptime_s=up, waited_for_ready_s=ready, active_recipe=self.active(),
+                  result_identical=res == st['result'])
+        rc, last = self.tool('smoke.py', '--output', str(self.run / 'session-smoke-after-reboot.json'))
+        self.step('R2 smoke flow after reboot', rc == 0, last=last)
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument('--phase', choices=['main', 'post-reboot'], required=True)
+    ap.add_argument('--run-dir', type=Path, default=ROOT / 'run')
+    ap.add_argument('--host', default='127.0.0.1')
+    ap.add_argument('--inference-port', type=int, default=8443)
+    ap.add_argument('--management-port', type=int, default=9443)
+    ap.add_argument('--rate', type=float, default=10)
+    ap.add_argument('--duration', type=float, default=60)
+    ap.add_argument('--no-docker', action='store_true')
+    args = ap.parse_args()
+    rounds_file = args.run_dir / 'session-slow-rounds.txt'
+    if rounds_file.is_file():
+        os.environ['VR01_SLOW_ROUNDS'] = rounds_file.read_text().strip()
+    s = Session(args)
+    if args.phase == 'post-reboot':
+        s.guarded('R1 after full machine reboot', s.post_reboot)
+    else:
+        steps = [s.p1_smoke, s.p2_load_cutover, s.p3_slow_model, s.p4_cancel_processing, s.p5_cancel_queued,
+                 s.p6_drain_before_unload]
+        if not args.no_docker:
+            steps.insert(2, s.p0_calibrate_slow)
+            steps += [s.p7_kill_api, s.p8_kill_triton_under_load, s.p9_backup_restore, s.p10_state_for_reboot]
+        for fn in steps:
+            s.guarded(fn.__name__, fn)
+    s.save()
+    rep = json.loads(s.report_path.read_text())
+    print(f"SESSION {args.phase}: {rep['verdict']}  {sum(x['result'] == 'PASS' for x in rep['steps'])}/{len(rep['steps'])} "
+          f"-> {s.report_path}")
+    return 0 if rep['verdict'] == 'PASS' else 1
+
+
+if __name__ == '__main__':
+    sys.exit(main())

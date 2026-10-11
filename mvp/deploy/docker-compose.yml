@@ -11,11 +11,12 @@ services:
         PYTHON_IMAGE: ${PYTHON_IMAGE:-python:3.12-slim}
     profiles: ["tools"]
     user: "${HOST_UID:-10001}:${HOST_GID:-10001}"
-    environment:
-      HOME: /tmp
     volumes:
       - ../run:/run-data
-    command: ["python", "tools/init_lab.py", "--run-dir", "/run-data", "--instance-kind", "${TRITON_INSTANCE_KIND:-KIND_CPU}"]
+    environment:
+      HOME: /tmp
+      VR01_SLOW_ROUNDS: ${VR01_SLOW_ROUNDS:-}
+    command: ["sh", "-c", "python tools/init_lab.py --run-dir /run-data --instance-kind ${TRITON_INSTANCE_KIND:-KIND_CPU} ${INIT_EXTRA:-}"]
 
   triton:
     image: ${TRITON_IMAGE:-nvcr.io/nvidia/tritonserver:25.08-py3}
@@ -40,7 +41,7 @@ services:
     command: ["python", "backend/inspection_api.py", "--host", "0.0.0.0",
               "--data-dir", "/run-data/data", "--principals", "/run-data/auth/principals.json",
               "--tls-cert", "/run-data/tls/server.crt", "--tls-key", "/run-data/tls/server.key",
-              "--kserve-url", "http://triton:8000"]
+              "--examples", "/run-data/examples", "--kserve-url", "http://triton:8000"]
     volumes:
       - ../run:/run-data
     ports:

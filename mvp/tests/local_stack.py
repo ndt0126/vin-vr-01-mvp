@@ -24,13 +24,14 @@ def main():
     ap.add_argument('--management-port', default='9443')
     args = ap.parse_args()
     run = args.run_dir
-    pk = HERE.parent / 'packages' / 'examples' / 'packages'
+    pk = run / 'examples' / 'packages'
     fake = FakeKServe({d.name: json.loads((d / 'model.json').read_text()) for d in pk.iterdir() if d.is_dir()})
+    fake.delays['model-slow'] = 0.8  # gia lap do cham cua fixture
     proc = subprocess.Popen([sys.executable, '-B', str(HERE.parent / 'backend' / 'inspection_api.py'),
                              '--data-dir', str(run / 'data'), '--principals', str(run / 'auth' / 'principals.json'),
                              '--tls-cert', str(run / 'tls' / 'server.crt'), '--tls-key', str(run / 'tls' / 'server.key'),
                              '--inference-port', args.inference_port, '--management-port', args.management_port,
-                             '--kserve-url', fake.url])
+                             '--examples', str(run / 'examples'), '--kserve-url', fake.url])
     print(f'FAKE inference server at {fake.url}; API starting (pid {proc.pid})', flush=True)
     signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))  # kill wrapper -> van tat API con
     try:

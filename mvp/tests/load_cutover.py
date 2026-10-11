@@ -28,7 +28,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 STATION = 'station-sim'
-TERMINAL = {'COMPLETED', 'FAILED', 'TIMEOUT', 'INDETERMINATE'}
+TERMINAL = {'COMPLETED', 'FAILED', 'TIMEOUT', 'INDETERMINATE', 'CANCELLED'}
 
 
 def png(gray, size=8):
@@ -73,6 +73,9 @@ def main():
     ap.add_argument('--rate', type=float, default=10, help='request moi giay')
     ap.add_argument('--duration', type=float, default=60, help='so giay phat tai')
     ap.add_argument('--cutover-every', type=float, default=10, help='so giay giua hai lan chuyen recipe')
+    ap.add_argument('--allow-technical', action='store_true',
+                    help='dung khi co chu y gay su co: FAILED/TIMEOUT/INDETERMINATE va request bi tu choi duoc DEM, '
+                         'khong tinh la loi; van bat buoc khong thieu/trung/sai lineage')
     ap.add_argument('--output', type=Path)
     args = ap.parse_args()
     tokens = {v['role']: v['token'] for v in
@@ -152,10 +155,16 @@ def main():
     th.join()
 
     # ---- doc lai tung request va kiem
-    problems, results = [], {}
+    problems, results, technical, not_accepted = [], {}, {}, 0
     for rec in sent:
         if rec['accepted_recipe'] is None:
-            problems.append({'rid': rec['rid'], 'problem': 'never accepted', 'detail': rec.get('error')})
+            if args.allow_technical:
+                not_accepted += 1
+                s, _ = c.call('GET', f"/v1/inspections/{rec['rid']}", 'viewer')
+                if s != 404:
+                    problems.append({'rid': rec['rid'], 'problem': f'client saw rejection but a record exists ({s})'})
+            else:
+                problems.append({'rid': rec['rid'], 'problem': 'never accepted', 'detail': rec.get('error')})
             continue
         res = None
         for _ in range(600):
@@ -180,6 +189,10 @@ def main():
             'model of that recipe': lin['model']['name'] == want['model'],
             'score of that model': res['score'] is not None and abs(res['score'] - score) <= 1e-5,
         }
+        if args.allow_technical and res['state'] != 'COMPLETED':
+            technical[res['state']] = technical.get(res['state'], 0) + 1
+            checks = {k: v for k, v in checks.items() if k not in ('state COMPLETED', 'score of that model')}
+            checks['decision is null'] = res['decision'] is None and res['score'] is None
         bad = [k for k, ok in checks.items() if not ok]
         if bad:
             problems.append({'rid': rec['rid'], 'problem': 'wrong: ' + ', '.join(bad), 'state': res['state'],
@@ -216,15 +229,19 @@ def main():
         by_recipe[k] = by_recipe.get(k, 0) + 1
     lat = sorted(r['timing_ms']['total'] for r in results.values() if r['timing_ms']['total'] is not None)
     ok_cut = [x for x in cutovers if x['status'] == 200 and x['changed'] and x['golden_passed']]
-    verdict = not problems and not dup and len(ok_cut) == len(cutovers) and len(cutovers) >= 1 \
-        and len(results) == len(sent)
+    if args.allow_technical:
+        verdict = not problems and not dup and len(results) + not_accepted == len(sent)
+    else:
+        verdict = not problems and not dup and len(ok_cut) == len(cutovers) and len(cutovers) >= 1 \
+            and len(results) == len(sent)
     report = {
         'verdict': 'PASS' if verdict else 'FAIL', 'run_id': run_id,
         'config': {'rate_per_s': args.rate, 'duration_s': args.duration, 'cutover_every_s': args.cutover_every,
                    'send_period_s': round(period, 4)},
         'requests': {'sent': len(sent), 'with_terminal_result': len(results),
                      'completed': sum(r['state'] == 'COMPLETED' for r in results.values()), 'by_recipe': by_recipe,
-                     'missing_or_wrong': len(problems), 'duplicate_or_extra_products': len(dup)},
+                     'missing_or_wrong': len(problems), 'duplicate_or_extra_products': len(dup),
+                     'technical_states': technical, 'not_accepted': not_accepted},
         'cutovers': {'requested': len(cutovers), 'succeeded': len(ok_cut), 'detail': gaps,
                      'max_gap_s': max(measured) if measured else None,
                      'gap_resolution_note': f'gap khong the nho hon chu ky gui {round(period, 3)} s; day khong phai so do downtime'},

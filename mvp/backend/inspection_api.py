@@ -1414,6 +1414,7 @@ def main():
     ap.add_argument('--tls-cert')
     ap.add_argument('--tls-key')
     ap.add_argument('--kserve-url', help='URL noi bo cua inference server KServe v2/Triton; bo trong = stub')
+    ap.add_argument('--examples', help='thu muc package/recipe (mac dinh: packages/examples trong ma nguon)')
     args = ap.parse_args()
     if args.init_lab_principals:
         tok, pr = init_lab_principals(args.init_lab_principals)
@@ -1422,7 +1423,8 @@ def main():
     if not args.principals:
         ap.error('--principals is required')
     backend = KServeV2Backend(args.kserve_url) if args.kserve_url else StubBackend()
-    app = App(args.data_dir, load_principals(args.principals), backend=backend)
+    registry = Registry(args.examples) if args.examples else None
+    app = App(args.data_dir, load_principals(args.principals), backend=backend, registry=registry)
     tls = {'cert': args.tls_cert, 'key': args.tls_key} if args.tls_cert else None
     srv = Server(app, args.host, args.inference_port, args.management_port, tls)
     print(json.dumps({'inference_port': srv.port('inference'), 'management_port': srv.port('management'),

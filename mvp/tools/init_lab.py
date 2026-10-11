@@ -54,6 +54,8 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--run-dir', type=Path, required=True)
     ap.add_argument('--instance-kind', default='KIND_CPU', choices=['KIND_CPU', 'KIND_GPU'])
+    ap.add_argument('--with-slow-fixture', action='store_true',
+                    help='them model-slow/recipe-slow (tests/fixtures/slow) de thu timeout/cancel/drain')
     args = ap.parse_args()
     run = args.run_dir
     (run / 'data').mkdir(parents=True, exist_ok=True)
@@ -67,8 +69,16 @@ def main():
     else:
         make_tls(run / 'tls')
         print('tls: created lab CA + server certificate (30 days, strict X.509 verified)')
-    accepted, rejected = build_triton_repo.build(build_triton_repo.PACKAGES_ROOT / 'examples' / 'packages',
-                                                 run / 'triton-repo', args.instance_kind)
+    # Kho package/recipe ma API doc luc chay: ban sao cua packages/examples (+ fixture cham neu duoc yeu cau).
+    examples = run / 'examples'
+    if examples.exists():
+        shutil.rmtree(examples)
+    shutil.copytree(build_triton_repo.PACKAGES_ROOT / 'examples', examples)
+    if args.with_slow_fixture:
+        shutil.copytree(HERE.parent / 'tests' / 'fixtures' / 'slow' / 'packages', examples / 'packages', dirs_exist_ok=True)
+        shutil.copytree(HERE.parent / 'tests' / 'fixtures' / 'slow' / 'recipes', examples / 'recipes', dirs_exist_ok=True)
+        print('examples: added TEST FIXTURE model-slow / recipe-slow')
+    accepted, rejected = build_triton_repo.build(examples / 'packages', run / 'triton-repo', args.instance_kind)
     for m in accepted:
         print(f"model: {m['name']}@{m['version']} {m['instance_kind']} digest {m['manifest_sha256'][:12]}")
     for r in rejected:

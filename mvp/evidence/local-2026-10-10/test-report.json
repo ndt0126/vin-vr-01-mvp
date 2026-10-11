@@ -2,7 +2,7 @@
   "verdict": "PASS",
   "python": "3.12.7",
   "platform": "macOS-26.6-arm64-arm-64bit",
-  "seconds": 23.3,
+  "seconds": 23.2,
   "openapi_static": {
     "checks": 11,
     "failed": []

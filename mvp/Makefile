@@ -1,5 +1,8 @@
 # VR-01 MVP - mot lenh cho moi viec. Chay trong thu muc mvp/.
-COMPOSE = HOST_UID=$$(id -u) HOST_GID=$$(id -g) docker compose --env-file deploy/.env -f deploy/docker-compose.yml
+# GPU=1: them cau hinh GPU cho Triton (chua chay thu).
+# SLOW=1: them fixture model-slow (chi de test timeout/cancel/drain).  VR01_SLOW_ROUNDS=N: chinh do cham.
+INIT_EXTRA = $(if $(SLOW),--with-slow-fixture,)
+COMPOSE = HOST_UID=$$(id -u) HOST_GID=$$(id -g) INIT_EXTRA="$(INIT_EXTRA)" docker compose --env-file deploy/.env -f deploy/docker-compose.yml $(if $(GPU),-f deploy/docker-compose.gpu.yml,)
 PY ?= python3
 
 .PHONY: env build init start stop down logs smoke load docs report test test-local digests clean

@@ -1,0 +1,11 @@
+# Lop phu cho may co GPU NVIDIA + NVIDIA Container Toolkit:  make start GPU=1
+# CHUA CHAY THU (10/2026). Dat TRITON_INSTANCE_KIND=KIND_GPU trong deploy/.env de config.pbtxt ghi KIND_GPU.
+services:
+  triton:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

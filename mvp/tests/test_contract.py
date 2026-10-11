@@ -162,6 +162,7 @@ class FakeKServe:
     def __init__(self, models):
         self.models, self.calls = models, []
         self.loaded, self.lifecycle, self.wrong_id = set(), [], False
+        self.delays = {}  # ten model -> giay ngu them (gia lap model cham)
         outer = self
 
         class H(BaseHTTPRequestHandler):
@@ -200,6 +201,7 @@ class FakeKServe:
                 if name not in outer.loaded:
                     return self._send(400, {'error': 'model not loaded'})
                 outer.calls.append({'path': self.path, 'trace': self.headers.get('X-Trace-Id'), 'body': body})
+                time.sleep(outer.delays.get(name, 0))
                 p = outer.models[name]
                 x = body['inputs'][0]['data']
                 score = min(1.0, max(0.0, p['gain'] * sum(x) / len(x) + p['bias']))

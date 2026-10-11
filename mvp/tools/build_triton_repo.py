@@ -14,6 +14,7 @@ Usage: python3 build_triton_repo.py --out ../run/triton-repo [--packages DIR] [-
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import struct
 import sys
@@ -77,8 +78,44 @@ def _attr_int(name, value):
     return _bytes(5, _bytes(1, name) + _int(3, value) + _int(20, 2))
 
 
-def linear_score_onnx(gain, bias):
-    """SCORE = clip(gain * mean(IMAGE) + bias, 0, 1)."""
+def _attr_tensor(name, tensor_bytes):
+    return _bytes(5, _bytes(1, name) + _bytes(5, tensor_bytes) + _int(20, 4))
+
+
+def _int64_tensor(name, values):
+    return b''.join(_int(1, d) for d in [len(values)]) + _int(2, INT64) + _bytes(8, name) + \
+        _bytes(9, struct.pack(f'<{len(values)}q', *values))
+
+
+def _burn_nodes(n, rounds):
+    """Lam cham CO CHU DICH cho model fixture: X = mean * Ones(n,n); lap X = X @ (Ones/n). Gia tri khong doi
+    Moi vong ton ~n^3 phep nhan tren CPU/GPU; ket qua vong lap khong anh huong SCORE."""
+    one = b''.join(_int(1, d) for d in [1]) + _int(2, FLOAT) + _bytes(9, struct.pack('<f', 1.0))
+    inv = b''.join(_int(1, d) for d in [1]) + _int(2, FLOAT) + _bytes(9, struct.pack('<f', 1.0 / n))
+    nodes = [_node('ConstantOfShape', ['burn_shape'], ['burn_ones'], _attr_tensor('value', one)),
+             _node('ConstantOfShape', ['burn_shape'], ['burn_p'], _attr_tensor('value', inv)),
+             _node('Mul', ['mean0', 'burn_ones'], ['burn_0'])]
+    for i in range(rounds):
+        nodes.append(_node('MatMul', [f'burn_{i}', 'burn_p'], [f'burn_{i + 1}']))
+    # Ket qua vong lap duoc nhan 0 roi cong vao: SCORE giu DUNG TUYET DOI cong thuc goc, khong bi sai so tich luy.
+    nodes.append(_node('ReduceMean', [f'burn_{rounds}'], ['burn_mean'], _attr_ints('axes', [0, 1]) + _attr_int('keepdims', 0)))
+    nodes.append(_node('Mul', ['burn_mean', 'burn_zero'], ['burn_nothing']))
+    nodes.append(_node('Add', ['mean0', 'burn_nothing'], ['mean_1']))
+    return nodes, [_bytes(5, _int64_tensor('burn_shape', [n, n])), _bytes(5, _tensor('burn_zero', [], [0.0]))]
+
+
+def linear_score_onnx(gain, bias, burn=None):
+    """SCORE = clip(gain * mean(IMAGE) + bias, 0, 1).  burn={'n':..,'rounds':..} chi dung cho fixture test."""
+    if burn:
+        extra, extra_init = _burn_nodes(int(burn['n']), int(burn['rounds']))
+        head = [_node('ReduceMean', ['IMAGE'], ['mean0'], _attr_ints('axes', [1, 2, 3]) + _attr_int('keepdims', 0))]
+        nodes = head + extra + [_node('Mul', ['mean_1', 'gain'], ['scaled']), _node('Add', ['scaled', 'bias'], ['raw']),
+                                _node('Clip', ['raw', 'lo', 'hi'], ['SCORE'])]
+        graph = b''.join(_bytes(1, x) for x in nodes) + _bytes(2, 'vr01_linear_score_slow') + b''.join(extra_init)
+        for name, dims, vals in (('gain', [1], [gain]), ('bias', [1], [bias]), ('lo', [], [0.0]), ('hi', [], [1.0])):
+            graph += _bytes(5, _tensor(name, dims, vals))
+        graph += _bytes(11, _value_info('IMAGE', [1, 1, 2, 2])) + _bytes(12, _value_info('SCORE', [1]))
+        return _int(1, 7) + _bytes(2, 'vr01-mvp') + _bytes(7, graph) + _bytes(8, _bytes(1, '') + _int(2, 13))
     nodes = [
         _node('ReduceMean', ['IMAGE'], ['mean'], _attr_ints('axes', [1, 2, 3]) + _attr_int('keepdims', 0)),
         _node('Mul', ['mean', 'gain'], ['scaled']),
@@ -127,7 +164,11 @@ def build(packages_dir, out_dir, kind='KIND_CPU', config=None):
         try:
             pkg, digest, _ = validate_design.validate_package(manifest, config)
             params = json.loads((manifest.parent / pkg['artifact']['path']).read_bytes())
-            onnx_bytes = linear_score_onnx(float(params['gain']), float(params['bias']))
+            burn_file = manifest.parent / 'triton-build.json'  # chi fixture test moi co file nay
+            burn = json.loads(burn_file.read_text()).get('burn') if burn_file.is_file() else None
+            if burn and os.environ.get('VR01_SLOW_ROUNDS'):  # hieu chinh do cham theo may dang chay
+                burn = dict(burn, rounds=int(os.environ['VR01_SLOW_ROUNDS']))
+            onnx_bytes = linear_score_onnx(float(params['gain']), float(params['bias']), burn)
             golden_in = json.loads((manifest.parent / pkg['golden']['input']['path']).read_bytes())
             actual = run_golden(onnx_bytes, golden_in)
             g = pkg['golden']
@@ -143,7 +184,7 @@ def build(packages_dir, out_dir, kind='KIND_CPU', config=None):
         (mdir / 'model.onnx').write_bytes(onnx_bytes)
         cfg = config_pbtxt(pkg['name'], kind)
         (out_dir / pkg['name'] / 'config.pbtxt').write_text(cfg)
-        accepted.append({'name': pkg['name'], 'version': pkg['version'], 'manifest_sha256': digest,
+        accepted.append({'name': pkg['name'], 'version': pkg['version'], 'manifest_sha256': digest, 'burn': burn,
                          'instance_kind': kind, 'golden_expected': g['expected_score'], 'golden_onnx': actual,
                          'files': {'1/model.onnx': hashlib.sha256(onnx_bytes).hexdigest(),
                                    'config.pbtxt': hashlib.sha256(cfg.encode()).hexdigest()}})

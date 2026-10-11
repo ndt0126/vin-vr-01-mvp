@@ -40,6 +40,14 @@ make test
 
 Lệnh khác: `make logs`, `make down`, `make digests`, `make clean` (xóa `run/`).
 
+## Phiên kiểm trên stack thật (chưa chạy)
+
+`tests/real_session.py` gom các kịch bản cần Triton thật vào một lệnh: smoke, chuyển recipe dưới tải, hủy khi đang chạy và khi đang chờ, drain trước khi gỡ model, `kill -9` API khi có request dở, `kill -9` Triton khi đang có tải, sao lưu → giả lập mất dữ liệu → khôi phục, reboot cả máy. Nó cần `make start SLOW=1`, tức thêm fixture `model-slow` (cùng kết quả với `model-a`, cố ý chậm khoảng 1 giây; xem `tests/fixtures/slow/`).
+
+Từ laptop, `tools/run_vps_session.sh <IP>` (ở thư mục gốc dự án) cài Docker trên VPS mới, `git clone` repo công khai, chạy cả phiên, reboot, rồi kéo log về `evidence/`. **Tính tới 11/10/2026 phiên này mới chạy thử 6 bước không cần Docker trên laptop với inference server giả; chưa chạy trên VPS.**
+
+`make start GPU=1` thêm cấu hình GPU cho Triton (`deploy/docker-compose.gpu.yml`); chưa chạy thử.
+
 ## Smoke flow kiểm gì
 
 `readyz` → thiếu token 401 → viewer gửi ảnh 403 → operator gọi management 403 → không có route Triton trên business API → admin chọn recipe A → 2 ảnh ra OK/NG với lineage `model-a` → ảnh hỏng 422 → gửi lại cùng ID trả 200 replay → cùng ID khác sản phẩm 409 → admin chuyển recipe B → recipe cũ bị 409 → ảnh mới có lineage `model-b` → kết quả đã pin A không đổi → liệt kê theo state. Kết quả ghi ở `run/smoke-report.json`.

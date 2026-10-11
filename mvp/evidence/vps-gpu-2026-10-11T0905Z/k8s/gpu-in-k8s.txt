@@ -1,0 +1,5 @@
+allocatable_gpu=1
+triton_gpu_limit=1
+NVIDIA RTX A6000, 398 MiB
+      2 instance_group [ { count: 1, kind: KIND_GPU } ]
+tritonserver, 388 MiB

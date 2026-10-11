@@ -1,0 +1,6 @@
+name: "model-heavy"
+backend: "onnxruntime"
+max_batch_size: 0
+input [ { name: "IMAGE", data_type: TYPE_UINT8, dims: [1, 3, 1024, 1024] } ]
+output [ { name: "SCORE", data_type: TYPE_FP32, dims: [ 1 ] } ]
+instance_group [ { count: 1, kind: KIND_GPU } ]

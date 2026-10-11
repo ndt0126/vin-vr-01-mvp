@@ -1,0 +1,95 @@
+{
+  "models": [
+    {
+      "name": "model-a",
+      "version": "0.1.0",
+      "manifest_sha256": "a700dc698dfef898dda6ba046196ef339dd7614ea360d041321c8becb6aecce1",
+      "burn": null,
+      "fail_above_mean": null,
+      "instance_kind": "KIND_GPU",
+      "golden_expected": 0.375,
+      "golden_onnx": null,
+      "files": {
+        "1/model.onnx": "4d2e14144139b9cd546c282a6a356e56ac8ea7f5becdb2c3d206ce0bc7353e78",
+        "config.pbtxt": "a8d72edbeb7803cc6874b33222e3d564c5c507fdeed782e901ca0e5cc92308c6"
+      }
+    },
+    {
+      "name": "model-b",
+      "version": "0.1.0",
+      "manifest_sha256": "dcf1542894dc2dad0c8a71c5289b56e92db2cc39718158053967c0831a9d3e15",
+      "burn": null,
+      "fail_above_mean": null,
+      "instance_kind": "KIND_GPU",
+      "golden_expected": 0.3125,
+      "golden_onnx": null,
+      "files": {
+        "1/model.onnx": "0999c39cdd034ee6713b942ce9439b8b5fdaa861704248cdb2cc30435649dafd",
+        "config.pbtxt": "8d170a8ad34704187f346121c1160ce98b81ff0456ea213170e4301ebdab21cb"
+      }
+    },
+    {
+      "name": "model-bad",
+      "version": "0.1.0",
+      "manifest_sha256": "1b20488423dbf187bb369a8da39d1d605534aee8575449ee53d31cf1981912cd",
+      "burn": null,
+      "fail_above_mean": 0.5,
+      "instance_kind": "KIND_GPU",
+      "golden_expected": 0.375,
+      "golden_onnx": null,
+      "files": {
+        "1/model.onnx": "308eddf7fbe33418fd458838f15b213d90c9949f6ef36568d7a8effd9e7e1d37",
+        "config.pbtxt": "25fab6a9770789e5ffa4eaa5e6af98085634702496dfacc81bba19d7f47f2b71"
+      }
+    },
+    {
+      "name": "model-heavy",
+      "version": "0.1.0",
+      "manifest_sha256": "a38da7342fd7c44e1317921f0d3204a9c0a2b64de16198c68639220bb49cb3b3",
+      "burn": null,
+      "fail_above_mean": null,
+      "instance_kind": "KIND_GPU",
+      "backend": "triton-onnx-v1",
+      "golden_expected": 0.479788,
+      "golden_onnx": null,
+      "files": {
+        "1/model.onnx": "63804825d78a7705f7ece54c30148a83deda2fab2836610e532ebb50197e097a",
+        "config.pbtxt": "99704f7361ec13f52283b20251ca0c1fee3dacb50fa63e48f146ac3d48cb2a14"
+      }
+    },
+    {
+      "name": "model-heavy-b",
+      "version": "0.1.0",
+      "manifest_sha256": "20c43097224beb7fc11d97a3eab3005918e9c241b4c24fb1ceda691187b937d7",
+      "burn": null,
+      "fail_above_mean": null,
+      "instance_kind": "KIND_GPU",
+      "backend": "triton-onnx-v1",
+      "golden_expected": 0.443069,
+      "golden_onnx": null,
+      "files": {
+        "1/model.onnx": "f7de9fc2d4ec90b7a2085729c77675e3e25bae4c6662d69f29904fc1f4b508d9",
+        "config.pbtxt": "a99cb88ad75c950cb36797c859f85e7559c2029291882f5d9ae223dc33eb884f"
+      }
+    },
+    {
+      "name": "model-slow",
+      "version": "0.1.0",
+      "manifest_sha256": "26384c166524758229b1000a3d9e97d7dd795061c7e6c831b57f9999392dc3a4",
+      "burn": {
+        "n": 1024,
+        "rounds": 64
+      },
+      "fail_above_mean": null,
+      "instance_kind": "KIND_GPU",
+      "golden_expected": 0.375,
+      "golden_onnx": null,
+      "files": {
+        "1/model.onnx": "19930b8a91c16dc450189529717dde379da664eeff9548896ba9127d01092ccd",
+        "config.pbtxt": "5e24815990800f868b8f27dd7ac3ddf9d3204025fce27886e15c5603638e2edc"
+      }
+    }
+  ],
+  "rejected": [],
+  "golden_checked_with_onnxruntime": false
+}

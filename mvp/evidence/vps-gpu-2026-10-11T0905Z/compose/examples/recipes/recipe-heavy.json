@@ -1,0 +1,21 @@
+{
+  "schema_version": "w2-draft-v1",
+  "name": "recipe-heavy",
+  "version": "0.1.0",
+  "site_id": "lab-only",
+  "station_id": "station-sim",
+  "package": {
+    "name": "model-heavy",
+    "version": "0.1.0",
+    "manifest_sha256": "a38da7342fd7c44e1317921f0d3204a9c0a2b64de16198c68639220bb49cb3b3"
+  },
+  "decision": {
+    "rule": "score-gte-threshold-is-ng",
+    "threshold": 0.5
+  },
+  "rollback_recipe": {
+    "name": "recipe-a",
+    "version": "0.1.0",
+    "sha256": "de9871c469e04977f5e85df5941412f35f3193d091523ee842da0b3a6de33677"
+  }
+}

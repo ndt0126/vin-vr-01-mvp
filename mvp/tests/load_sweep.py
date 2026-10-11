@@ -53,7 +53,7 @@ def main():
     run_id = time.strftime('%Y%m%dT%H%M%S')
     image = base64.b64encode(png(90)).decode()
     steps, saturated_in_a_row = [], 0
-    for rate in [float(x) for x in a.rates.split(',')]:
+    for step_no, rate in enumerate(float(x) for x in a.rates.split(',')):
         n = int(rate * a.step_seconds)
         results, lock, idx = [], threading.Lock(), [0]
         t0 = time.time() + 0.2
@@ -69,7 +69,7 @@ def main():
                     return
                 due = t0 + i / rate
                 time.sleep(max(0.0, due - time.time()))
-                rid = f'sweep-{run_id}-{int(rate)}-{i:06d}'
+                rid = f'sweep-{run_id}-s{step_no}-{i:06d}'  # theo so thu tu buoc: 1.0 va 1.5 req/s khong duoc trung ma
                 body = {'request_id': rid, 'product_id': f'PCB1-SWEEP-{i % 100:03d}', 'product_type': 'PCB1',
                         'recipe_version': recipe, 'captured_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
                         'station_id': STATION, 'retry_of': None,

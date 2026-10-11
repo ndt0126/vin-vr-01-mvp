@@ -1,0 +1,2 @@
+DA CHUYEN: recipe-a@0.1.0 -> recipe-b@0.1.0
+golden: mong doi 0.3125, thuc te 0.3125, DAT   activation_id 4

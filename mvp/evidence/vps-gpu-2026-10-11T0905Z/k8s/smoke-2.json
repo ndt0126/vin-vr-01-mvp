@@ -1,0 +1,152 @@
+{
+  "verdict": "PASS",
+  "run_id": "20261011T091711",
+  "steps": [
+    {
+      "step": "readyz",
+      "result": "PASS",
+      "detail": {
+        "status": 200,
+        "body": {
+          "ready": true,
+          "reasons": []
+        }
+      }
+    },
+    {
+      "step": "no token -> 401",
+      "result": "PASS",
+      "detail": 401
+    },
+    {
+      "step": "viewer cannot submit -> 403",
+      "result": "PASS",
+      "detail": 403
+    },
+    {
+      "step": "operator cannot use management -> 403",
+      "result": "PASS",
+      "detail": 403
+    },
+    {
+      "step": "no Triton route on business API -> 404",
+      "result": "PASS",
+      "detail": 404
+    },
+    {
+      "step": "admin activates recipe-a",
+      "result": "PASS",
+      "detail": {
+        "status": 200,
+        "changed": false,
+        "golden": {
+          "expected": 0.375,
+          "actual": 0.375,
+          "passed": true
+        }
+      }
+    },
+    {
+      "step": "inspect smoke-20261011T091711-a1",
+      "result": "PASS",
+      "detail": {
+        "submit": 202,
+        "state": "COMPLETED",
+        "decision": "OK",
+        "score": 0.156863,
+        "model": "model-a",
+        "model_digest": "a700dc698dfe",
+        "recipe": "recipe-a",
+        "inference_ms": 1.869
+      }
+    },
+    {
+      "step": "inspect smoke-20261011T091711-a2",
+      "result": "PASS",
+      "detail": {
+        "submit": 202,
+        "state": "COMPLETED",
+        "decision": "NG",
+        "score": 0.862745,
+        "model": "model-a",
+        "model_digest": "a700dc698dfe",
+        "recipe": "recipe-a",
+        "inference_ms": 1.602
+      }
+    },
+    {
+      "step": "corrupt image -> 422, no record",
+      "result": "PASS",
+      "detail": {
+        "status": 422
+      }
+    },
+    {
+      "step": "same request_id + same payload -> 200 replay, no new inference",
+      "result": "PASS",
+      "detail": 200
+    },
+    {
+      "step": "same request_id + other product -> 409",
+      "result": "PASS",
+      "detail": 409
+    },
+    {
+      "step": "cancel a finished request -> 409, result untouched",
+      "result": "PASS",
+      "detail": 409
+    },
+    {
+      "step": "viewer cannot cancel -> 403",
+      "result": "PASS",
+      "detail": 403
+    },
+    {
+      "step": "admin activates recipe-b",
+      "result": "PASS",
+      "detail": {
+        "status": 200,
+        "changed": true,
+        "golden": {
+          "expected": 0.3125,
+          "actual": 0.3125,
+          "passed": true
+        }
+      }
+    },
+    {
+      "step": "old recipe_version after switch -> 409",
+      "result": "PASS",
+      "detail": 409
+    },
+    {
+      "step": "inspect smoke-20261011T091711-b1",
+      "result": "PASS",
+      "detail": {
+        "submit": 202,
+        "state": "COMPLETED",
+        "decision": "OK",
+        "score": 0.203432,
+        "model": "model-b",
+        "model_digest": "dcf1542894dc",
+        "recipe": "recipe-b",
+        "inference_ms": 1.223
+      }
+    },
+    {
+      "step": "result of request pinned to A unchanged after switch",
+      "result": "PASS",
+      "detail": 200
+    },
+    {
+      "step": "list by state",
+      "result": "PASS",
+      "detail": [
+        "smoke-20261011T091711-b1",
+        "smoke-20261011T091711-a2",
+        "smoke-20261011T091711-a1"
+      ]
+    }
+  ],
+  "active_recipe_at_end": "recipe-b@0.1.0"
+}

@@ -1,0 +1,7 @@
+Client Version: v1.34.12
+Kustomize Version: v5.7.1
+Server Version: v1.34.12
+v1.34.12
+containerd containerd.io v2.2.1 dea7da592f5d1d2b7755e3a161be07f43fad8f75
+NAME                  STATUS   ROLES           AGE     VERSION    INTERNAL-IP     EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
+0006-kci-prxmx10075   Ready    control-plane   3m39s   v1.34.12   64.247.196.50   <none>        Ubuntu 24.04.4 LTS   6.17.0-14-generic   containerd://2.2.1

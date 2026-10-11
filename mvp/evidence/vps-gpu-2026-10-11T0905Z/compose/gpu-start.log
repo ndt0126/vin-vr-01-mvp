@@ -1,0 +1,167 @@
+HOST_UID=$(id -u) HOST_GID=$(id -g) INIT_EXTRA="--with-slow-fixture --with-heavy-fixture gpu" docker compose --env-file deploy/.env -f deploy/docker-compose.yml -f deploy/docker-compose.gpu.yml build init
+ Image vr01-mvp-api:0.1.0 Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 642B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 959B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1
+#3 DONE 0.1s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 583.75kB 0.0s done
+#5 DONE 0.0s
+
+#6 [ 1/14] FROM docker.io/library/python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1
+#6 resolve docker.io/library/python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1 0.0s done
+#6 sha256:6912e23eb44595b44dc6d9882b34f305ad6f6e9667cec70b13e5dbc4f8cd97f4 9.44MB / 12.12MB 0.1s
+#6 sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1 10.37kB / 10.37kB done
+#6 sha256:2b4f19dae3a777dfc3b76730bda1e82e1f66ab2a2686fa93ca78edbfb4f04ffe 1.75kB / 1.75kB done
+#6 sha256:df18428df8a0f9189c84e7424d214b4c50092af1f9dca5842a00c41c39bda316 5.66kB / 5.66kB done
+#6 sha256:ecc510c1e359bdc007b39802570bb7e4dec7d6ebccf357c3201a74299113e05e 9.44MB / 29.84MB 0.1s
+#6 sha256:75b6a36c64a1cf3520fc4b4aae4739d5caa8a6a05c27835a920a61784c9c32f8 1.29MB / 1.29MB 0.1s done
+#6 sha256:6912e23eb44595b44dc6d9882b34f305ad6f6e9667cec70b13e5dbc4f8cd97f4 12.12MB / 12.12MB 0.1s done
+#6 sha256:ecc510c1e359bdc007b39802570bb7e4dec7d6ebccf357c3201a74299113e05e 29.84MB / 29.84MB 0.3s done
+#6 sha256:bbc5a12237474ec0b23b5051260d56d6436a24d70d9cad961adebe7a037ed813 249B / 249B 0.1s done
+#6 extracting sha256:ecc510c1e359bdc007b39802570bb7e4dec7d6ebccf357c3201a74299113e05e 0.1s
+#6 extracting sha256:ecc510c1e359bdc007b39802570bb7e4dec7d6ebccf357c3201a74299113e05e 1.4s done
+#6 extracting sha256:75b6a36c64a1cf3520fc4b4aae4739d5caa8a6a05c27835a920a61784c9c32f8 0.1s
+#6 extracting sha256:75b6a36c64a1cf3520fc4b4aae4739d5caa8a6a05c27835a920a61784c9c32f8 0.1s done
+#6 extracting sha256:6912e23eb44595b44dc6d9882b34f305ad6f6e9667cec70b13e5dbc4f8cd97f4 0.1s
+#6 extracting sha256:6912e23eb44595b44dc6d9882b34f305ad6f6e9667cec70b13e5dbc4f8cd97f4 0.7s done
+#6 extracting sha256:bbc5a12237474ec0b23b5051260d56d6436a24d70d9cad961adebe7a037ed813
+#6 extracting sha256:bbc5a12237474ec0b23b5051260d56d6436a24d70d9cad961adebe7a037ed813 done
+#6 DONE 2.8s
+
+#7 [ 2/14] RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+#7 0.235 Hit:1 http://deb.debian.org/debian trixie InRelease
+#7 0.235 Get:2 http://deb.debian.org/debian trixie-updates InRelease [47.3 kB]
+#7 0.238 Get:3 http://deb.debian.org/debian-security trixie-security InRelease [43.4 kB]
+#7 0.259 Get:4 http://deb.debian.org/debian trixie/main amd64 Packages [9678 kB]
+#7 0.362 Get:5 http://deb.debian.org/debian trixie-updates/main amd64 Packages [4412 B]
+#7 0.362 Get:6 http://deb.debian.org/debian-security trixie-security/main amd64 Packages [265 kB]
+#7 1.489 Fetched 10.0 MB in 1s (7874 kB/s)
+#7 1.489 Reading package lists...
+#7 2.380 Reading package lists...
+#7 3.213 Building dependency tree...
+#7 3.410 Reading state information...
+#7 3.689 openssl is already the newest version (3.5.7-1~deb13u3).
+#7 3.689 openssl set to manually installed.
+#7 3.689 0 upgraded, 0 newly installed, 0 to remove and 1 not upgraded.
+#7 DONE 4.1s
+
+#8 [ 3/14] WORKDIR /app
+#8 DONE 0.0s
+
+#9 [ 4/14] COPY backend/requirements.txt backend/requirements.txt
+#9 DONE 0.0s
+
+#10 [ 5/14] RUN pip install --no-cache-dir -r backend/requirements.txt
+#10 2.506 Collecting jsonschema==4.26.0 (from -r backend/requirements.txt (line 1))
+#10 2.531   Downloading jsonschema-4.26.0-py3-none-any.whl.metadata (7.6 kB)
+#10 2.580 Collecting PyYAML==6.0.3 (from -r backend/requirements.txt (line 2))
+#10 2.584   Downloading pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+#10 2.823 Collecting Pillow==11.0.0 (from -r backend/requirements.txt (line 3))
+#10 2.827   Downloading pillow-11.0.0-cp312-cp312-manylinux_2_28_x86_64.whl.metadata (9.1 kB)
+#10 2.848 Collecting attrs>=22.2.0 (from jsonschema==4.26.0->-r backend/requirements.txt (line 1))
+#10 2.869   Downloading attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+#10 2.883 Collecting jsonschema-specifications>=2023.03.6 (from jsonschema==4.26.0->-r backend/requirements.txt (line 1))
+#10 2.887   Downloading jsonschema_specifications-2025.9.1-py3-none-any.whl.metadata (2.9 kB)
+#10 2.915 Collecting referencing>=0.28.4 (from jsonschema==4.26.0->-r backend/requirements.txt (line 1))
+#10 2.919   Downloading referencing-0.37.0-py3-none-any.whl.metadata (2.8 kB)
+#10 3.251 Collecting rpds-py>=0.25.0 (from jsonschema==4.26.0->-r backend/requirements.txt (line 1))
+#10 3.255   Downloading rpds_py-2026.9.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.1 kB)
+#10 3.295 Collecting typing-extensions>=4.4.0 (from referencing>=0.28.4->jsonschema==4.26.0->-r backend/requirements.txt (line 1))
+#10 3.301   Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+#10 3.309 Downloading jsonschema-4.26.0-py3-none-any.whl (90 kB)
+#10 3.316 Downloading pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (807 kB)
+#10 3.325    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 807.9/807.9 kB 146.4 MB/s eta 0:00:00
+#10 3.330 Downloading pillow-11.0.0-cp312-cp312-manylinux_2_28_x86_64.whl (4.4 MB)
+#10 3.348    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.4/4.4 MB 277.4 MB/s eta 0:00:00
+#10 3.352 Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
+#10 3.356 Downloading jsonschema_specifications-2025.9.1-py3-none-any.whl (18 kB)
+#10 3.359 Downloading referencing-0.37.0-py3-none-any.whl (26 kB)
+#10 3.364 Downloading rpds_py-2026.9.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (371 kB)
+#10 3.369 Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+#10 3.424 Installing collected packages: typing-extensions, rpds-py, PyYAML, Pillow, attrs, referencing, jsonschema-specifications, jsonschema
+#10 4.214 Successfully installed Pillow-11.0.0 PyYAML-6.0.3 attrs-26.1.0 jsonschema-4.26.0 jsonschema-specifications-2025.9.1 referencing-0.37.0 rpds-py-2026.9.1 typing-extensions-4.16.0
+#10 4.214 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+#10 4.315 
+#10 4.315 [notice] A new release of pip is available: 25.0.1 -> 26.2.1
+#10 4.315 [notice] To update, run: pip install --upgrade pip
+#10 DONE 4.5s
+
+#11 [ 6/14] COPY backend backend
+#11 DONE 0.0s
+
+#12 [ 7/14] COPY packages packages
+#12 DONE 0.0s
+
+#13 [ 8/14] COPY tools tools
+#13 DONE 0.0s
+
+#14 [ 9/14] COPY tests tests
+#14 DONE 0.0s
+
+#15 [10/14] COPY docs docs
+#15 DONE 0.0s
+
+#16 [11/14] COPY deploy/observability deploy/observability
+#16 DONE 0.0s
+
+#17 [12/14] COPY deploy/k8s deploy/k8s
+#17 DONE 0.0s
+
+#18 [13/14] COPY deploy/.env.sample deploy/.env.sample
+#18 DONE 0.0s
+
+#19 [14/14] RUN useradd --uid 10001 --create-home vr01 && mkdir -p /run-data && chown vr01 /run-data
+#19 DONE 0.3s
+
+#20 exporting to image
+#20 exporting layers
+#20 exporting layers 0.4s done
+#20 writing image sha256:c55e80ec35e5d306b7998f60c69b50d628c3b5aadeff20ec225373455d75d9e6 done
+#20 naming to docker.io/library/vr01-mvp-api:0.1.0 done
+#20 DONE 0.4s
+
+#21 resolving provenance for metadata file
+#21 DONE 0.0s
+ Image vr01-mvp-api:0.1.0 Built 
+HOST_UID=$(id -u) HOST_GID=$(id -g) INIT_EXTRA="--with-slow-fixture --with-heavy-fixture gpu" docker compose --env-file deploy/.env -f deploy/docker-compose.yml -f deploy/docker-compose.gpu.yml run --rm init
+ Network vr01-mvp_default Creating 
+ Network vr01-mvp_default Created 
+ Container vr01-mvp-init-run-9766ce78af6a Creating 
+ Container vr01-mvp-init-run-9766ce78af6a Created 
+auth: created lab principals (token file mode 600)
+tls: created lab CA + server certificate (30 days, strict X.509 verified)
+examples: added TEST FIXTURES model-slow / recipe-slow, model-bad / recipe-bad
+examples: added TEST FIXTURES model-heavy + model-heavy-b (gpu: 48 lop, 96 kenh, anh 512x512, 15263 KiB, device nvidia-gpu)
+model: model-a@0.1.0 KIND_GPU digest a700dc698dfe
+model: model-b@0.1.0 KIND_GPU digest dcf1542894dc
+model: model-bad@0.1.0 KIND_GPU digest 1b20488423db
+model: model-heavy@0.1.0 KIND_GPU digest 2a78e5ba998e
+model: model-heavy-b@0.1.0 KIND_GPU digest 79912c919c7a
+model: model-slow@0.1.0 KIND_GPU digest 26384c166524
+HOST_UID=$(id -u) HOST_GID=$(id -g) INIT_EXTRA="--with-slow-fixture --with-heavy-fixture gpu" docker compose --env-file deploy/.env -f deploy/docker-compose.yml -f deploy/docker-compose.gpu.yml up -d --wait triton api
+ Container vr01-mvp-triton-1 Creating 
+ Container vr01-mvp-triton-1 Created 
+ Container vr01-mvp-api-1 Creating 
+ Container vr01-mvp-api-1 Created 
+ Container vr01-mvp-triton-1 Starting 
+ Container vr01-mvp-triton-1 Started 
+ Container vr01-mvp-triton-1 Waiting 
+ Container vr01-mvp-triton-1 Healthy 
+ Container vr01-mvp-api-1 Starting 
+ Container vr01-mvp-api-1 Started 
+ Container vr01-mvp-triton-1 Waiting 
+ Container vr01-mvp-api-1 Waiting 
+ Container vr01-mvp-triton-1 Healthy 
+ Container vr01-mvp-api-1 Healthy 

@@ -1,0 +1,7 @@
+{
+  "comment": "TEST FIXTURE: cung cong thuc voi model-a nhung co vong lap lam cham de thu timeout/cancel/drain tren Triton that",
+  "burn": {
+    "n": 1024,
+    "rounds": 64
+  }
+}

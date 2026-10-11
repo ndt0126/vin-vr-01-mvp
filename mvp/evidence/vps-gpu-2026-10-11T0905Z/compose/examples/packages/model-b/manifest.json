@@ -1,0 +1,67 @@
+{
+  "schema_version": "w2-draft-v1",
+  "name": "model-b",
+  "version": "0.1.0",
+  "purpose": "fixture",
+  "artifact": {
+    "path": "model.json",
+    "sha256": "1571ba273d5a797c8024401ecdf49103bd03b273429995fa52d9210e5420e6fa"
+  },
+  "runtime": {
+    "backend": "reference-linear-score-v1",
+    "profile": "reference-cpu-v1",
+    "device": "cpu"
+  },
+  "io": {
+    "input": {
+      "name": "IMAGE",
+      "dtype": "FP32",
+      "shape": [
+        1,
+        1,
+        2,
+        2
+      ]
+    },
+    "output": {
+      "name": "SCORE",
+      "dtype": "FP32",
+      "shape": [
+        1
+      ]
+    }
+  },
+  "preprocess": "tensor-json-v1",
+  "postprocess": "normalized-score-v1",
+  "resources": {
+    "cpu_millicores": 100,
+    "ram_mib": 32,
+    "peak_vram_mib": 0,
+    "basis": "estimate"
+  },
+  "compatibility": {
+    "platform_contract": "w2-draft-v1",
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "warmup": {
+    "runs": 3,
+    "timeout_ms": 1000
+  },
+  "golden": {
+    "input": {
+      "path": "golden-input.json",
+      "sha256": "fc02e4249b96fcb45d584e2ec5c398b11e42c7f8d13ccba64ed3be0f9cac445c"
+    },
+    "expected_score": 0.3125,
+    "atol": 1e-06,
+    "rtol": 1e-06
+  },
+  "rollback_candidates": [
+    {
+      "name": "model-a",
+      "version": "0.1.0",
+      "manifest_sha256": "a700dc698dfef898dda6ba046196ef339dd7614ea360d041321c8becb6aecce1"
+    }
+  ]
+}

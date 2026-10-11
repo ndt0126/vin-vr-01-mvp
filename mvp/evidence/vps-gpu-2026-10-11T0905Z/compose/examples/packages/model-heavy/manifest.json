@@ -1,0 +1,61 @@
+{
+  "schema_version": "w2-draft-v1",
+  "name": "model-heavy",
+  "version": "0.1.0",
+  "purpose": "fixture",
+  "artifact": {
+    "path": "model.onnx",
+    "sha256": "63804825d78a7705f7ece54c30148a83deda2fab2836610e532ebb50197e097a"
+  },
+  "runtime": {
+    "backend": "triton-onnx-v1",
+    "profile": "triton-onnx-gpu-v1",
+    "device": "nvidia-gpu"
+  },
+  "io": {
+    "input": {
+      "name": "IMAGE",
+      "dtype": "UINT8",
+      "shape": [
+        1,
+        3,
+        1024,
+        1024
+      ]
+    },
+    "output": {
+      "name": "SCORE",
+      "dtype": "FP32",
+      "shape": [
+        1
+      ]
+    }
+  },
+  "preprocess": "image-rgb-unit-v1",
+  "postprocess": "normalized-score-v1",
+  "resources": {
+    "cpu_millicores": 2000,
+    "ram_mib": 1572,
+    "peak_vram_mib": 2304,
+    "basis": "estimate"
+  },
+  "compatibility": {
+    "platform_contract": "w2-draft-v1",
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "warmup": {
+    "runs": 1,
+    "timeout_ms": 60000
+  },
+  "golden": {
+    "input": {
+      "path": "golden-input.png",
+      "sha256": "7dcff461c5628b98452f5832b9fb0251c773cb701f5fb94d2aba9a9e135c823d"
+    },
+    "expected_score": 0.479788,
+    "atol": 0.002,
+    "rtol": 0.0
+  },
+  "rollback_candidates": []
+}

@@ -1,0 +1,4 @@
+{
+  "comment": "TEST FIXTURE: qua golden (mean 0.375) nhung LOI khi anh co mean >= 0.5; de thu tu rollback sau cutover",
+  "fail_above_mean": 0.5
+}

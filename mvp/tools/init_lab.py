@@ -83,6 +83,16 @@ def main():
         print('tls: created lab CA + server certificate (30 days, strict X.509 verified)')
     # Kho package/recipe ma API doc luc chay: ban sao cua packages/examples (+ fixture cham neu duoc yeu cau).
     examples = run / 'examples'
+
+    def tree_hash(root):
+        import hashlib
+        h = hashlib.sha256()
+        for f in sorted(root.rglob('*')) if root.exists() else []:
+            if f.is_file():
+                h.update(str(f.relative_to(root)).encode() + b'\0' + f.read_bytes())
+        return h.hexdigest()
+
+    examples_before = tree_hash(examples)
     if examples.exists():
         shutil.rmtree(examples)
     shutil.copytree(build_triton_repo.PACKAGES_ROOT / 'examples', examples)
@@ -100,6 +110,11 @@ def main():
               f"anh {info['size']}x{info['size']}, {info['onnx_bytes'] // 1024} KiB, device {info['device']})")
     accepted, rejected = build_triton_repo.build(examples / 'packages', run / 'triton-repo', args.instance_kind)
     opt_file.write_text(json.dumps({'slow': bool(args.with_slow_fixture), 'heavy': args.with_heavy_fixture}))
+    if examples_before != tree_hash(examples):
+        # API doc kho package/recipe va site-config MOT LAN luc khoi dong: kho doi thi phai khoi dong lai API
+        # (lo ra o phien GPU 11/10: doi muc model nang xong API van dung gioi han cu va tu choi model moi).
+        (run / 'examples.changed').write_text('restart api\n')
+        print('examples: content changed -> API must be restarted (make start does it)')
     for m in accepted:
         print(f"model: {m['name']}@{m['version']} {m['instance_kind']} digest {m['manifest_sha256'][:12]}")
     for r in rejected:

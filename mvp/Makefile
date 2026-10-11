@@ -21,6 +21,7 @@ init: build         ## tao token lab, chung chi TLS lab, Triton model repository
 
 start: init         ## bat Triton + API, cho toi khi healthy
 	$(COMPOSE) up -d --wait triton api
+	@if [ -f run/examples.changed ] && [ -n "$$(docker ps -q -f name=vr01-mvp-api-1)" ]; then echo 'kho package da doi: khoi dong lai API'; $(COMPOSE) restart api >/dev/null && $(COMPOSE) up -d --wait api; fi; rm -f run/examples.changed
 
 stop:               ## dung, giu du lieu trong run/
 	$(COMPOSE) stop

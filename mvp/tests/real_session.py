@@ -229,10 +229,11 @@ class Session:
                   old_model_unloaded_after_request_finished=unloaded_after)
 
     def p7_kill_api(self):
-        self.activate('recipe-slow')
+        rcp = getattr(self, 'slow_recipe', 'recipe-slow')  # tren GPU model-slow qua nhanh -> dung model nang
+        self.activate(rcp)
         ids = [self.rid('kill') for _ in range(3)]
         for r in ids:
-            self.submit(r, 'recipe-slow@0.1.0')
+            self.submit(r, f'{rcp}@0.1.0')
         self.wait_state(ids[0], {'PROCESSING'}, 10)
         before = [self.status(r)['state'] for r in ids]
         os.kill(self.pid(API), 9)
@@ -241,10 +242,10 @@ class Session:
         finals = [self.status(r) for r in ids]
         active = self.active()
         retry = self.rid('retry')
-        self.submit(retry, 'recipe-slow@0.1.0', retry_of=ids[0], product=self.status(ids[0])['product_id'])
+        self.submit(retry, f'{rcp}@0.1.0', retry_of=ids[0], product=self.status(ids[0])['product_id'])
         retry_final = self.wait_state(retry, TERMINAL, 60)['state']
         ok = all(f['state'] == 'INDETERMINATE' and f['decision'] is None for f in finals) \
-            and active == 'recipe-slow@0.1.0' and retry_final == 'COMPLETED'
+            and active == f'{rcp}@0.1.0' and retry_final == 'COMPLETED'
         self.step('P7 kill -9 API with 1 running + 2 queued', ok, before_kill=before,
                   after_restart=[f['state'] for f in finals], ready_again_s=back, active_recipe=active,
                   retry_with_new_id=retry_final)
@@ -827,6 +828,7 @@ def main():
     elif args.phase == 'gpu':
         s.report_path = s.run / 'session-gpu-report.json'
         s.steps = []
+        s.slow_recipe = 'recipe-heavy'
         for fn in (s.p1_smoke, s.g1_gpu_execution, s.g2_calibrate_heavy, s.p18_heavy_image_model, s.g3_heavy_cutover_under_load,
                    s.g4_oom_at_model_load, s.g5_oom_when_two_models_coexist, s.p13_observability, s.p14_auto_rollback,
                    s.p7_kill_api, s.p8_kill_triton_under_load):

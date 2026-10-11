@@ -1,0 +1,39 @@
+[09:05:47] preflight
+[09:05:54] packages + source
+[09:06:07] GPU in container
+NVIDIA RTX A6000, 49140 MiB
+[09:08:17] == PHAN 1: Compose tren GPU ==
+start exit=0
+ Container vr01-mvp-api-1 Waiting 
+ Container vr01-mvp-triton-1 Healthy 
+ Container vr01-mvp-api-1 Healthy 
+PASS  P1 smoke flow  {"last": "SMOKE PASS  18/18  -> /opt/vin-vr-01-mvp/mvp/run/session-smoke.json"}
+PASS  G1 the heavy model executes on the GPU (no silent CPU fallback)  {"gpu": {"name": "NVIDIA RTX A6000", "used_mib": 940.0, "total_mib": 49140.0, "driver": "580.126.16"}, "vram_before_mib": 398.0, "config_instance_kind": "KIND_GPU", "compute_apps": ["tritonserver, 930 MiB"], "triton_gpu_mem_used_bytes": [1001390080.
+FAIL  g2_calibrate_heavy  {"error": "AssertionError: activate recipe-heavy: 422 {'type': 'urn:vr01:problem:PACKAGE_REJECTED', 'title': 'Unprocessable content', 'status': 422, 'code': 'PACKAGE_REJECTED', 'detail': 'E_LIMIT: input larger than max_decoded_pixels', 'trace_id': 'f50a226ba242481da053fed5e8636bf1', 'request_i
+FAIL  p18_heavy_image_model  {"error": "AssertionError: activate recipe-heavy: 422 {'type': 'urn:vr01:problem:PACKAGE_REJECTED', 'title': 'Unprocessable content', 'status': 422, 'code': 'PACKAGE_REJECTED', 'detail': 'E_LIMIT: input larger than max_decoded_pixels', 'trace_id': '9d431ad8ed6f43be9eef83ee365cbc2b', 'reques
+FAIL  g3_heavy_cutover_under_load  {"error": "FileNotFoundError: [Errno 2] No such file or directory: '/opt/vin-vr-01-mvp/mvp/run/session-heavy-ms.txt'"}
+FAIL  G4 GPU OOM at model load/warm-up: activation refused, old recipe keeps serving, no restart needed  {"hog": {"total_mib": 48539, "held_mib": 47675, "free_mib": 199}, "activation_http": 422, "code": "PACKAGE_REJECTED", "active_after": "recipe-a@0.1.0", "readyz": 200, "request_on_old_recipe": "COMPLETED", "activatio
+FAIL  g5_oom_when_two_models_coexist  {"error": "AssertionError: activate recipe-heavy: 422 {'type': 'urn:vr01:problem:PACKAGE_REJECTED', 'title': 'Unprocessable content', 'status': 422, 'code': 'PACKAGE_REJECTED', 'detail': 'E_LIMIT: input larger than max_decoded_pixels', 'trace_id': 'a916eed4ae32429690ed7f4b3bc28e23'
+PASS  P13a Prometheus scrapes API and Triton  {"both_targets_up_after_s": 10.1}
+PASS  P13b one request and one model switch are observable in Prometheus  {"visible_after_s": 2.0, "counters_before": {"terminal": 10.0, "act": 4.0, "triton_b": 0.0}, "counters_after": {"terminal": 12.0, "act": 5.0, "triton_b": 2.0}, "active_recipe_series": [{"__name__": "vr01_active_recipe_info", "instance": "api:9090
+PASS  P13c full execution path of one request from its request_id (ledger + log)  {"events": ["request.admitted", "http.access", "inference.started", "inference.finished", "request.terminal"], "pinned_model": {"name": "model-a", "version": "0.1.0", "manifest_sha256": "a700dc698dfef898dda6ba046196ef339dd7614ea360d041321
+PASS  P13d alert VR01ModelUnavailable fires when Triton is stopped and clears after it is back  {"fired_after_stop_s": 22.0, "cleared_after_start_s": 6.0}
+PASS  P13e Grafana serves the provisioned dashboard  {"title": "VR-01 MVP — tổng quan vận hành", "panels": 18}
+PASS  P13f /metrics is reachable inside the compose network but not published on the host  {"series_lines": 135, "host_port_9090_http": "000"}
+PASS  P14 automatic rollback after 3 consecutive inference errors right after cutover  {"failed_requests": ["FAILED/BACKEND_ERROR", "FAILED/BACKEND_ERROR", "FAILED/BACKEND_ERROR"], "active_after": "recipe-a@0.1.0", "auto_rollback_logged": true, "failed_request_keeps_lineage": "model-bad", "request_after_rollback": "COM
+FAIL  p7_kill_api  {"error": "AssertionError: sess-20261011T090852-kill-014 did not reach {'PROCESSING'} within 10s (now {'request_id': 'sess-20261011T090852-kill-014', 'state': 'COMPLETED', 'decision': 'OK', 'reason': None, 'product_id': 'PCB1-SESS-016', 'product_type': 'PCB1', 'station_id': 'station-sim', 'retry_of'
+PASS  P8 kill -9 Triton under load: no wrong/duplicate result, service recovers  {"sent": 501, "completed": 501, "technical": {}, "not_accepted": 0, "wrong": 0, "duplicates": 0, "cutovers": "6/6", "ready_after_load_s": 0.0, "active_recipe": "recipe-a@0.1.0", "seconds_from_kill_to_end": 40.4}
+SESSION gpu: FAIL  10/16 -> /opt/vin-vr-01-mvp/mvp/run/session-gpu-report.json
+[09:12:40] quet tai tren model nang (GPU)
+cannot activate recipe-heavy: 422 {'type': 'urn:vr01:problem:PACKAGE_REJECTED', 'title': 'Unprocessable content', 'status': 422, 'code': 'PACKAGE_REJECTED', 'detail': 'E_LIMIT: input larger than max_d
+0
+1 MiB
+[09:12:50] == PHAN 2: Kubernetes co GPU ==
+kubeadm exit=0
+ALLOCATABLE_GPU=1
+NAME                  STATUS   ROLES           AGE   VERSION    INTERNAL-IP     EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
+0006-kci-prxmx10075   Ready    control-plane   46s   v1.34.12   64.247.196.50   <none>        Ubuntu 24.04.4 LTS   6.17.0-14-generic   containerd://2.2.1
+v1.34.12
+containerd containerd.io v2.2.1 dea7da592f5d1d2b7755e3a161be07f43fad8f75
+docker.io/library/vr01-mvp-api:0.1.0
+nvcr.io/nvidia/tritonserver@sha256:f836551575df7c9fb71144073845c6b3911de57db91a8c95e0687a4d2ac9f7a5

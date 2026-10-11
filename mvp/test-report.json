@@ -1,0 +1,62 @@
+{
+  "verdict": "PASS",
+  "python": "3.12.7",
+  "platform": "macOS-26.6-arm64-arm-64bit",
+  "seconds": 27.8,
+  "openapi_static": {
+    "checks": 11,
+    "failed": []
+  },
+  "api_docs_match_spec": true,
+  "suites": {
+    "test_contract": {
+      "run": 45,
+      "passed": 45,
+      "failed": 0,
+      "errors": 0,
+      "skipped": [],
+      "failing": []
+    },
+    "test_mvp": {
+      "run": 22,
+      "passed": 22,
+      "failed": 0,
+      "errors": 0,
+      "skipped": [],
+      "failing": []
+    },
+    "test_models": {
+      "run": 6,
+      "passed": 6,
+      "failed": 0,
+      "errors": 0,
+      "skipped": [],
+      "failing": []
+    },
+    "test_observability": {
+      "run": 6,
+      "passed": 6,
+      "failed": 0,
+      "errors": 0,
+      "skipped": [],
+      "failing": []
+    },
+    "test_k8s_manifests": {
+      "run": 7,
+      "passed": 7,
+      "failed": 0,
+      "errors": 0,
+      "skipped": [],
+      "failing": []
+    },
+    "test_heavy": {
+      "run": 10,
+      "passed": 10,
+      "failed": 0,
+      "errors": 0,
+      "skipped": [],
+      "failing": []
+    }
+  },
+  "meaning": "Unit/contract/integration voi backend stub va inference server gia. Khong chung minh Triton/GPU that; xem smoke.py."
+}

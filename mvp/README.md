@@ -16,10 +16,10 @@ Trạng thái 11/10/2026: **bản đầu, đã chạy với Triton thật (CPU) 
 
 ## Quick start
 
-**Máy cần có:** Linux amd64 (đã chạy trên Ubuntu 26.04), tối thiểu 2 vCPU, 4 GB RAM và khoảng 30 GB ổ trống (image Triton 20 GB sau khi bung). Cần Docker có Compose v2, `make`, `git` và `python3`. Trên Ubuntu mới cài:
+**Máy cần có:** Linux amd64 (đã chạy trên Ubuntu 26.04), tối thiểu 2 vCPU, 4 GB RAM và khoảng 30 GB ổ trống (image Triton 20 GB sau khi bung). Cần Docker có Compose v2, `make`, `git` và `python3`. Các lệnh dưới đây chạy bằng `root` (hoặc thêm `sudo` và cho user vào nhóm `docker`). Trên Ubuntu mới cài:
 
 ```bash
-apt-get update && apt-get install -y docker.io docker-compose-v2 make git
+apt-get update && apt-get install -y docker.io docker-compose-v2 make git python3
 ```
 
 **Lấy mã nguồn và vào thư mục `mvp/`** (mọi lệnh `make` bên dưới chạy trong thư mục này):
@@ -42,7 +42,7 @@ Lệnh này build image API, tạo token + chứng chỉ TLS lab + model reposit
 make smoke
 ```
 
-**Toàn bộ test trong container** (không cần Triton, chạy được khi stack đang bật hoặc tắt). Dòng cuối mong đợi: `MVP tests: PASS  72/73 passed, static 11/11` (1 test bỏ qua vì image không cài `onnxruntime`); báo cáo ghi ở `run/test-report-container.json`.
+**Toàn bộ test trong container** (không cần Triton, chạy được khi stack đang bật hoặc tắt). Dòng cuối mong đợi bắt đầu bằng `MVP tests: PASS  72/73 passed, static 11/11` (1 test bỏ qua vì image không cài `onnxruntime`); báo cáo ghi ở `run/test-report-container.json`.
 
 ```bash
 make test
@@ -142,7 +142,7 @@ Số liệu chi tiết và file nguồn: `TEST-REPORT.md` (sinh bằng `make rep
 ## Chưa kiểm chứng
 
 - **GPU:** model mới chạy `KIND_CPU`. `KIND_GPU` chỉ được ghi vào `config.pbtxt`; Compose chưa có cấu hình GPU cho Triton.
-- **Máy sạch bởi người khác:** ngày 11/10 một agent AI độc lập (không phải người) chỉ đọc README đã cài Docker, clone, `make start` và `make smoke` 18/18 trên VPS mới 2 vCPU / 4 GB; nó phải đoán 3 bước README khi đó chưa ghi (cài Docker, clone, thư mục chạy) và phát hiện `make test` trong container báo FAIL do image thiếu `docs/`. Cả hai đã sửa; biên bản ở `evidence/person-b-2026-10-11/`. Chưa có **người** reviewer tự làm, và bản README đã sửa chưa được chạy độc lập lại.
+- **Máy sạch bởi người khác:** ngày 11/10 có hai lượt do agent AI độc lập (không phải người) chỉ đọc README, mỗi lượt trên một VPS mới 2 vCPU / 4 GB. Lượt 1 phải đoán 3 bước và bắt được lỗi `make test`; sau khi sửa, **lượt 2 chạy trọn Quick start không cần can thiệp nào** (`make start`, smoke 18/18, test 72/73), ở đúng commit của release `w3-mvp-2026-10-11`. Biên bản: `evidence/person-b-2026-10-11/` và `evidence/person-b-2026-10-11-run2/`. Chưa có **người** reviewer tự làm.
 - Tải cao, soak dài, đầy ổ, mất điện thật.
 - Hủy không giải phóng GPU: inference đang chạy vẫn chạy hết (đã thấy trên Triton thật ở bước P4).
 - Chưa có UI.

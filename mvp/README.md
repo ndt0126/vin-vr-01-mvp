@@ -1,6 +1,6 @@
 # VR-01 MVP — Inspection API + lifecycle + Triton (W3-01 → W3-05)
 
-Trạng thái 11/10/2026: **bản đầu, đã chạy với Triton thật (CPU) trên VPS amd64**. Chưa GPU, chưa Kubernetes, chưa được mentor review.
+Trạng thái 11/10/2026: **bản lab, đã chạy với Triton thật trên VPS amd64, cả CPU và GPU NVIDIA (RTX A6000), cả Compose và kubeadm**. Soak 8 giờ trên GPU đang chạy. Chưa chạy trên máy AMD của nhà máy, chưa air gap đầy đủ, chưa được mentor review.
 
 ## Cấu trúc
 
@@ -67,15 +67,16 @@ Trên một VPS mới 4 vCPU / 8 GB, Triton thật, model chạy CPU. Chi tiết
 - **Model ảnh thật** (`triton-onnx-v1`): golden qua Triton đạt, khoảng 104 ms/lần; quét tải bão hòa ở khoảng 8 request/giây với 1 worker.
 - Lượt chính có 4 bước hỏng, đều do script kiểm của tác giả (2 bước) hoặc bước cắt mạng chưa chặn IPv6 (2 bước); đã sửa và chạy lại đạt. **Chưa chạy GPU; kubeadm cài có Internet; gói offline chưa ký.**
 
-## Phiên GPU (W4-04, W4-03 trên GPU) — đã chuẩn bị, CHƯA chạy
+## Phiên GPU (W4-04, W4-03 trên GPU) — 11/10/2026
 
-Mọi thứ dưới đây đã viết nhưng **chưa chạy trên GPU lần nào**; lần chạy đầu có thể phải sửa script.
+Trên một VPS thuê có RTX A6000 48 GB (NVIDIA, có Internet). Chi tiết, số liệu và giới hạn: `evidence/vps-gpu-2026-10-11T0905Z/README.md`.
 
-- `make start` trên máy GPU: đặt `TRITON_INSTANCE_KIND=KIND_GPU` và `VR01_GPU=1` trong `deploy/.env`.
-- `tests/real_session.py --phase gpu`: chứng minh model chạy trên GPU (không rơi về CPU), chọn mức model nặng để mỗi lần suy luận khoảng 1–2 giây, chuyển qua lại **hai model nặng** dưới tải, OOM lúc nạp model, OOM khi hai model cùng tồn tại (dùng `tests/vram_hog.py` chiếm VRAM), observability, tự rollback, kill API, kill Triton.
-- Soak 8 giờ không restart định kỳ: `tests/load_cutover.py` (ghi journal từng request), `tests/sampler.py` (RAM, VRAM, GPU mỗi 30 giây), `tests/soak_report.py` (xu hướng theo giờ, so giờ đầu với giờ cuối).
-- Kubernetes có GPU: `deploy/k8s/lab-kubeadm-gpu.sh` (kubeadm + NVIDIA device plugin) và overlay `lab-gpu`.
-- OOM giữa lúc suy luận **không tái hiện được** với model kích thước cố định đã warm-up (bộ nhớ đã được cấp từ lần golden); hai kịch bản OOM còn lại xảy ra lúc nạp/kích hoạt.
+- **Compose trên GPU: 16/16** (`tests/real_session.py --phase gpu`), sau khi sửa hai lỗi lộ ra ở lượt đầu (10/16). Model nặng chạy `KIND_GPU` thật (590 ms mỗi lần ở mức `gpu-xl`, VRAM 4,6 GB); chuyển qua lại hai model nặng dưới tải 5 phút: 256 request, 9/9 lần chuyển, 0 sai, 0 trùng.
+- **Hết VRAM:** lúc nạp model và khi nạp model thứ hai cạnh model đang chạy, kích hoạt bị từ chối 422, recipe cũ vẫn phục vụ, không cần restart (dùng `tests/vram_hog.py` chiếm VRAM).
+- **Quét tải model nặng:** trần khoảng 1,66 req/s với một instance; quá trần thì hàng đợi dài ra rồi trả 429.
+- **Kubernetes có GPU: 10/10** với `deploy/k8s/lab-kubeadm-gpu.sh` (kubeadm + NVIDIA device plugin) và overlay `lab-gpu`.
+- **Soak 8 giờ** không restart định kỳ: đang chạy (`tests/load_cutover.py` ghi journal, `tests/sampler.py` lấy mẫu mỗi 30 giây, `tests/soak_report.py` tổng hợp). Chưa có kết quả.
+- **Đã viết, CHƯA chạy trên GPU:** hết VRAM giữa lúc suy luận (`--phase gpu-post`, fixture `model-vram` cấp bộ nhớ theo ảnh), reboot node Kubernetes có GPU, gói offline trên node GPU (overlay `offline-gpu`).
 
 ## Observability (W4-01, W4-02)
 
@@ -130,7 +131,7 @@ Bật thêm Prometheus (`http://127.0.0.1:9091`) và Grafana (`http://127.0.0.1:
 - Sao lưu: bản sao nằm trên **chính máy đó** (không bảo vệ khi hỏng ổ); chưa có lịch sao lưu tự động. Lượt P9 đầu tiên (sáng 11/10) cho thấy trace không nằm trong bản sao lưu; `make backup` đã sửa điểm này.
 - P12: trong lúc Triton dừng, bên gửi bị chặn ở từng request (thử lại 5 giây), nên các request sau bị gửi trễ chứ không mất. Hành vi của camera thật khi bị chặn như vậy cần Integration xem.
 
-`make start GPU=1` thêm cấu hình GPU cho Triton (`deploy/docker-compose.gpu.yml`); chưa chạy thử.
+`make start GPU=1` (hoặc `VR01_GPU=1` trong `deploy/.env`) thêm cấu hình GPU cho Triton (`deploy/docker-compose.gpu.yml`); đã chạy ở phiên GPU 11/10.
 
 ## Smoke flow kiểm gì
 
@@ -180,9 +181,10 @@ Số liệu chi tiết và file nguồn: `TEST-REPORT.md` (sinh bằng `make rep
 
 ## Chưa kiểm chứng
 
-- **GPU:** model mới chạy `KIND_CPU`. `KIND_GPU` chỉ được ghi vào `config.pbtxt`; Compose chưa có cấu hình GPU cho Triton.
+- **GPU AMD của nhà máy:** mới chạy trên GPU NVIDIA thuê (RTX A6000). Chưa chạy trên phần cứng AMD; kết quả NVIDIA không suy ra được cho AMD.
+- Soak 8 giờ trên GPU đang chạy, chưa có kết quả. Hết VRAM giữa lúc suy luận chưa chạy thử.
 - **Máy sạch bởi người khác:** ngày 11/10 có hai lượt do agent AI độc lập (không phải người) chỉ đọc README, mỗi lượt trên một VPS mới 2 vCPU / 4 GB. Lượt 1 phải đoán 3 bước và bắt được lỗi `make test`; sau khi sửa, **lượt 2 chạy trọn Quick start không cần can thiệp nào** (`make start`, smoke 18/18, test 72/73), ở commit `c83b893`. Biên bản: `evidence/person-b-2026-10-11/` và `evidence/person-b-2026-10-11-run2/`. Chưa có **người** reviewer tự làm.
-- Tải cao, soak dài, đầy ổ, mất điện thật.
+- Mất điện thật; tải cao với model QC thật (mới quét tải bằng model tự sinh).
 - Hủy không giải phóng GPU: inference đang chạy vẫn chạy hết (đã thấy trên Triton thật ở bước P4).
 - Chưa có UI.
 
@@ -193,4 +195,4 @@ Số liệu chi tiết và file nguồn: `TEST-REPORT.md` (sinh bằng `make rep
 - Hai model mẫu là hàm tuyến tính trên ảnh thu về 2×2 (deterministic stub), không phải model QC. OK/NG/REVIEW ở đây không nói gì về chất lượng sản phẩm.
 - Package khai báo tham số (`model.json`); file ONNX được sinh từ tham số đó. Chuẩn package chưa mang trực tiếp file ONNX/TensorRT.
 - Auth là bearer token lab, chứng chỉ TLS tự ký 30 ngày. SQLite, 1 worker, 1 node. Chưa mTLS/PKI.
-- Đây là Compose cho lab. Triển khai Kubernetes thuộc W4-03.
+- Compose và manifests Kubernetes đều là bản lab một node.

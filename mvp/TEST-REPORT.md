@@ -98,8 +98,118 @@ Kết luận: **PASS**, 4/4 bước.
 | P11b normal limits restored: slow request completes again | PASS | {"state": "COMPLETED"} |
 | P12 inference server down ~30 s under load: clean refusals, no wrong result, recovery | PASS | {"sent": 601, "completed": 597, "technical": {}, "not_accepted": 4, "wrong": 0, "duplicates": 0, "client_503": 217, "readyz_during_outage": [503, 503, 503, 503, 503, 503], "outage_s": 24.3, "ready_after_start_s": 0.0, "request_after_recovery": "COMPLETED", "active_recipe": "recipe-a@0.1.0"} |
 
+## Phiên Tuần 4 trên Triton thật — vps-gpu-2026-10-11T0905Z / compose/session-gpu-report.json
+
+Nguồn: `evidence/vps-gpu-2026-10-11T0905Z/compose/session-gpu-report.json` (sha256 4d4c7096a396ba99…)
+
+Môi trường: Ubuntu 24.04.4 LTS · 6.17.0-14-generic x86_64 · 6 · Mem:           32139        1010       30317           5        1190       31128 · /dev/sda2       251G  9.9G  231G   5% / · NVIDIA RTX A6000, 49140 MiB, 580.126.16 · Docker version 29.2.1, build a5c7197 · NVIDIA Container Toolkit CLI version 1.18.
+
+Kết luận: **PASS**, 16/16 bước.
+
+| Bước | Kết quả | Số liệu ghi nhận |
+|---|---|---|
+| P1 smoke flow | PASS | {} |
+| G1 the heavy model executes on the GPU (no silent CPU fallback) | PASS | {"gpu": {"name": "NVIDIA RTX A6000", "used_mib": 942.0, "total_mib": 49140.0, "driver": "580.126.16"}, "vram_before_mib": 400.0, "config_instance_kind": "KIND_GPU", "compute_apps": ["tritonserver, 932 MiB"], "triton_gpu_mem_used_bytes": [418381824.0], "triton_success_counter": ["nv_inference_request_success{gpu_uuid=\"GPU-74db33 |
+| G2 calibrate heavy model on this GPU | PASS | {"preset_gpu_ms": [89.153, 88.194, 88.199, 88.493, 88.645], "preset_gpu_xl_ms": [664.425, 589.325, 589.444, 589.56, 590.864], "chosen": "gpu-xl", "median_inference_ms": 589.56, "vram": {"name": "NVIDIA RTX A6000", "used_mib": 4622.0, "total_mib": 49140.0, "driver": "580.126.16"}} |
+| P18 real image model (triton-onnx-v1): golden on the inference server, score depends on the image | PASS | {"golden": {"expected": 0.479788, "actual": 0.47975558042526245, "passed": true}, "scores": {"dark": 0.435297, "mid": 0.47941, "bright": 0.525869}, "inference_ms": [592.937, 590.979, 592.118], "model": {"name": "model-heavy", "version": "0.1.0", "manifest_sha256": "a38da7342fd7c44e1317921f0d3204a9c0a2b64de16198c68639220bb49cb3b3 |
+| G3 cutover between two heavy models on GPU under continuous load (5 min) | PASS | {"rate_per_s": 0.848, "sent": 256, "wrong": 0, "duplicates": 0, "cutovers": "9/9", "max_gap_s": 1.267, "latency_ms": {"p50": 608.573, "p95": 688.701, "max": 1165.582}, "vram_after": {"name": "NVIDIA RTX A6000", "used_mib": 4622.0, "total_mib": 49140.0, "driver": "580.126.16"}} |
+| G4 GPU OOM at model load/warm-up: activation refused, old recipe keeps serving, no restart needed | PASS | {"hog": {"total_mib": 48539, "held_mib": 47673, "free_mib": 199}, "activation_http": 422, "code": "ACTIVATION_GOLDEN_FAILED", "active_after": "recipe-a@0.1.0", "readyz": 200, "request_on_old_recipe": "COMPLETED", "activation_after_vram_freed": 200} |
+| G5 GPU OOM when a second model is loaded next to the active one: refused, active model unaffected | PASS | {"hog": {"total_mib": 48539, "held_mib": 45499, "free_mib": 199}, "activation_http": 422, "code": "ACTIVATION_GOLDEN_FAILED", "active_after": "recipe-heavy@0.1.0", "request_on_active_model": "COMPLETED", "activation_after_vram_freed": 200} |
+| P13a Prometheus scrapes API and Triton | PASS | {"both_targets_up_after_s": 0.0} |
+| P13b one request and one model switch are observable in Prometheus | PASS | {"visible_after_s": 4.0, "counters_before": {"terminal": 266.0, "act": 17.0, "triton_b": 0.0}, "counters_after": {"terminal": 268.0, "act": 18.0, "triton_b": 2.0}, "active_recipe_series": [{"__name__": "vr01_active_recipe_info", "instance": "api:9090", "job": "vr01-api", "model": "model-b", "model_sha256": "dcf1542894dc", "model |
+| P13c full execution path of one request from its request_id (ledger + log) | PASS | {"events": ["request.admitted", "http.access", "inference.started", "inference.finished", "request.terminal"], "pinned_model": {"name": "model-a", "version": "0.1.0", "manifest_sha256": "a700dc698dfef898dda6ba046196ef339dd7614ea360d041321c8becb6aecce1"}} |
+| P13d alert VR01ModelUnavailable fires when Triton is stopped and clears after it is back | PASS | {"fired_after_stop_s": 24.0, "cleared_after_start_s": 6.0} |
+| P13e Grafana serves the provisioned dashboard | PASS | {"title": "VR-01 MVP — tổng quan vận hành", "panels": 18} |
+| P13f /metrics is reachable inside the compose network but not published on the host | PASS | {"series_lines": 141, "host_port_9090_http": "000"} |
+| P14 automatic rollback after 3 consecutive inference errors right after cutover | PASS | {"failed_requests": ["FAILED/BACKEND_ERROR", "FAILED/BACKEND_ERROR", "FAILED/BACKEND_ERROR"], "active_after": "recipe-a@0.1.0", "auto_rollback_logged": true, "failed_request_keeps_lineage": "model-bad", "request_after_rollback": "COMPLETED/NG"} |
+| P7 kill -9 API with 1 running + 2 queued | PASS | {"before_kill": ["PROCESSING", "RECEIVED", "RECEIVED"], "after_restart": ["INDETERMINATE", "INDETERMINATE", "INDETERMINATE"], "ready_again_s": 1.0, "active_recipe": "recipe-heavy@0.1.0", "retry_with_new_id": "COMPLETED"} |
+| P8 kill -9 Triton under load: no wrong/duplicate result, service recovers | PASS | {"sent": 501, "completed": 501, "technical": {}, "not_accepted": 0, "wrong": 0, "duplicates": 0, "cutovers": "6/6", "ready_after_load_s": 0.0, "active_recipe": "recipe-a@0.1.0", "seconds_from_kill_to_end": 40.6} |
+
+## Kubernetes (kubeadm) — vps-gpu-2026-10-11T0905Z / k8s/k8s-report.txt
+
+Nguồn: `evidence/vps-gpu-2026-10-11T0905Z/k8s/k8s-report.txt` (sha256 d7bf286b2c6d9b3e…)
+
+Kết luận: **K8S CHECK PASS  10/10**
+
+| Bước | Kết quả |
+|---|---|
+| K1 deploy from a clean namespace, rollout complete  13s | PASS |
+| K2 both containers Ready (api readiness = active recipe verified + model loaded)  ready=[true true] | PASS |
+| K3 vr01ctl status through NodePort  SAN SANG recipe active : recipe-a@0.1.0  (sha256 de9871c469e0)  | PASS |
+| K4 smoke flow through NodePort  SMOKE PASS  18/18  -> /root/k8s-evidence | PASS |
+| K5 from another pod: Triton 8000 closed, API 8443 open, metrics 9090 closed by NetworkPolicy  triton8000=closed api8443=open metrics9090=closed | PASS |
+| K6 pod deleted -> recreated, same active recipe  11s; recipe active : recipe-b@0.1.0  (sha256 6ee3711f1bf3) | PASS |
+| K7 update to a new release revision  rev 1 -> 2, 12s | PASS |
+| K8 rollback to the previous release (rollout undo)  release=0.1.0, 14s | PASS |
+| K9 model switch and model rollback  DA CHUYEN: recipe-b@0.1.0 -> recipe-a@0.1.0 | PASS |
+| K10 smoke flow after update/rollback  SMOKE PASS  18/18  -> /root/k8s-evidence | PASS |
+
+## Quét tải model nặng trên GPU — vps-gpu-2026-10-11T0905Z
+
+Nguồn: `evidence/vps-gpu-2026-10-11T0905Z/compose/load-sweep-gpu-heavy-report.json` (sha256 7e9bc8bb2fc524e5…)
+
+Throughput cao nhất chưa bão hòa: **1.66 req/s**; bước đầu tiên bão hòa: 2.0 req/s. Model là mạng tích chập tự sinh, không phải model QC; số chỉ có nghĩa trên máy thử.
+
+## Phiên Tuần 4 trên Triton thật — vps-w4-2026-10-11T0754Z / compose/session-w4-report.json
+
+Nguồn: `evidence/vps-w4-2026-10-11T0754Z/compose/session-w4-report.json` (sha256 48d517249a1507d1…)
+
+Môi trường: Ubuntu 26.04 LTS · 7.0.0-29-generic x86_64 · 4 · Mem:            7746         716         579           4        6763        7029 · /dev/sda1        75G   22G   51G  30% /
+
+Kết luận: **FAIL**, 10/12 bước.
+
+| Bước | Kết quả | Số liệu ghi nhận |
+|---|---|---|
+| P1 smoke flow | PASS | {} |
+| P13a Prometheus scrapes API and Triton | PASS | {"both_targets_up_after_s": 10.0} |
+| P13b one request and one model switch are observable in Prometheus | FAIL | {"visible_after_s": null, "active_recipe_series": [{"__name__": "vr01_active_recipe_info", "instance": "api:9090", "job": "vr01-api", "model": "model-b", "model_sha256": "dcf1542894dc", "model_version": "0.1.0", "recipe": "recipe-b", "recipe_sha256": "6ee3711f1bf3", "recipe_version": "0.1.0"}], "p95_total_s": NaN} |
+| P13c full execution path of one request from its request_id (ledger + log) | PASS | {"events": ["request.admitted", "http.access", "inference.started", "inference.finished", "request.terminal"], "pinned_model": {"name": "model-a", "version": "0.1.0", "manifest_sha256": "a700dc698dfef898dda6ba046196ef339dd7614ea360d041321c8becb6aecce1"}} |
+| P13d alert VR01ModelUnavailable fires when Triton is stopped and clears after it is back | PASS | {"fired_after_stop_s": 20.0, "cleared_after_start_s": 6.0} |
+| P13e Grafana serves the provisioned dashboard | PASS | {"title": "VR-01 MVP — tổng quan vận hành", "panels": 18} |
+| P13f /metrics is reachable inside the compose network but not published on the host | PASS | {"series_lines": 93, "host_port_9090_http": "000"} |
+| P14 automatic rollback after 3 consecutive inference errors right after cutover | PASS | {"failed_requests": ["FAILED/BACKEND_ERROR", "FAILED/BACKEND_ERROR", "FAILED/BACKEND_ERROR"], "active_after": "recipe-a@0.1.0", "auto_rollback_logged": true, "failed_request_keeps_lineage": "model-bad", "request_after_rollback": "COMPLETED/NG"} |
+| p18_heavy_image_model | FAIL | {"error": "AssertionError: activate recipe-heavy: 422 {'type': 'urn:vr01:problem:RECIPE_NOT_FOUND', 'title': 'Unprocessable content', 'status': 422, 'code': 'RECIPE_NOT_FOUND', 'detail': 'recipe recipe-heavy@0.1.0 is not registered', 'trace_id': '4236316af097408fb9f5aa0ac57bab3f', 'request_id': None, 'retryable': False}"} |
+| P16 app image upgrade and rollback under load (Compose): no wrong result, active recipe kept | PASS | {"upgrade_s": 8.7, "image_after_upgrade": "vr01-mvp-api:0.1.1-test", "active_after_upgrade": "recipe-a@0.1.0", "rollback_s": 8.6, "image_after_rollback": "vr01-mvp-api:0.1.0", "sent": 901, "completed": 901, "technical": {}, "not_accepted": 0, "client_retries": {"recipe_refresh_409": 0, "queue_full_429": 0, "not_ready_503": 0, "s |
+| P17 network cut between client and API for 10 s under load: retries with same request_id, no loss/duplicate | PASS | {"iptables_chains": ["INPUT", "DOCKER-USER", "OUTPUT"], "sent": 401, "completed": 401, "not_accepted": 0, "client_send_errors": 5, "wrong": 0, "duplicates": 0} |
+| P15 image store really full (64 KiB tmpfs): clean 503, no record for refused, recovery after space is back | PASS | {"accepted_before_full": 16, "refused": 5, "first_refusal": [503, "STORAGE_UNAVAILABLE"], "readyz": [503, {"ready": false, "reasons": ["STORAGE_UNAVAILABLE"]}], "refused_have_no_record": true, "accepted_all_completed": true, "ready_after_space_back_s": 0.0, "request_after_recovery": "COMPLETED"} |
+
+## Kubernetes (kubeadm) — vps-w4-2026-10-11T0754Z / k8s/k8s-report.txt
+
+Nguồn: `evidence/vps-w4-2026-10-11T0754Z/k8s/k8s-report.txt` (sha256 95487ee3e2812293…)
+
+Kết luận: **K8S CHECK PASS  10/10**
+
+| Bước | Kết quả |
+|---|---|
+| K1 deploy from a clean namespace, rollout complete  8s | PASS |
+| K2 both containers Ready (api readiness = active recipe verified + model loaded)  ready=[true true] | PASS |
+| K3 vr01ctl status through NodePort  SAN SANG recipe active : recipe-a@0.1.0  (sha256 de9871c469e0)  | PASS |
+| K4 smoke flow through NodePort  SMOKE PASS  18/18  -> /root/k8s-evidence | PASS |
+| K5 from another pod: Triton 8000 closed, API 8443 open, metrics 9090 closed by NetworkPolicy  triton8000=closed api8443=open metrics9090=closed | PASS |
+| K6 pod deleted -> recreated, same active recipe  6s; recipe active : recipe-b@0.1.0  (sha256 6ee3711f1bf3) | PASS |
+| K7 update to a new release revision  rev 1 -> 2, 11s | PASS |
+| K8 rollback to the previous release (rollout undo)  release=0.1.0, 11s | PASS |
+| K9 model switch and model rollback  DA CHUYEN: recipe-b@0.1.0 -> recipe-a@0.1.0 | PASS |
+| K10 smoke flow after update/rollback  SMOKE PASS  18/18  -> /root/k8s-evidence | PASS |
+
+## Gói offline lớp ứng dụng — vps-w4-2026-10-11T0754Z / k8s/offline-report.txt
+
+Nguồn: `evidence/vps-w4-2026-10-11T0754Z/k8s/offline-report.txt` (sha256 56889d1e47a86c80…)
+
+Kết luận: **OFFLINE CHECK FAIL  5/7  (egress stays cut; reboot or flush iptables to restore)**
+
+| Bước | Kết quả |
+|---|---|
+| O1 build offline app bundle  size 7.0G, files 79 | PASS |
+| O2 Internet egress cut on the node  probe=open | FAIL |
+| O3 app images removed from the node before offline install  left=0 | PASS |
+| O4 install from the bundle with egress cut  122s; kich hoat luc : 2026-10-11T08:09:20.316Z | PASS |
+| O5 smoke flow on the offline-installed stack (tools from the bundle)  SMOKE PASS  18/18  -> /root/k8s-evidence | PASS |
+| O6 no image pull was attempted  pull events=0 | PASS |
+| O7 egress still cut at the end  probe=open | FAIL |
+
 ## Chưa có trong báo cáo này
 
-- Chuyển recipe dưới tải liên tục trên **Triton thật** (mới chạy với inference server giả).
-- Reboot cả máy; GPU (`KIND_GPU`); người khác tự chạy theo README trên máy sạch.
-- Stress tới bão hòa, soak dài, fault injection có hệ thống (W4-04).
+- Máy AMD của nhà máy; air gap đầy đủ (lớp nền Kubernetes vẫn cài online); model QC thật.
+- Người vận hành (không phải agent AI) tự chạy theo README/runbook trên máy sạch.
+- Mất điện thật; soak dài hơn 8 giờ.

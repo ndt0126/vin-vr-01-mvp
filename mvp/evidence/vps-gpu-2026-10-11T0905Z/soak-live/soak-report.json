@@ -1,69 +1,76 @@
 {
-  "samples": 200,
-  "duration_h": 1.66,
+  "samples": 210,
+  "duration_h": 1.74,
   "series": {
     "vr01_process_resident_memory_bytes": {
       "unit": "MiB",
       "min": 56.23,
-      "max": 107.59,
-      "first_window_avg": 76.6,
-      "last_window_avg": 97.04,
-      "slope_per_hour": 14.172,
-      "last_vs_first_pct": 26.68
+      "max": 108.4,
+      "first_window_avg": 77.96,
+      "last_window_avg": 97.73,
+      "slope_per_hour": 14.012,
+      "slope_per_hour_after_first_hour": null,
+      "last_vs_first_pct": 25.36
     },
     "api_container_mem_bytes": {
       "unit": "MiB",
       "min": 40.37,
       "max": 94.21,
-      "first_window_avg": 61.14,
-      "last_window_avg": 82.54,
-      "slope_per_hour": 14.883,
-      "last_vs_first_pct": 35.01
+      "first_window_avg": 62.5,
+      "last_window_avg": 82.83,
+      "slope_per_hour": 14.491,
+      "slope_per_hour_after_first_hour": null,
+      "last_vs_first_pct": 32.53
     },
     "triton_container_mem_bytes": {
       "unit": "MiB",
       "min": 1458.18,
       "max": 1634.3,
-      "first_window_avg": 1541.04,
-      "last_window_avg": 1599.49,
-      "slope_per_hour": 51.045,
-      "last_vs_first_pct": 3.79
+      "first_window_avg": 1541.62,
+      "last_window_avg": 1600.84,
+      "slope_per_hour": 46.304,
+      "slope_per_hour_after_first_hour": null,
+      "last_vs_first_pct": 3.84
     },
     "gpu_mem_used_mib": {
       "unit": "MiB",
       "min": 2572.0,
       "max": 6810.0,
-      "first_window_avg": 4622.84,
+      "first_window_avg": 4622.68,
       "last_window_avg": 4620.0,
-      "slope_per_hour": 1.91,
+      "slope_per_hour": 1.54,
+      "slope_per_hour_after_first_hour": null,
       "last_vs_first_pct": -0.06
     },
     "gpu_util_pct": {
       "unit": "%",
       "min": 0.0,
       "max": 100.0,
-      "first_window_avg": 39.38,
-      "last_window_avg": 42.66,
-      "slope_per_hour": 1.981,
-      "last_vs_first_pct": 8.33
+      "first_window_avg": 39.04,
+      "last_window_avg": 40.58,
+      "slope_per_hour": 1.824,
+      "slope_per_hour_after_first_hour": null,
+      "last_vs_first_pct": 3.96
     },
     "gpu_temp_c": {
       "unit": "C",
       "min": 57.0,
       "max": 62.0,
-      "first_window_avg": 58.88,
-      "last_window_avg": 58.96,
-      "slope_per_hour": -0.126,
-      "last_vs_first_pct": 0.14
+      "first_window_avg": 58.92,
+      "last_window_avg": 59.04,
+      "slope_per_hour": 0.031,
+      "slope_per_hour_after_first_hour": null,
+      "last_vs_first_pct": 0.19
     },
     "vr01_queue_depth": {
       "unit": "request",
       "min": 0.0,
       "max": 1.0,
       "first_window_avg": 0.42,
-      "last_window_avg": 0.42,
-      "slope_per_hour": -0.045,
-      "last_vs_first_pct": 0.0
+      "last_window_avg": 0.45,
+      "slope_per_hour": -0.01,
+      "slope_per_hour_after_first_hour": null,
+      "last_vs_first_pct": 9.09
     }
   },
   "container_restart_counts_seen": [

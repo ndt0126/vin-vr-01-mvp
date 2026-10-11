@@ -41,6 +41,9 @@ def main():
         out['series'][key] = {'unit': unit, 'min': round(min(vals), 2), 'max': round(max(vals), 2),
                               'first_window_avg': round(fa, 2), 'last_window_avg': round(la, 2),
                               'slope_per_hour': None if sl is None else round(sl, 3),
+                              # bo gio dau (khoi dong, cache nong len): do doc nay moi noi ve xu huong dai han
+                              'slope_per_hour_after_first_hour': (lambda z: None if z is None else round(z, 3))(
+                                  slope_per_hour([(t, v) for t, v in pts if t - t0 > 3600]) if t1 - t0 > 7200 else None),
                               'last_vs_first_pct': None if fa == 0 else round((la - fa) / fa * 100, 2)}
     restarts = sorted({tuple(s.get('container_restarts') or []) for s in samples})
     out['container_restart_counts_seen'] = [list(r) for r in restarts]

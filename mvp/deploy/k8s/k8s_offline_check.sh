@@ -10,6 +10,8 @@ probe(){ [ -n "${SKIP_EGRESS_CUT:-}" ] && { echo skipped; return; }; for u in ht
 deploy/k8s/make_offline_bundle.sh "$B" > "$OUT/bundle-make.log" 2>&1; rc=$?
 step "O1 build offline app bundle" $([ $rc = 0 ] && echo ok || echo no) "size $(du -sh $B 2>/dev/null | cut -f1), files $(wc -l < $B/SHA256SUMS 2>/dev/null)"
 cp "$B/SHA256SUMS" "$B/BUNDLE-INFO.txt" "$OUT/" 2>/dev/null
+# Khong co goi thi DUNG: neu di tiep se xoa image khoi node trong khi khong con gi de cai lai (da xay ra o lan chay lai 11/10).
+if [ $rc != 0 ] || [ ! -s "$B/SHA256SUMS" ]; then tail -5 "$OUT/bundle-make.log" | tee -a "$R"; echo "OFFLINE CHECK FAIL (no bundle; node left untouched)" | tee -a "$R"; exit 1; fi
 # Cat ket noi MOI ra Internet (giu loopback, mang pod/service, ket noi da thiet lap nhu SSH dang mo).
 if [ -z "${SKIP_EGRESS_CUT:-}" ]; then
 iptables -I OUTPUT 1 -o lo -j ACCEPT; iptables -I OUTPUT 2 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT

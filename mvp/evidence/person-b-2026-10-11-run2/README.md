@@ -2,7 +2,7 @@
 
 **Ai:** một agent AI mới khác (không phải người), không biết dự án, chỉ đọc README của repo công khai, dùng terminal có ghi biên bản (`terminal.jsonl`). Được yêu cầu chép nguyên lệnh trong Quick start, không sửa gì.
 
-**Máy:** VPS Hetzner vừa tạo lại, Ubuntu 26.04.1, 2 vCPU, 3,8 GB RAM, ổ 38 GB; chưa có Docker và make. Repo ở commit `c83b893` (trùng bản release `w3-mvp-2026-10-11`).
+**Máy:** VPS Hetzner vừa tạo lại, Ubuntu 26.04.1, 2 vCPU, 3,8 GB RAM, ổ 38 GB; chưa có Docker và make. Repo ở commit `c83b893`.
 
 **Kết luận của người B: DONE_NO_INTERVENTION.** Mọi lệnh thay đổi hệ thống đều chép từ Quick start, và kết quả khớp điều README ghi.
 

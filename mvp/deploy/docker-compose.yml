@@ -42,6 +42,8 @@ services:
               "--data-dir", "/run-data/data", "--principals", "/run-data/auth/principals.json",
               "--tls-cert", "/run-data/tls/server.crt", "--tls-key", "/run-data/tls/server.key",
               "--examples", "/run-data/examples", "--kserve-url", "http://triton:8000"]
+    environment:
+      VR01_LIMIT_OVERRIDES: ${VR01_LIMIT_OVERRIDES:-}
     volumes:
       - ../run:/run-data
     ports:

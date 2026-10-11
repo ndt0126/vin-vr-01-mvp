@@ -5,7 +5,7 @@ INIT_EXTRA = $(if $(SLOW),--with-slow-fixture,)
 COMPOSE = HOST_UID=$$(id -u) HOST_GID=$$(id -g) INIT_EXTRA="$(INIT_EXTRA)" docker compose --env-file deploy/.env -f deploy/docker-compose.yml $(if $(GPU),-f deploy/docker-compose.gpu.yml,)
 PY ?= python3
 
-.PHONY: env build init start stop down logs smoke load docs report test test-local digests clean
+.PHONY: env build init start stop down logs smoke load docs report backup restore test test-local digests clean
 
 env:
 	@test -f deploy/.env || cp deploy/.env.sample deploy/.env
@@ -40,6 +40,15 @@ docs:               ## sinh lai docs/API.md tu openapi.v1.yaml
 
 report:             ## sinh TEST-REPORT.md tu cac file JSON/log trong evidence/
 	$(PY) tools/make_test_report.py
+
+backup:             ## sao luu ledger + trace + anh vao run/backup/ (chay duoc khi stack dang bat)
+	$(PY) tools/backup.py backup --run-dir run
+
+restore:            ## make restore BACKUP=run/backup/backup-...  (dung stack, khoi phuc, bat lai; du lieu cu duoc doi ten)
+	@test -n "$(BACKUP)" || (echo "usage: make restore BACKUP=run/backup/<ten>"; exit 2)
+	$(COMPOSE) stop
+	$(PY) tools/backup.py restore --run-dir run --from $(BACKUP)
+	$(COMPOSE) up -d --wait triton api
 
 test: build         ## toan bo unit/contract/integration test, chay trong container
 	@mkdir -p run

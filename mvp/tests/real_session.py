@@ -278,21 +278,10 @@ class Session:
         self.submit(probe, self.active())
         self.wait_state(probe, TERMINAL, 60)
         before, active = self.result(probe), self.active()
-        data = self.run / 'data'
-        bdir = self.run / 'backup'
-        bdir.mkdir(exist_ok=True)
-        dst = bdir / f'ledger-{self.id}.sqlite3'
-        t0 = time.time()
-        src = sqlite3.connect(str(data / 'ledger.sqlite3'))
-        bak = sqlite3.connect(str(dst))
-        src.backup(bak)  # online backup API: khong can dung service
-        integrity = bak.execute('PRAGMA integrity_check').fetchone()[0]
-        rows = bak.execute('SELECT COUNT(*) FROM inspections').fetchone()[0]
-        bak.close()
-        src.close()
-        backup_s = round(time.time() - t0, 2)
-        digest = hashlib.sha256(dst.read_bytes()).hexdigest()
+        trace_before = len(self.trace(probe))
+        info = json.loads(self.sh(sys.executable, 'tools/backup.py', 'backup', '--run-dir', str(self.run)).stdout.strip())
         self.sh('make', 'stop')
+        data = self.run / 'data'
         lost = self.run / f'data.lost-{self.id}'
         shutil.move(str(data), str(lost))  # gia lap mat du lieu
         data.mkdir()
@@ -300,20 +289,94 @@ class Session:
         self.wait_ready()
         gone = self.c.call('GET', f'/v1/inspections/{probe}/result', 'viewer')[0]
         t1 = time.time()
-        self.sh('make', 'stop')
-        shutil.rmtree(data)
-        data.mkdir()
-        shutil.copy(dst, data / 'ledger.sqlite3')
-        shutil.copytree(lost / 'images', data / 'images')
-        self.sh('make', 'start', 'SLOW=1')
+        self.sh('make', 'restore', f"BACKUP={info['backup']}")
         self.wait_ready()
         rto = round(time.time() - t1, 1)
         after = self.result(probe)
-        ok = integrity == 'ok' and gone == 404 and after == before and self.active() == active
-        self.step('P9 ledger backup -> simulated data loss -> restore', ok, backup_integrity=integrity, backup_rows=rows,
-                  backup_seconds=backup_s, backup_sha256=digest[:16], lookup_after_loss_http=gone,
-                  result_identical_after_restore=after == before, active_recipe_restored=self.active() == active,
-                  restore_rto_s_lab=rto, note='backup nam tren cung may; anh lay lai tu thu muc cu (chua co backup anh rieng)')
+        trace_after = len(self.trace(probe))
+        ok = info['integrity_check'] == 'ok' and info['has_trace'] and gone == 404 and after == before \
+            and self.active() == active and trace_after == trace_before and trace_before > 0
+        self.step('P9 make backup -> simulated data loss -> make restore (ledger + trace + images)', ok,
+                  backup=info, lookup_after_loss_http=gone, result_identical_after_restore=after == before,
+                  active_recipe_restored=self.active() == active,
+                  trace_events_for_probe_before_after=[trace_before, trace_after], restore_rto_s_lab=rto,
+                  note='backup nam tren cung may')
+
+    def p11_execution_timeout(self):
+        """Ha execution timeout xuong thap hon do cham cua model-slow de kich hoat TIMEOUT tren inference server that."""
+        env = dict(os.environ, VR01_LIMIT_OVERRIDES='{"execution_timeout_s": 0.3}')
+        subprocess.run(['make', 'start', 'SLOW=1'], cwd=ROOT, env=env, capture_output=True, text=True, check=True)
+        self.wait_ready()
+        try:
+            self.activate('recipe-slow')
+            rid = self.rid('timeout')
+            self.submit(rid, 'recipe-slow@0.1.0')
+            final = self.wait_state(rid, TERMINAL, 30)
+            finished = self.result(rid)['finished_at']
+            time.sleep(3)  # ket qua muon da ve
+            res = self.result(rid)
+            ev = [e['event'] for e in self.trace(rid)]
+            ready = self.c.call('GET', '/readyz')[0]
+            ok = (final['state'], final['reason'], final['decision']) == ('TIMEOUT', 'EXECUTION_TIMEOUT', None) \
+                and 'inference.late_result_ignored' in ev and res['state'] == 'TIMEOUT' and res['score'] is None \
+                and res['finished_at'] == finished and ready == 200
+            self.step('P11 execution timeout on the real inference server; late result ignored', ok,
+                      state=final['state'], reason=final['reason'], late_result_logged='inference.late_result_ignored' in ev,
+                      unchanged_after_late_result=res['finished_at'] == finished, readyz=ready,
+                      note='execution_timeout_s ha xuong 0.3 s chi cho buoc nay')
+        finally:
+            subprocess.run(['make', 'start', 'SLOW=1'], cwd=ROOT, capture_output=True, text=True, check=True)
+            self.wait_ready()
+        normal = self.rid('aftertimeout')
+        self.submit(normal, 'recipe-slow@0.1.0')
+        back = self.wait_state(normal, TERMINAL, 60)['state']
+        self.step('P11b normal limits restored: slow request completes again', back == 'COMPLETED', state=back)
+
+    def p12_long_triton_outage(self):
+        """Dung han Triton 30 s khi dang co tai (khong tu khoi dong lai), roi bat lai."""
+        import threading
+        self.activate('recipe-a')
+        out = self.run / 'session-load-triton-outage.json'
+        marks = {}
+
+        def outage():
+            time.sleep(8)
+            self.sh('docker', 'stop', '-t', '0', TRITON)
+            marks['stopped'] = time.time()
+            rz = []
+            for _ in range(6):
+                time.sleep(4)
+                try:
+                    rz.append(self.c.call('GET', '/readyz')[0])
+                except OSError:
+                    rz.append(None)
+            marks['readyz_during_outage'] = rz
+            self.sh('docker', 'start', TRITON)
+            marks['started'] = time.time()
+
+        th = threading.Thread(target=outage)
+        th.start()
+        subprocess.run([sys.executable, '-B', str(HERE / 'load_cutover.py'), '--run-dir', str(self.run),
+                        '--host', self.a.host, '--inference-port', str(self.a.inference_port),
+                        '--management-port', str(self.a.management_port), '--rate', '10', '--duration', '60',
+                        '--cutover-every', '100000', '--allow-technical', '--output', str(out)],
+                       cwd=ROOT, capture_output=True, text=True)
+        th.join()
+        ready_s = self.wait_ready()
+        after = self.rid('afteroutage')
+        self.submit(after, self.active())
+        after_state = self.wait_state(after, TERMINAL, 60)['state']
+        r = json.loads(out.read_text())
+        q = r['requests']
+        ok = q['missing_or_wrong'] == 0 and q['duplicate_or_extra_products'] == 0 and after_state == 'COMPLETED' \
+            and set(marks['readyz_during_outage']) == {503} and (q['not_accepted'] + sum(q['technical_states'].values())) > 0
+        self.step('P12 inference server down ~30 s under load: clean refusals, no wrong result, recovery', ok,
+                  sent=q['sent'], completed=q['completed'], technical=q['technical_states'], not_accepted=q['not_accepted'],
+                  wrong=q['missing_or_wrong'], duplicates=q['duplicate_or_extra_products'],
+                  client_503=r['client_retries_same_request_id']['not_ready_503'],
+                  readyz_during_outage=marks['readyz_during_outage'],
+                  outage_s=round(marks['started'] - marks['stopped'], 1), ready_after_start_s=ready_s,
+                  request_after_recovery=after_state, active_recipe=self.active())
 
     def p10_state_for_reboot(self):
         probe = self.rid('reboot')
@@ -341,7 +404,7 @@ class Session:
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--phase', choices=['main', 'post-reboot'], required=True)
+    ap.add_argument('--phase', choices=['main', 'post-reboot', 'extra'], required=True)
     ap.add_argument('--run-dir', type=Path, default=ROOT / 'run')
     ap.add_argument('--host', default='127.0.0.1')
     ap.add_argument('--inference-port', type=int, default=8443)
@@ -354,14 +417,20 @@ def main():
     if rounds_file.is_file():
         os.environ['VR01_SLOW_ROUNDS'] = rounds_file.read_text().strip()
     s = Session(args)
-    if args.phase == 'post-reboot':
+    if args.phase == 'extra':
+        if s.report_path.is_file():
+            s.report_path = s.run / 'session-extra-report.json'
+        for fn in (s.p9_backup_restore, s.p11_execution_timeout, s.p12_long_triton_outage):
+            s.guarded(fn.__name__, fn)
+    elif args.phase == 'post-reboot':
         s.guarded('R1 after full machine reboot', s.post_reboot)
     else:
         steps = [s.p1_smoke, s.p2_load_cutover, s.p3_slow_model, s.p4_cancel_processing, s.p5_cancel_queued,
                  s.p6_drain_before_unload]
         if not args.no_docker:
             steps.insert(2, s.p0_calibrate_slow)
-            steps += [s.p7_kill_api, s.p8_kill_triton_under_load, s.p9_backup_restore, s.p10_state_for_reboot]
+            steps += [s.p7_kill_api, s.p8_kill_triton_under_load, s.p9_backup_restore, s.p11_execution_timeout,
+                      s.p12_long_triton_outage, s.p10_state_for_reboot]
         for fn in steps:
             s.guarded(fn.__name__, fn)
     s.save()

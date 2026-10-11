@@ -1424,7 +1424,12 @@ def main():
         ap.error('--principals is required')
     backend = KServeV2Backend(args.kserve_url) if args.kserve_url else StubBackend()
     registry = Registry(args.examples) if args.examples else None
-    app = App(args.data_dir, load_principals(args.principals), backend=backend, registry=registry)
+    # Ghi de gioi han khi thu nghiem, vd VR01_LIMIT_OVERRIDES='{"execution_timeout_s": 0.4}'. Bo trong = theo spec.
+    overrides = json.loads(os.environ.get('VR01_LIMIT_OVERRIDES') or '{}')
+    app = App(args.data_dir, load_principals(args.principals), backend=backend, registry=registry,
+              overrides=overrides)
+    if overrides:
+        app.trace('config.limit_overrides', overrides=overrides)
     tls = {'cert': args.tls_cert, 'key': args.tls_key} if args.tls_cert else None
     srv = Server(app, args.host, args.inference_port, args.management_port, tls)
     print(json.dumps({'inference_port': srv.port('inference'), 'management_port': srv.port('management'),

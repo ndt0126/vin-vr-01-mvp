@@ -56,11 +56,33 @@ make stop
 
 Lệnh khác: `make logs`, `make down`, `make digests`, `make clean` (xóa `run/`).
 
-## Phiên kiểm trên stack thật (chưa chạy)
+## Phiên kiểm trên stack thật
 
 `tests/real_session.py` gom các kịch bản cần Triton thật vào một lệnh: smoke, chuyển recipe dưới tải, hủy khi đang chạy và khi đang chờ, drain trước khi gỡ model, `kill -9` API khi có request dở, `kill -9` Triton khi đang có tải, sao lưu → giả lập mất dữ liệu → khôi phục, reboot cả máy. Nó cần `make start SLOW=1`, tức thêm fixture `model-slow` (cùng kết quả với `model-a`, cố ý chậm khoảng 1 giây; xem `tests/fixtures/slow/`).
 
-Từ laptop, `tools/run_vps_session.sh <IP>` (ở thư mục gốc dự án) cài Docker trên VPS mới, `git clone` repo công khai, chạy cả phiên, reboot, rồi kéo log về `evidence/`. **Tính tới 11/10/2026 phiên này mới chạy thử 6 bước không cần Docker trên laptop với inference server giả; chưa chạy trên VPS.**
+**Đã chạy 11/10/2026** trên VPS Hetzner mới (amd64, Ubuntu 26.04, 2 vCPU / 3,8 GB, Triton 2.60.0, model chạy CPU), mã nguồn lấy bằng `git clone` repo công khai ở commit `c6922f1`: **13/13 bước đạt ngay lượt đầu**, không sửa gì giữa chừng. Log, báo cáo và bảng hash ở `evidence/vps-2026-10-11T0436Z/`.
+
+| Bước | Kết quả chính |
+|---|---|
+| P1 smoke | 18/18 |
+| P2 chuyển recipe A↔B dưới tải (10 request/giây × 60 giây) | 601 request: 0 thiếu, 0 trùng, 0 sai; 11/11 lần chuyển |
+| P0, P3 model chậm | khoảng 0,83 giây mỗi lần suy luận trên máy này |
+| P4 hủy khi đang chạy | `CANCELLED`; kết quả về muộn bị bỏ và có log; request kế tiếp chạy bình thường |
+| P5 hủy khi đang chờ | request bị hủy không tới Triton; hai request kia hoàn tất |
+| P6 chuyển recipe khi có request đang chạy | request chạy xong trên model cũ rồi model cũ mới bị gỡ |
+| P7 `kill -9` API khi 1 đang chạy + 2 đang chờ | cả 3 thành `INDETERMINATE`; sẵn sàng lại sau 1,5 giây; recipe active giữ nguyên; kiểm lại bằng mã mới đạt |
+| P8 `kill -9` Triton khi đang có tải | 501 request: 0 sai, 0 trùng. Trong lúc Triton chết, client nhận 20 lần 503 và gửi lại cùng mã; cuối cùng cả 501 hoàn tất |
+| P9 sao lưu → giả lập mất dữ liệu → khôi phục | backup integrity ok (1.119 dòng); sau khi mất: tra request cũ 404; sau khôi phục: kết quả y hệt, recipe active đúng; khoảng 25 giây |
+| P10, R1, R2 reboot cả máy | stack tự lên, recipe active và kết quả cũ còn nguyên, smoke 18/18 |
+| `make test` trong container | 72/73 đạt, 1 bỏ qua |
+
+Điều cần đọc kèm:
+
+- Đây là **một lượt**, tải thấp (10 request/giây), model mẫu chạy vài mili giây trên CPU. Không phải số đo hiệu năng hay RTO cho máy đích.
+- **Cần Internet** (cài Docker, clone, tải image): đây không phải air gap.
+- P9: bản sao lưu nằm trên chính máy đó; ảnh được lấy lại từ thư mục cũ chứ chưa có sao lưu ảnh riêng; **`trace.jsonl` không nằm trong bản sao lưu nên mất sau khôi phục**.
+- P8: Triton tự lên lại trong khoảng 2 giây nên không request nào hết lượt thử lại; chưa thử trường hợp Triton chết lâu.
+- Execution timeout (10 giây) chưa được kích hoạt trên Triton thật.
 
 `make start GPU=1` thêm cấu hình GPU cho Triton (`deploy/docker-compose.gpu.yml`); chưa chạy thử.
 
@@ -114,12 +136,13 @@ Số liệu chi tiết và file nguồn: `TEST-REPORT.md` (sinh bằng `make rep
 
 - **GPU:** model mới chạy `KIND_CPU`. `KIND_GPU` chỉ được ghi vào `config.pbtxt`; Compose chưa có cấu hình GPU cho Triton.
 - **Máy sạch bởi người khác:** ngày 11/10 một agent AI độc lập (không phải người) chỉ đọc README đã cài Docker, clone, `make start` và `make smoke` 18/18 trên VPS mới 2 vCPU / 4 GB; nó phải đoán 3 bước README khi đó chưa ghi (cài Docker, clone, thư mục chạy) và phát hiện `make test` trong container báo FAIL do image thiếu `docs/`. Cả hai đã sửa; biên bản ở `evidence/person-b-2026-10-11/`. Chưa có **người** reviewer tự làm, và bản README đã sửa chưa được chạy độc lập lại.
-- Chuyển model **dưới tải liên tục** trên Triton thật: `make load` đã sẵn sàng nhưng mới chạy với inference server giả. Bản sửa lỗi thứ 3 cũng chưa chạy với Triton thật.
-- Reboot cả máy; đầy ổ; mất Triton lâu hơn vài giây.
-- **Cancellation chưa chạy với Triton thật** (7 test với backend stub; smoke trên VPS ngày 10/10 là bản 16 bước, chưa có 2 bước hủy). Hủy không giải phóng GPU: inference đang chạy vẫn chạy hết.
+- Tải cao, soak dài, Triton chết lâu, đầy ổ, timeout thực thi trên Triton thật.
+- Hủy không giải phóng GPU: inference đang chạy vẫn chạy hết (đã thấy trên Triton thật ở bước P4).
 - Chưa có UI.
 
 ## Giới hạn
+
+- **Không phải air gap.** Quick start cần Internet để cài Docker, clone và tải image. MVP này chưa được đóng gói để cài offline; bộ cài offline đã thử của dự án (r4.x, kubeadm) dùng app cũ.
 
 - Hai model mẫu là hàm tuyến tính trên ảnh thu về 2×2 (deterministic stub), không phải model QC. OK/NG/REVIEW ở đây không nói gì về chất lượng sản phẩm.
 - Package khai báo tham số (`model.json`); file ONNX được sinh từ tham số đó. Chuẩn package chưa mang trực tiếp file ONNX/TensorRT.

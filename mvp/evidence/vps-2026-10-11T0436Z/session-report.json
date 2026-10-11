@@ -1,0 +1,138 @@
+{
+  "verdict": "PASS",
+  "failed": [],
+  "steps": [
+    {
+      "step": "P1 smoke flow",
+      "result": "PASS",
+      "at": "04:36:58",
+      "last": "SMOKE PASS  18/18  -> /root/vin-vr-01-mvp/mvp/run/session-smoke.json"
+    },
+    {
+      "step": "P2 cutover A<->B under continuous load",
+      "result": "PASS",
+      "at": "04:38:00",
+      "sent": 601,
+      "missing_or_wrong": 0,
+      "duplicates": 0,
+      "cutovers": "11/11",
+      "max_gap_s": 0.114,
+      "p95_ms": 5.426
+    },
+    {
+      "step": "P0 calibrate slow fixture for this machine",
+      "result": "PASS",
+      "at": "04:38:02",
+      "first_measure_ms": 840.3,
+      "rounds": 64
+    },
+    {
+      "step": "P3 slow fixture model runs on the inference server",
+      "result": "PASS",
+      "at": "04:38:03",
+      "inference_ms": 831.733,
+      "score": 0.156863,
+      "decision": "OK",
+      "note": "can >= 300 ms de cac buoc P4-P8 bat duoc trang thai PROCESSING"
+    },
+    {
+      "step": "P4 cancel while PROCESSING: late result discarded",
+      "result": "PASS",
+      "at": "04:38:05",
+      "cancel_http": 200,
+      "state": "CANCELLED",
+      "discarded_logged": true,
+      "next_request": "COMPLETED"
+    },
+    {
+      "step": "P5 cancel while queued: never sent to the inference server",
+      "result": "PASS",
+      "at": "04:38:07",
+      "cancel_http": 200,
+      "finals": [
+        "COMPLETED",
+        "COMPLETED",
+        "CANCELLED"
+      ],
+      "inference_started_for_cancelled": false
+    },
+    {
+      "step": "P6 cutover drains the in-flight request before unloading the old model",
+      "result": "PASS",
+      "at": "04:38:07",
+      "in_flight_final": "COMPLETED",
+      "in_flight_model": "model-slow",
+      "new_recipe_request": "COMPLETED",
+      "old_model_unloaded_after_request_finished": true
+    },
+    {
+      "step": "P7 kill -9 API with 1 running + 2 queued",
+      "result": "PASS",
+      "at": "04:38:12",
+      "before_kill": [
+        "PROCESSING",
+        "RECEIVED",
+        "RECEIVED"
+      ],
+      "after_restart": [
+        "INDETERMINATE",
+        "INDETERMINATE",
+        "INDETERMINATE"
+      ],
+      "ready_again_s": 1.5,
+      "active_recipe": "recipe-slow@0.1.0",
+      "retry_with_new_id": "COMPLETED"
+    },
+    {
+      "step": "P8 kill -9 Triton under load: no wrong/duplicate result, service recovers",
+      "result": "PASS",
+      "at": "04:39:04",
+      "sent": 501,
+      "completed": 501,
+      "technical": {},
+      "not_accepted": 0,
+      "wrong": 0,
+      "duplicates": 0,
+      "cutovers": "6/6",
+      "ready_after_load_s": 0.0,
+      "active_recipe": "recipe-a@0.1.0",
+      "seconds_from_kill_to_end": 39.6
+    },
+    {
+      "step": "P9 ledger backup -> simulated data loss -> restore",
+      "result": "PASS",
+      "at": "04:39:53",
+      "backup_integrity": "ok",
+      "backup_rows": 1119,
+      "backup_seconds": 0.01,
+      "backup_sha256": "b88f3a44ba1aba88",
+      "lookup_after_loss_http": 404,
+      "result_identical_after_restore": true,
+      "active_recipe_restored": true,
+      "restore_rto_s_lab": 24.6,
+      "note": "backup nam tren cung may; anh lay lai tu thu muc cu (chua co backup anh rieng)"
+    },
+    {
+      "step": "P10 state saved for reboot; docker starts on boot",
+      "result": "PASS",
+      "at": "04:39:53",
+      "docker_service": "enabled",
+      "active_recipe": "recipe-a@0.1.0"
+    },
+    {
+      "step": "R1 after full machine reboot: stack back by itself, active recipe and old result intact",
+      "result": "PASS",
+      "at": "04:41:02",
+      "machine_uptime_s": 21.91,
+      "waited_for_ready_s": 0.0,
+      "active_recipe": "recipe-a@0.1.0",
+      "result_identical": true
+    },
+    {
+      "step": "R2 smoke flow after reboot",
+      "result": "PASS",
+      "at": "04:41:03",
+      "last": "SMOKE PASS  18/18  -> /root/vin-vr-01-mvp/mvp/run/session-smoke-after-reboot.json"
+    }
+  ]
+}

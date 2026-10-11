@@ -1,0 +1,3 @@
+PASS  R1 after full machine reboot: stack back by itself, active recipe and old result intact  {"machine_uptime_s": 21.91, "waited_for_ready_s": 0.0, "active_recipe": "recipe-a@0.1.0", "result_identical": true}
+PASS  R2 smoke flow after reboot  {"last": "SMOKE PASS  18/18  -> /root/vin-vr-01-mvp/mvp/run/session-smoke-after-reboot.json"}
+SESSION post-reboot: PASS  13/13 -> /root/vin-vr-01-mvp/mvp/run/session-report.json

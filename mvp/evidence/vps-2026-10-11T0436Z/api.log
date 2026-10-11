@@ -1,0 +1,2 @@
+{"inference_port": 8443, "management_port": 9443, "tls": true, "backend": "kserve-v2"}
+{"inference_port": 8443, "management_port": 9443, "tls": true, "backend": "kserve-v2"}

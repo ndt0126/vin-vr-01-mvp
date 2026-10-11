@@ -55,6 +55,19 @@ def main():
             r = json.loads(sm.read_text())
             out += [f'## Smoke flow — {d.name}', '', f'Nguồn: {src(sm)} (lượt smoke cuối của phiên)', '',
                     f"Kết luận: **{r['verdict']}**, {sum(s['result'] == 'PASS' for s in r['steps'])}/{len(r['steps'])} bước.", '']
+        sess = d / 'session-report.json'
+        if sess.is_file():
+            r = json.loads(sess.read_text())
+            host = (d / 'host-info.txt').read_text().split('\n') if (d / 'host-info.txt').is_file() else []
+            commit = (d / 'git-commit.txt').read_text().strip()[:12] if (d / 'git-commit.txt').is_file() else '?'
+            out += [f'## Phiên kiểm trên Triton thật — {d.name}', '', f'Nguồn: {src(sess)} · repo công khai commit `{commit}`', '',
+                    'Môi trường: ' + ' · '.join(x.strip() for x in host if x.strip())[:300], '',
+                    f"Kết luận: **{r['verdict']}**, {sum(s['result'] == 'PASS' for s in r['steps'])}/{len(r['steps'])} bước.", '',
+                    '| Bước | Kết quả | Số liệu ghi nhận |', '|---|---|---|']
+            for s in r['steps']:
+                detail = {k: v for k, v in s.items() if k not in ('step', 'result', 'at', 'note', 'last')}
+                out.append(f"| {s['step']} | {s['result']} | {json.dumps(detail, ensure_ascii=False).replace('|', '/')[:330]} |")
+            out.append('')
         log = d / 'vps-session.log'
         if log.is_file():
             text = log.read_text()

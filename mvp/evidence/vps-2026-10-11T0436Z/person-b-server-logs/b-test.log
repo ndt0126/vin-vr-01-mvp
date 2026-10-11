@@ -1,0 +1,87 @@
+HOST_UID=$(id -u) HOST_GID=$(id -g) INIT_EXTRA="" docker compose --env-file deploy/.env -f deploy/docker-compose.yml  build init
+time="2026-10-11T04:32:25Z" level=warning msg="Docker Compose is configured to build using Bake, but buildx isn't installed"
+#0 building with "default" instance using docker driver
+
+#1 [init internal] load build definition from Dockerfile
+#1 transferring dockerfile: 827B done
+#1 DONE 0.0s
+
+#2 [init internal] load metadata for docker.io/library/python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1
+#2 DONE 0.0s
+
+#3 [init internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [init  1/10] FROM docker.io/library/python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1
+#4 resolve docker.io/library/python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1 0.0s done
+#4 DONE 0.0s
+
+#5 [init internal] load build context
+#5 transferring context: 2.48kB done
+#5 DONE 0.0s
+
+#6 [init  3/10] WORKDIR /app
+#6 CACHED
+
+#7 [init  7/10] COPY packages packages
+#7 CACHED
+
+#8 [init  5/10] RUN pip install --no-cache-dir -r backend/requirements.txt
+#8 CACHED
+
+#9 [init  4/10] COPY backend/requirements.txt backend/requirements.txt
+#9 CACHED
+
+#10 [init  8/10] COPY tools tools
+#10 CACHED
+
+#11 [init  2/10] RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+#11 CACHED
+
+#12 [init  6/10] COPY backend backend
+#12 CACHED
+
+#13 [init  9/10] COPY tests tests
+#13 CACHED
+
+#14 [init 10/10] RUN useradd --uid 10001 --create-home vr01 && mkdir -p /run-data && chown vr01 /run-data
+#14 CACHED
+
+#15 [init] exporting to image
+#15 exporting layers done
+#15 exporting manifest sha256:3b506ed9aaee7bdeb279b02c55618d2f905ba8cf0e5ba27247c83112bcb36f2d done
+#15 exporting config sha256:89cd4b1535198bf24a5f4008dd6efa8975d9b7ea756f7fee498f76a284dba46e done
+#15 exporting attestation manifest sha256:822506bab0d33ca8ffc61e03cbc85eb0e39e490eb1d70cfa6c84b98e286be34a 0.0s done
+#15 exporting manifest list sha256:96cbe957c7c653632669f13fb3ac6b2fabaa5a82cfd08bc5fde5728de2d8a18c
+#15 exporting manifest list sha256:96cbe957c7c653632669f13fb3ac6b2fabaa5a82cfd08bc5fde5728de2d8a18c done
+#15 naming to docker.io/library/vr01-mvp-api:0.1.0 done
+#15 unpacking to docker.io/library/vr01-mvp-api:0.1.0 0.0s done
+#15 DONE 0.1s
+
+#16 [init] resolving provenance for metadata file
+#16 DONE 0.0s
+ init  Built
+HOST_UID=$(id -u) HOST_GID=$(id -g) INIT_EXTRA="" docker compose --env-file deploy/.env -f deploy/docker-compose.yml  run --rm --no-deps -w /app/tests init python run_tests.py --output /tmp/test-report.json
+.............................................
+----------------------------------------------------------------------
+Ran 45 tests in 11.679s
+
+OK
+......................
+----------------------------------------------------------------------
+Ran 22 tests in 12.473s
+
+OK
+...s..
+----------------------------------------------------------------------
+Ran 6 tests in 0.065s
+
+OK (skipped=1)
+MVP tests: FAIL  72/73 passed, static 11/11  -> /tmp/test-report.json
+
+make: *** [Makefile:45: test] Error 1
+
+real	0m25.592s
+user	0m0.144s
+sys	0m0.079s

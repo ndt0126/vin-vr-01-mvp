@@ -1,0 +1,12 @@
+PASS  P1 smoke flow  {"last": "SMOKE PASS  18/18  -> /root/vin-vr-01-mvp/mvp/run/session-smoke.json"}
+PASS  P2 cutover A<->B under continuous load  {"sent": 601, "missing_or_wrong": 0, "duplicates": 0, "cutovers": "11/11", "max_gap_s": 0.114, "p95_ms": 5.426}
+PASS  P0 calibrate slow fixture for this machine  {"first_measure_ms": 840.3, "rounds": 64}
+PASS  P3 slow fixture model runs on the inference server  {"inference_ms": 831.733, "score": 0.156863, "decision": "OK", "note": "can >= 300 ms de cac buoc P4-P8 bat duoc trang thai PROCESSING"}
+PASS  P4 cancel while PROCESSING: late result discarded  {"cancel_http": 200, "state": "CANCELLED", "discarded_logged": true, "next_request": "COMPLETED"}
+PASS  P5 cancel while queued: never sent to the inference server  {"cancel_http": 200, "finals": ["COMPLETED", "COMPLETED", "CANCELLED"], "inference_started_for_cancelled": false}
+PASS  P6 cutover drains the in-flight request before unloading the old model  {"in_flight_final": "COMPLETED", "in_flight_model": "model-slow", "new_recipe_request": "COMPLETED", "old_model_unloaded_after_request_finished": true}
+PASS  P7 kill -9 API with 1 running + 2 queued  {"before_kill": ["PROCESSING", "RECEIVED", "RECEIVED"], "after_restart": ["INDETERMINATE", "INDETERMINATE", "INDETERMINATE"], "ready_again_s": 1.5, "active_recipe": "recipe-slow@0.1.0", "retry_with_new_id": "COMPLETED"}
+PASS  P8 kill -9 Triton under load: no wrong/duplicate result, service recovers  {"sent": 501, "completed": 501, "technical": {}, "not_accepted": 0, "wrong": 0, "duplicates": 0, "cutovers": "6/6", "ready_after_load_s": 0.0, "active_recipe": "recipe-a@0.1.0", "seconds_from_kill_to_end": 39.6}
+PASS  P9 ledger backup -> simulated data loss -> restore  {"backup_integrity": "ok", "backup_rows": 1119, "backup_seconds": 0.01, "backup_sha256": "b88f3a44ba1aba88", "lookup_after_loss_http": 404, "result_identical_after_restore": true, "active_recipe_restored": true, "restore_rto_s_lab": 24.6, "note": "backup nam tren cung may; anh lay lai tu thu muc cu 
+PASS  P10 state saved for reboot; docker starts on boot  {"docker_service": "enabled", "active_recipe": "recipe-a@0.1.0"}
+SESSION main: PASS  11/11 -> /root/vin-vr-01-mvp/mvp/run/session-report.json

@@ -4,6 +4,8 @@
 
 **Máy:** VPS Hetzner mới, Ubuntu 26.04, 2 vCPU, 3,8 GB RAM, ổ 38 GB; chưa có Docker và make. Repo ở commit `3f2a610`.
 
+**Phạm vi:** lượt này cần Internet (cài Docker, `git clone`, tải image). Nó kiểm "máy sạch + README" của W3-01, **không** phải bài cài air gap.
+
 **Kết luận của người B: DONE_WITH_INTERVENTIONS**, kèm một lỗi:
 
 | Bước | Kết quả |

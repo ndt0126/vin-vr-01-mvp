@@ -1,0 +1,30 @@
+[04:36:11] host facts
+[04:36:14] install docker, make, git
+[04:36:20] git clone public repo @ main
+[04:36:38] make start SLOW=1 (lan dau tai image Triton ~7 GiB)
+make start exit=0
+TRITON_IMAGE=nvcr.io/nvidia/tritonserver@sha256:f836551575df7c9fb71144073845c6b3911de57db91a8c95e0687a4d2ac9f7a5
+api image id=sha256:b833a64cb06ba1381cea1cb26a44d27bd2f086154925dfb68054f7f0a807565b
+[04:36:54] phase main (P0..P10)
+PASS  P1 smoke flow  {"last": "SMOKE PASS  18/18  -> /root/vin-vr-01-mvp/mvp/run/session-smoke.json"}
+PASS  P2 cutover A<->B under continuous load  {"sent": 601, "missing_or_wrong": 0, "duplicates": 0, "cutovers": "11/11", "max_gap_s": 0.114, "p95_ms": 5.426}
+PASS  P0 calibrate slow fixture for this machine  {"first_measure_ms": 840.3, "rounds": 64}
+PASS  P3 slow fixture model runs on the inference server  {"inference_ms": 831.733, "score": 0.156863, "decision": "OK", "note": "can >= 300 ms de cac buoc P4-P8 bat duoc trang thai PROCESSING"}
+PASS  P4 cancel while PROCESSING: late result discarded  {"cancel_http": 200, "state": "CANCELLED", "discarded_logged": true, "next_request": "COMPLETED"}
+PASS  P5 cancel while queued: never sent to the inference server  {"cancel_http": 200, "finals": ["COMPLETED", "COMPLETED", "CANCELLED"], "inference_started_for_cancelled": false}
+PASS  P6 cutover drains the in-flight request before unloading the old model  {"in_flight_final": "COMPLETED", "in_flight_model": "model-slow", "new_recipe_request": "COMPLETED", "old_model_unloaded_after_request_finished": true}
+PASS  P7 kill -9 API with 1 running + 2 queued  {"before_kill": ["PROCESSING", "RECEIVED", "RECEIVED"], "after_restart": ["INDETERMINATE", "INDETERMINATE", "INDETERMINATE"], "ready_again_s": 1.5, "active_recipe": "recipe-slow@0.1.0", "retry_with_new_id": "COMP
+PASS  P8 kill -9 Triton under load: no wrong/duplicate result, service recovers  {"sent": 501, "completed": 501, "technical": {}, "not_accepted": 0, "wrong": 0, "duplicates": 0, "cutovers": "6/6", "ready_after_load_s": 0.0, "active_recipe": "recipe-a@0.1.0", "
+PASS  P9 ledger backup -> simulated data loss -> restore  {"backup_integrity": "ok", "backup_rows": 1119, "backup_seconds": 0.01, "backup_sha256": "b88f3a44ba1aba88", "lookup_after_loss_http": 404, "result_identical_after_restore": true, "active_recipe_restore
+PASS  P10 state saved for reboot; docker starts on boot  {"docker_service": "enabled", "active_recipe": "recipe-a@0.1.0"}
+SESSION main: PASS  11/11 -> /root/vin-vr-01-mvp/mvp/run/session-report.json
+[04:39:53] reboot
+[04:41:00] phase post-reboot (R1..R2) + make test
+PASS  R1 after full machine reboot: stack back by itself, active recipe and old result intact  {"machine_uptime_s": 21.91, "waited_for_ready_s": 0.0, "active_recipe": "recipe-a@0.1.0", "result_identical": true}
+PASS  R2 smoke flow after reboot  {"last": "SMOKE PASS  18/18  -> /root/vin-vr-01-mvp/mvp/run/session-smoke-after-reboot.json"}
+SESSION post-reboot: PASS  13/13 -> /root/vin-vr-01-mvp/mvp/run/session-report.json
+MVP tests: PASS  72/73 passed, static 11/11  -> /run-data/test-report-container.json
+[04:41:29] collect logs
+token leaks outside auth/: []
+43 MANIFEST.sha256
+[04:41:46] pull evidence (khong lay auth/, private key, anh)

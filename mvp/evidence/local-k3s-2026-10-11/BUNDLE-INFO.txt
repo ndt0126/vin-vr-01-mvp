@@ -1,0 +1,6 @@
+VR-01 MVP app bundle (LAB, UNSIGNED unless SHA256SUMS.asc is present)
+created_utc=2026-10-11T07:28:47Z
+source_commit=85e3c525d227b22c1be9933d8ca5a3dc18d8f003
+api_image=vr01-mvp-api:0.1.0
+triton_image=vr01-local/tritonserver:2.60.0-25.08  (from docker.io/library/vr01-mvp-api:0.1.0)
+scope=application layer only; Kubernetes/containerd/driver are NOT included

@@ -65,7 +65,8 @@ Gói hiện **chưa ký**: private key ký chỉ nằm ở laptop, nên chữ k�
 
 - **Kiểm tĩnh (laptop, 11/10):** `kubectl kustomize` render được 4 overlay; `kubeconform -strict` schema 1.34 hợp lệ; `tests/test_k8s_manifests.py` 7 test.
 - **Chạy thử (laptop, 11/10):** cluster **k3s v1.34.1 trong Docker** + overlay `local-fake` (inference server giả thay Triton): `k8s_check.sh` đạt 10/10, ba lượt liên tiếp. Log ở `evidence/local-k3s-2026-10-11/`. Lần chạy thử này sửa được hai lỗi: pod bị PodSecurity chặn vì hostPath, và bài kiểm gọi cổng quản trị trước khi Service kịp cập nhật.
-- **Chưa kiểm:** kubeadm thật, Triton thật trên Kubernetes, `lab-kubeadm-cpu.sh`, `load-images.sh`, ba script gói offline, overlay GPU, reboot node, thời gian gián đoạn thật khi cập nhật (trên cluster thử mỗi lần tạo lại pod mất 31–40 giây, phần lớn do inference server giả không xử lý tín hiệu dừng).
+- **Chạy thử gói offline (laptop, 11/10):** trên cùng cluster k3s, `k8s_offline_check.sh` đạt 7/7 với overlay `local-fake-offline` và **bỏ qua bước cắt Internet** (`SKIP_EGRESS_CUT=1`): tạo gói, xóa image và namespace, nạp image từ gói, cài, smoke bằng công cụ trong gói, không có lần kéo image nào; gói bị sửa một byte thì bị từ chối ở bước kiểm hash. Lượt này sửa hai lỗi script (đường dẫn file image, và xuất/nạp image phải đi qua stream). Nó **không** chứng minh cài offline, vì mạng không bị cắt và image là image giả.
+- **Chưa kiểm:** kubeadm thật, Triton thật trên Kubernetes, `lab-kubeadm-cpu.sh`, `load-images.sh`, gói offline với Internet bị cắt thật và image Triton thật (20 GB), overlay GPU, reboot node, thời gian gián đoạn thật khi cập nhật (trên cluster thử mỗi lần tạo lại pod mất 31–40 giây, phần lớn do inference server giả không xử lý tín hiệu dừng).
 
 ## Khác gì nếu dùng K3s
 

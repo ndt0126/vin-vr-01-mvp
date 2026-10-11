@@ -1,0 +1,22 @@
+# CHI DE THU SCRIPT GOI OFFLINE tren may dev: nhu local-fake nhung image lay tu goi (policy Never),
+# "tritonserver" trong goi thuc ra la image api chay inference server GIA.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../local-fake
+images:
+  - name: vr01-mvp-api
+    newName: vr01-local/tritonserver
+    newTag: "2.60.0-25.08"
+patches:
+  - target: {kind: Deployment, name: vr01-inspection}
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/initContainers/0/imagePullPolicy
+        value: Never
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never
+      - op: replace
+        path: /spec/template/spec/containers/1/imagePullPolicy
+        value: Never

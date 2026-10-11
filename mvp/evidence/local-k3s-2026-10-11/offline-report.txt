@@ -1,0 +1,8 @@
+PASS  O1 build offline app bundle  size 103M, files       79
+PASS  O2 Internet egress cut on the node  probe=skipped
+PASS  O3 app images removed from the node before offline install  left=0
+PASS  O4 install from the bundle with egress cut  14s; kich hoat luc : 2026-10-11T07:28:55.763Z
+PASS  O5 smoke flow on the offline-installed stack (tools from the bundle)  SMOKE PASS  18/18  -> /private/tmp/claud
+PASS  O6 no image pull was attempted  pull events=0
+PASS  O7 egress still cut at the end  probe=skipped
+OFFLINE CHECK PASS  7/7  (egress stays cut; reboot or flush iptables to restore)

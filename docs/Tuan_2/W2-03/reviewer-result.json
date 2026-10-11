@@ -5,9 +5,7 @@
   "errors": [],
   "notes": [
     {
-      "added_to_w2_01": [
-        "RECEIVED->TIMEOUT"
-      ]
+      "added_to_w2_01": []
     }
   ],
   "summary": {
@@ -148,11 +146,11 @@
       ],
       "decision": "NG",
       "timestamps": {
-        "received_at": "2026-10-11T04:05:16.767Z",
-        "started_at": "2026-10-11T04:05:17.070Z",
-        "finished_at": "2026-10-11T04:05:17.374Z"
+        "received_at": "2026-10-11T04:55:21.452Z",
+        "started_at": "2026-10-11T04:55:21.761Z",
+        "finished_at": "2026-10-11T04:55:22.070Z"
       },
-      "seconds": 0.78
+      "seconds": 0.79
     },
     "probe_queue_timeout": {
       "status": "PASS",
@@ -163,7 +161,7 @@
       "reason": "QUEUE_TIMEOUT",
       "started_at": null,
       "backend_calls_for_q2": 0,
-      "seconds": 0.78
+      "seconds": 0.77
     },
     "probe_backend_error": {
       "status": "PASS",
@@ -196,7 +194,7 @@
         "decision": null,
         "score": null
       },
-      "seconds": 1.03
+      "seconds": 1.07
     },
     "probe_wrong_product": {
       "status": "PASS",
@@ -214,6 +212,7 @@
         "OK": 3
       },
       "recipe_a_requests_processed_after_switch_to_b": [
+        "wp-01",
         "wp-02",
         "wp-03",
         "wp-04",
@@ -223,7 +222,7 @@
       "conflict_same_id_other_product": 409,
       "replay_after_switch": 200,
       "backend_calls_for_replayed_id": 1,
-      "seconds": 1.46
+      "seconds": 1.51
     },
     "probe_sigkill_recovery": {
       "status": "PASS",
@@ -313,15 +312,15 @@
           "c3"
         ]
       },
-      "kill_to_serving_again_s_lab_only": 0.54,
-      "seconds": 1.64
+      "kill_to_serving_again_s_lab_only": 0.55,
+      "seconds": 1.67
     },
     "probe_gap_no_cas_guard": {
       "status": "PASS",
       "gap_confirmed": true,
       "terminal_row_after_second_writer": "COMPLETED",
       "how": "direct call to the ledger write path; the public API has no way to do this",
-      "seconds": 0.61
+      "seconds": 0.62
     },
     "probe_gap_backend_id_not_checked": {
       "status": "PASS",
@@ -329,7 +328,7 @@
       "backend_answered_with_id": "another-request",
       "state": "COMPLETED",
       "decision": "OK",
-      "seconds": 0.57
+      "seconds": 0.6
     },
     "probe_gap_captured_at_not_stored": {
       "status": "PASS",
@@ -340,7 +339,7 @@
         "finished_at",
         "updated_at"
       ],
-      "seconds": 0.21
+      "seconds": 0.2
     },
     "probe_gap_no_list_by_state": {
       "status": "PASS",

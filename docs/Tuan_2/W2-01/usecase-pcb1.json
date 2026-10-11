@@ -1,7 +1,7 @@
 {
   "spec": "W2-01 PCB1 visual anomaly",
-  "version": "draft-1",
-  "date": "2026-10-06",
+  "version": "draft-2",
+  "date": "2026-10-11",
   "status": "SUBMITTED_PENDING_QC_INTEGRATION_CONFIRMATION",
   "source": "mentor replies Q7-Q10, Task_Plan_Weeks_1_5_Reviewed_2026-09-30.xlsx",
   "request_fields": [
@@ -22,7 +22,8 @@
       "COMPLETED",
       "FAILED",
       "TIMEOUT",
-      "INDETERMINATE"
+      "INDETERMINATE",
+      "CANCELLED"
     ],
     "technical": [
       "FAILED",
@@ -63,6 +64,18 @@
     [
       "RECEIVED",
       "INDETERMINATE"
+    ],
+    [
+      "RECEIVED",
+      "TIMEOUT"
+    ],
+    [
+      "RECEIVED",
+      "CANCELLED"
+    ],
+    [
+      "PROCESSING",
+      "CANCELLED"
     ]
   ],
   "cases": [

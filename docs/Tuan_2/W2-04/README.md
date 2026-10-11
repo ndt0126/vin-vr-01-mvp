@@ -14,3 +14,7 @@ python3 -I verify_w2_04.py --output reviewer-result.json --evidence-dir evidence
 Kết quả PASS chỉ có nghĩa là spec nhất quán và server tham chiếu trong lab đúng hợp đồng. Đây không phải nghiệm thu. Giới hạn xem mục 13 của tài liệu.
 
 `reference_api.py` dùng validator và package mẫu của W2-05 ở `../` (trong repo) hoặc `../W2-05/` (trong gói ZIP), và không sửa các file đó. `demo_walkthrough.py` sinh lại `examples/`.
+
+## Ghi chú 11/10/2026
+
+Thư mục này là **bản draft-1 đã nộp (06/10)** và được giữ nguyên. Hợp đồng hiện hành là `mvp/backend/openapi.v1.yaml` bản **1.2.0-draft.1**, bổ sung so với bản ở đây: `captured_at` trong result, lọc danh sách theo `state`, reason `BACKEND_ID_MISMATCH`, và operation `cancelInspection` với state `CANCELLED`. Server chạy thật là `mvp/backend/inspection_api.py`; `reference_api.py` ở đây chỉ còn dùng làm chuẩn so sánh cho `check_w2_03.py`. Bảng tóm tắt API hiện hành: `mvp/docs/API.md`.

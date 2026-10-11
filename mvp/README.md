@@ -54,7 +54,7 @@ make test
 make stop
 ```
 
-Lệnh khác: `make logs`, `make down`, `make digests`, `make clean` (xóa `run/`).
+Lệnh khác: `make backup`, `make restore BACKUP=run/backup/<tên>`, `make load`, `make logs`, `make down`, `make digests`, `make clean` (xóa `run/`).
 
 ## Phiên kiểm trên stack thật
 
@@ -76,13 +76,20 @@ Lệnh khác: `make logs`, `make down`, `make digests`, `make clean` (xóa `run/
 | P10, R1, R2 reboot cả máy | stack tự lên, recipe active và kết quả cũ còn nguyên, smoke 18/18 |
 | `make test` trong container | 72/73 đạt, 1 bỏ qua |
 
+**Ba kịch bản bổ sung, cùng ngày, cùng VPS, commit `9c8071a`** (4/4 bước đạt; `evidence/vps-2026-10-11T0452Z-extra/`):
+
+| Bước | Kết quả chính |
+|---|---|
+| P9 (bản mới) `make backup` → giả lập mất dữ liệu → `make restore` | Bản sao lưu gồm ledger (1.124 dòng, integrity ok), `trace.jsonl` và 256 ảnh, có bảng hash. Sau khôi phục: kết quả y hệt, trace của request kiểm còn đủ (4/4 sự kiện), recipe active đúng; khoảng 24 giây |
+| P11 execution timeout trên Triton thật | Hạ timeout xuống 0,3 giây (model chậm 0,83 giây): request thành `TIMEOUT` / `EXECUTION_TIMEOUT`; kết quả về muộn bị bỏ và có log; trạng thái không đổi; hệ thống vẫn sẵn sàng. Trả timeout về 10 giây thì request chậm chạy xong bình thường |
+| P12 dừng hẳn Triton khoảng 24 giây khi đang có tải | `readyz` trả 503 suốt thời gian đó. 601 request: 597 hoàn tất, 4 bị từ chối sạch (client thử lại 5 giây rồi bỏ, **không** có record nào được tạo), 0 sai, 0 trùng; client nhận 217 lần 503. Bật lại Triton thì hệ thống tự nạp model và phục vụ tiếp |
+
 Điều cần đọc kèm:
 
 - Đây là **một lượt**, tải thấp (10 request/giây), model mẫu chạy vài mili giây trên CPU. Không phải số đo hiệu năng hay RTO cho máy đích.
 - **Cần Internet** (cài Docker, clone, tải image): đây không phải air gap.
-- P9: bản sao lưu nằm trên chính máy đó; ảnh được lấy lại từ thư mục cũ chứ chưa có sao lưu ảnh riêng; **`trace.jsonl` không nằm trong bản sao lưu nên mất sau khôi phục**.
-- P8: Triton tự lên lại trong khoảng 2 giây nên không request nào hết lượt thử lại; chưa thử trường hợp Triton chết lâu.
-- Execution timeout (10 giây) chưa được kích hoạt trên Triton thật.
+- Sao lưu: bản sao nằm trên **chính máy đó** (không bảo vệ khi hỏng ổ); chưa có lịch sao lưu tự động. Lượt P9 đầu tiên (sáng 11/10) cho thấy trace không nằm trong bản sao lưu; `make backup` đã sửa điểm này.
+- P12: trong lúc Triton dừng, bên gửi bị chặn ở từng request (thử lại 5 giây), nên các request sau bị gửi trễ chứ không mất. Hành vi của camera thật khi bị chặn như vậy cần Integration xem.
 
 `make start GPU=1` thêm cấu hình GPU cho Triton (`deploy/docker-compose.gpu.yml`); chưa chạy thử.
 
@@ -136,7 +143,7 @@ Số liệu chi tiết và file nguồn: `TEST-REPORT.md` (sinh bằng `make rep
 
 - **GPU:** model mới chạy `KIND_CPU`. `KIND_GPU` chỉ được ghi vào `config.pbtxt`; Compose chưa có cấu hình GPU cho Triton.
 - **Máy sạch bởi người khác:** ngày 11/10 một agent AI độc lập (không phải người) chỉ đọc README đã cài Docker, clone, `make start` và `make smoke` 18/18 trên VPS mới 2 vCPU / 4 GB; nó phải đoán 3 bước README khi đó chưa ghi (cài Docker, clone, thư mục chạy) và phát hiện `make test` trong container báo FAIL do image thiếu `docs/`. Cả hai đã sửa; biên bản ở `evidence/person-b-2026-10-11/`. Chưa có **người** reviewer tự làm, và bản README đã sửa chưa được chạy độc lập lại.
-- Tải cao, soak dài, Triton chết lâu, đầy ổ, timeout thực thi trên Triton thật.
+- Tải cao, soak dài, đầy ổ, mất điện thật.
 - Hủy không giải phóng GPU: inference đang chạy vẫn chạy hết (đã thấy trên Triton thật ở bước P4).
 - Chưa có UI.
 

@@ -1,0 +1,125 @@
+{
+  "verdict": "PASS",
+  "meaning": "spec consistent and every lab label backed by observed behaviour; NOT QC/integration acceptance",
+  "spec_status": "SUBMITTED_PENDING_QC_INTEGRATION_CONFIRMATION",
+  "spec_errors": [],
+  "label_mismatches": [],
+  "lab_status_counts": {
+    "PARTIAL": 2,
+    "PASS": 10,
+    "GAP": 5
+  },
+  "probes": {
+    "probe_N1": {
+      "observed": [
+        200,
+        "COMPLETED"
+      ],
+      "has_decision": false,
+      "expected_gap": "spec needs decision OK/NG/REVIEW on COMPLETED",
+      "confirms_label": true
+    },
+    "probe_F1": {
+      "observed": [
+        400,
+        400
+      ],
+      "confirms_label": true
+    },
+    "probe_F2": {
+      "observed": 413,
+      "confirms_label": true
+    },
+    "probe_F3": {
+      "observed": [
+        200,
+        "COMPLETED"
+      ],
+      "expected": 422,
+      "confirms_label": true
+    },
+    "probe_F4": {
+      "observed": [
+        200,
+        200
+      ],
+      "backend_calls_added": 1,
+      "confirms_label": true
+    },
+    "probe_F5": {
+      "observed": 409,
+      "confirms_label": true
+    },
+    "probe_F6": {
+      "observed": [
+        200,
+        "COMPLETED"
+      ],
+      "expected": "422/409",
+      "confirms_label": true
+    },
+    "probe_F7": {
+      "observed": 429,
+      "confirms_label": true
+    },
+    "probe_F8": {
+      "readiness": 503,
+      "submit": [
+        200,
+        "FAILED"
+      ],
+      "expected_submit": 503,
+      "confirms_label": true
+    },
+    "probe_F10": {
+      "observed": [
+        200,
+        "FAILED"
+      ],
+      "route_kept": "A",
+      "confirms_label": true
+    },
+    "probe_F14": {
+      "observed": 200,
+      "same_record": true,
+      "confirms_label": true
+    },
+    "probe_F15": {
+      "observed": 404,
+      "confirms_label": true
+    },
+    "probe_F9": {
+      "observed": "exception ProgrammingError",
+      "expected": 503,
+      "confirms_label": true
+    },
+    "probe_F11": {
+      "observed": "no TIMEOUT state / execution timeout in controller source",
+      "confirms_label": true
+    },
+    "probe_F12": {
+      "observed": "INDETERMINATE",
+      "reexecuted": false,
+      "confirms_label": true
+    },
+    "probe_F13": {
+      "switch": "COMPLETED",
+      "active_after_restart": "A",
+      "expected": "B or 503",
+      "confirms_label": true
+    }
+  },
+  "unittests": {
+    "run": 10,
+    "failures": 0,
+    "errors": 0,
+    "ok": true
+  },
+  "unittest_log": "test_admission_is_bounded_without_ledger_side_effect (test_controller.Tests.test_admission_is_bounded_without_ledger_side_effect) ... ok\ntest_concurrent_retry_is_processing (test_controller.Tests.test_concurrent_retry_is_processing) ... ok\ntest_crash_recovery_does_not_reexecute_uncertain (test_controller.Tests.test_crash_recovery_does_not_reexecute_uncertain) ... ok\ntest_dedup_and_conflict (test_controller.Tests.test_dedup_and_conflict) ... ok\ntest_faults_keep_or_restore_A (test_controller.Tests.test_faults_keep_or_restore_A) ... ok\ntest_invalid_payload (test_controller.Tests.test_invalid_payload) ... ok\ntest_old_is_not_unloaded_before_drain (test_controller.Tests.test_old_is_not_unloaded_before_drain) ... ok\ntest_oom_counter_tracks_inference_failure (test_controller.Tests.test_oom_counter_tracks_inference_failure) ... ok\ntest_parameter_revision_retry_is_idempotent (test_controller.Tests.test_parameter_revision_retry_is_idempotent) ... ok\ntest_switch (test_controller.Tests.test_switch) ... ok\n\n----------------------------------------------------------------------\nRan 10 tests in 0.217s\n\nOK\n",
+  "lab_sha256": {
+    "common.py": "853d8f31e7ae94a5ee47f0f0688262ec1b1ed915ee0c25d376b2db54ce890217",
+    "controller.py": "be2c145e73d3b27d84c322e4abd9f34c4f31fe533a964f41ad0897c95a564516",
+    "test_controller.py": "d89110ffe971b877f7fc6dddae48f994d7ae16a015cef3f17f73e4cb9ada92ea"
+  },
+  "python": "3.12.7"
+}

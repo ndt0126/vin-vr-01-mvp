@@ -80,6 +80,21 @@ Kết luận: **PASS**, 13/13 bước.
 | R1 after full machine reboot: stack back by itself, active recipe and old result intact | PASS | {"machine_uptime_s": 21.91, "waited_for_ready_s": 0.0, "active_recipe": "recipe-a@0.1.0", "result_identical": true} |
 | R2 smoke flow after reboot | PASS | {} |
 
+## Phiên kiểm trên Triton thật — vps-2026-10-11T0452Z-extra
+
+Nguồn: `evidence/vps-2026-10-11T0452Z-extra/session-extra-report.json` (sha256 307d0337ec6d8ce5…) · repo công khai commit `9c8071a8fadf`
+
+Môi trường: 
+
+Kết luận: **PASS**, 4/4 bước.
+
+| Bước | Kết quả | Số liệu ghi nhận |
+|---|---|---|
+| P9 make backup -> simulated data loss -> make restore (ledger + trace + images) | PASS | {"backup": {"backup": "/root/vin-vr-01-mvp/mvp/run/backup/backup-20261011T045148Z", "integrity_check": "ok", "inspections": 1124, "files": 258, "images": 256, "has_trace": true, "seconds": 0.05}, "lookup_after_loss_http": 404, "result_identical_after_restore": true, "active_recipe_restored": true, "trace_events_for_probe_before_ |
+| P11 execution timeout on the real inference server; late result ignored | PASS | {"state": "TIMEOUT", "reason": "EXECUTION_TIMEOUT", "late_result_logged": true, "unchanged_after_late_result": true, "readyz": 200} |
+| P11b normal limits restored: slow request completes again | PASS | {"state": "COMPLETED"} |
+| P12 inference server down ~30 s under load: clean refusals, no wrong result, recovery | PASS | {"sent": 601, "completed": 597, "technical": {}, "not_accepted": 4, "wrong": 0, "duplicates": 0, "client_503": 217, "readyz_during_outage": [503, 503, 503, 503, 503, 503], "outage_s": 24.3, "ready_after_start_s": 0.0, "request_after_recovery": "COMPLETED", "active_recipe": "recipe-a@0.1.0"} |
+
 ## Chưa có trong báo cáo này
 
 - Chuyển recipe dưới tải liên tục trên **Triton thật** (mới chạy với inference server giả).

@@ -1,6 +1,6 @@
 # W2-01 — Use-case specification: PCB1 visual anomaly (MVP một trạm)
 
-Phiên bản: **draft-1, 06/10/2026**. Trạng thái: **ĐÃ NỘP — CHỜ QC/INTEGRATION XÁC NHẬN**. Đây chưa phải tài liệu đã được chấp nhận.
+Phiên bản: **draft-2, 11/10/2026** (draft-1 nộp 06/10; thay đổi của draft-2 chỉ ở mục 6: thêm chuyển `RECEIVED → TIMEOUT` và trạng thái `CANCELLED` cho khớp W2-03 và MVP). Trạng thái: **CHỜ QC/INTEGRATION XÁC NHẬN**. Đây chưa phải tài liệu đã được chấp nhận.
 
 Nguồn quyết định: phản hồi của mentor cho các câu 7, 8, 9, 10 (sheet `Phản hồi câu hỏi`, workbook reviewed 30/09). Những điểm mentor **chưa** trả lời được đánh dấu **[ĐỀ XUẤT]** và cần mentor/QC chốt.
 
@@ -128,12 +128,16 @@ stateDiagram-v2
     PROCESSING --> COMPLETED: có score, áp threshold → OK/NG/REVIEW
     PROCESSING --> FAILED: lỗi backend / OOM
     PROCESSING --> TIMEOUT: quá execution timeout
+    RECEIVED --> TIMEOUT: chờ hàng đợi quá lâu
+    RECEIVED --> CANCELLED: bên gửi hủy khi đang chờ
+    PROCESSING --> CANCELLED: bên gửi hủy khi đang chạy
     PROCESSING --> INDETERMINATE: service/node restart giữa chừng
     RECEIVED --> INDETERMINATE: restart trước khi infer
     COMPLETED --> [*]
     FAILED --> [*]
     TIMEOUT --> [*]
     INDETERMINATE --> [*]
+    CANCELLED --> [*]
 ```
 
 | Từ | Sang | Điều kiện | Có `decision`? |
@@ -143,9 +147,11 @@ stateDiagram-v2
 | `PROCESSING` | `COMPLETED` | Inference trả score, áp threshold của recipe đã pin, ghi bền | **Có** (OK/NG/REVIEW) |
 | `PROCESSING` | `FAILED` | Exception backend/GPU/OOM | Không |
 | `PROCESSING` | `TIMEOUT` | Vượt execution timeout | Không |
+| `RECEIVED` | `TIMEOUT` | Chờ hàng đợi lâu hơn queue timeout; không gọi inference server (draft-2) | Không |
 | `RECEIVED`/`PROCESSING` | `INDETERMINATE` | Phát hiện lúc khởi động lại sau restart/crash | Không |
+| `RECEIVED`/`PROCESSING` | `CANCELLED` | Bên gửi (operator) hủy request chưa có kết quả; nếu đang chạy, kết quả về muộn bị bỏ (draft-2) | Không |
 
-Các state terminal (`COMPLETED`, `FAILED`, `TIMEOUT`, `INDETERMINATE`) **không bao giờ chuyển tiếp**. Từ chối trước admission (`400/409/413/422/429/503`) không tạo state nào. Ghi chú: lab controller gộp `RECEIVED` vào `PROCESSING` (ghi `PROCESSING` ngay lúc admission); đây là khác biệt chấp nhận được trong lab và sẽ được tách ở W3.
+Các state terminal (`COMPLETED`, `FAILED`, `TIMEOUT`, `INDETERMINATE`, `CANCELLED`) **không bao giờ chuyển tiếp**. `CANCELLED` không phải kết luận chất lượng và cũng không phải lỗi kỹ thuật: nó nghĩa là bên gửi không cần kết quả nữa; sản phẩm vẫn là chưa được kiểm. Quy tắc chi tiết ở W2-03 mục 8b; hành vi này chỉ có ở MVP (`mvp/`), không có ở controller lab nên không có probe trong `check_w2_01.py`. Từ chối trước admission (`400/409/413/422/429/503`) không tạo state nào. Ghi chú: lab controller gộp `RECEIVED` vào `PROCESSING` (ghi `PROCESSING` ngay lúc admission); đây là khác biệt chấp nhận được trong lab và sẽ được tách ở W3.
 
 ## 7. Tiêu chí hoàn tất (platform gate) và câu hỏi chờ xác nhận
 

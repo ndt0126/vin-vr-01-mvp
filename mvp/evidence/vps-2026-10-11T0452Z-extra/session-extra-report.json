@@ -1,0 +1,70 @@
+{
+  "verdict": "PASS",
+  "failed": [],
+  "steps": [
+    {
+      "step": "P9 make backup -> simulated data loss -> make restore (ledger + trace + images)",
+      "result": "PASS",
+      "at": "04:52:36",
+      "backup": {
+        "backup": "/root/vin-vr-01-mvp/mvp/run/backup/backup-20261011T045148Z",
+        "integrity_check": "ok",
+        "inspections": 1124,
+        "files": 258,
+        "images": 256,
+        "has_trace": true,
+        "seconds": 0.05
+      },
+      "lookup_after_loss_http": 404,
+      "result_identical_after_restore": true,
+      "active_recipe_restored": true,
+      "trace_events_for_probe_before_after": [
+        4,
+        4
+      ],
+      "restore_rto_s_lab": 23.6,
+      "note": "backup nam tren cung may"
+    },
+    {
+      "step": "P11 execution timeout on the real inference server; late result ignored",
+      "result": "PASS",
+      "at": "04:52:58",
+      "state": "TIMEOUT",
+      "reason": "EXECUTION_TIMEOUT",
+      "late_result_logged": true,
+      "unchanged_after_late_result": true,
+      "readyz": 200,
+      "note": "execution_timeout_s ha xuong 0.3 s chi cho buoc nay"
+    },
+    {
+      "step": "P11b normal limits restored: slow request completes again",
+      "result": "PASS",
+      "at": "04:53:16",
+      "state": "COMPLETED"
+    },
+    {
+      "step": "P12 inference server down ~30 s under load: clean refusals, no wrong result, recovery",
+      "result": "PASS",
+      "at": "04:54:19",
+      "sent": 601,
+      "completed": 597,
+      "technical": {},
+      "not_accepted": 4,
+      "wrong": 0,
+      "duplicates": 0,
+      "client_503": 217,
+      "readyz_during_outage": [
+        503,
+        503,
+        503,
+        503,
+        503,
+        503
+      ],
+      "outage_s": 24.3,
+      "ready_after_start_s": 0.0,
+      "request_after_recovery": "COMPLETED",
+      "active_recipe": "recipe-a@0.1.0"
+    }
+  ]
+}

@@ -86,6 +86,7 @@ def check_spec(spec, md_text, w201):
     if w201 is not None:
         mine = {(t['from'].replace('NONE', 'START'), t['to']) for t in spec['transitions']}
         theirs = {tuple(x) for x in w201['transitions']}
+        theirs -= {tuple(x) for x in spec.get('mvp_only_transitions', [])}  # muc 8b: chi co o MVP
         if theirs - mine:
             errors.append(f'missing W2-01 transitions: {sorted(theirs - mine)}')
         notes.append({'added_to_w2_01': sorted(f'{a}->{b}' for a, b in mine - theirs)})

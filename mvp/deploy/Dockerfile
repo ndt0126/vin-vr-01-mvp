@@ -12,6 +12,8 @@ COPY tools tools
 COPY tests tests
 COPY docs docs
 COPY deploy/observability deploy/observability
+COPY deploy/k8s deploy/k8s
+COPY deploy/.env.sample deploy/.env.sample
 RUN useradd --uid 10001 --create-home vr01 && mkdir -p /run-data && chown vr01 /run-data
 USER 10001
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PYTHONPATH=/app/backend

@@ -1,0 +1,126 @@
+# VR-01 MVP tren Kubernetes single-node (kubeadm). Mot pod: init + api + triton.
+# - Triton chi nghe tren loopback cua pod (khong Service, khong hostPort): chi api goi duoc.
+# - SQLite + hostPath => 1 replica, strategy Recreate (khong chay 2 ban cung luc tren mot ledger).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vr01-inspection
+  namespace: vr01
+  labels: {app.kubernetes.io/name: vr01-inspection, app.kubernetes.io/part-of: vr01}
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  strategy: {type: Recreate}
+  selector:
+    matchLabels: {app.kubernetes.io/name: vr01-inspection}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: vr01-inspection, app.kubernetes.io/part-of: vr01}
+      annotations:
+        vr01.io/release: "0.1.0"
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        seccompProfile: {type: RuntimeDefault}
+      initContainers:
+        - name: init
+          image: vr01-mvp-api
+          imagePullPolicy: IfNotPresent
+          # Tao (neu chua co) token lab + chung chi TLS lab va dung lai model repository; giu nguyen du lieu da co.
+          # Chay bang root chi de tao thu muc tren hostPath, roi trao quyen cho uid 10001 cua container api.
+          command: ["sh", "-c"]
+          args:
+            - >-
+              python tools/init_lab.py --run-dir /run-data --instance-kind "$TRITON_INSTANCE_KIND" &&
+              chown -R 10001:10001 /run-data/data /run-data/auth /run-data/tls /run-data/examples &&
+              chmod -R a+rX /run-data/triton-repo
+          env:
+            - {name: TRITON_INSTANCE_KIND, value: KIND_CPU}
+            - {name: HOME, value: /tmp}
+          securityContext: {runAsUser: 0, allowPrivilegeEscalation: false}
+          volumeMounts:
+            - {name: run, mountPath: /run-data}
+      containers:
+        - name: triton
+          image: tritonserver
+          imagePullPolicy: IfNotPresent
+          command: ["tritonserver"]
+          args:
+            - --model-repository=/models
+            - --model-control-mode=explicit
+            - --http-port=8000
+            - --http-address=127.0.0.1
+            - --allow-grpc=false
+            - --allow-metrics=true
+            - --metrics-port=8002
+          ports:
+            - {name: triton-metrics, containerPort: 8002}
+          startupProbe:
+            exec: {command: ["sh", "-c", "curl -sf http://127.0.0.1:8000/v2/health/ready"]}
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            exec: {command: ["sh", "-c", "curl -sf http://127.0.0.1:8000/v2/health/ready"]}
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            exec: {command: ["sh", "-c", "curl -sf http://127.0.0.1:8000/v2/health/live"]}
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests: {cpu: 500m, memory: 1Gi}
+            limits: {cpu: "2", memory: 3Gi}
+          securityContext: {allowPrivilegeEscalation: false}
+          volumeMounts:
+            - {name: run, mountPath: /models, subPath: triton-repo, readOnly: true}
+        - name: api
+          image: vr01-mvp-api
+          imagePullPolicy: IfNotPresent
+          command: ["python", "backend/inspection_api.py"]
+          args:
+            - --host=0.0.0.0
+            - --data-dir=/run-data/data
+            - --principals=/run-data/auth/principals.json
+            - --tls-cert=/run-data/tls/server.crt
+            - --tls-key=/run-data/tls/server.key
+            - --examples=/run-data/examples
+            - --kserve-url=http://127.0.0.1:8000
+            - --metrics-port=9090
+          ports:
+            - {name: inference, containerPort: 8443}
+            - {name: management, containerPort: 9443}
+            - {name: metrics, containerPort: 9090}
+          # readyz chi tra 200 khi recipe active da xac minh digest VA dung model do dang nap tren Triton.
+          startupProbe:
+            httpGet: {path: /readyz, port: inference, scheme: HTTPS}
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet: {path: /readyz, port: inference, scheme: HTTPS}
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet: {path: /healthz, port: inference, scheme: HTTPS}
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests: {cpu: 100m, memory: 128Mi}
+            limits: {cpu: "1", memory: 512Mi}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: ["ALL"]}
+          volumeMounts:
+            - {name: run, mountPath: /run-data}
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - name: run
+          hostPath: {path: /var/lib/vr01/run, type: DirectoryOrCreate}
+        - name: tmp
+          emptyDir: {sizeLimit: 64Mi}

@@ -5,7 +5,7 @@ INIT_EXTRA = $(if $(SLOW),--with-slow-fixture,)
 COMPOSE = HOST_UID=$$(id -u) HOST_GID=$$(id -g) INIT_EXTRA="$(INIT_EXTRA)" docker compose --env-file deploy/.env -f deploy/docker-compose.yml $(if $(GPU),-f deploy/docker-compose.gpu.yml,)
 PY ?= python3
 
-.PHONY: env build init start stop down logs smoke load docs report backup restore obs-start obs-stop alerts-test trace test test-local digests clean
+.PHONY: env build init start stop down logs smoke load docs report backup restore obs-start obs-stop alerts-test trace diag status test test-local digests clean
 
 env:
 	@test -f deploy/.env || cp deploy/.env.sample deploy/.env
@@ -63,6 +63,12 @@ alerts-test: env    ## kiem luat canh bao bang promtool (offline, khong can stac
 
 trace:              ## make trace ID=<request_id>: toan bo duong di cua mot request (ledger + log + audit)
 	@$(PY) tools/trace_request.py --run-dir run $(ID)
+
+status:             ## san sang chua, recipe/model nao dang active
+	@$(PY) tools/vr01ctl.py --run-dir run status
+
+diag:               ## tao goi chan doan run/diag/vr01-diag-*.tar.gz (khong chua secret, khong chua anh)
+	@$(PY) tools/diag_bundle.py --run-dir run
 
 test: build         ## toan bo unit/contract/integration test, chay trong container
 	@mkdir -p run

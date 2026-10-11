@@ -1,0 +1,18 @@
+# Chi cho vao 2 cong nghiep vu; metrics chi tu namespace co nhan vr01.io/monitoring=true. Can CNI ho tro NetworkPolicy (Calico).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: vr01-inspection, namespace: vr01}
+spec:
+  podSelector:
+    matchLabels: {app.kubernetes.io/name: vr01-inspection}
+  policyTypes: [Ingress]
+  ingress:
+    - ports:
+        - {protocol: TCP, port: 8443}
+        - {protocol: TCP, port: 9443}
+    - from:
+        - namespaceSelector:
+            matchLabels: {vr01.io/monitoring: "true"}
+      ports:
+        - {protocol: TCP, port: 9090}
+        - {protocol: TCP, port: 8002}

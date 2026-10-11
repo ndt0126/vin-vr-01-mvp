@@ -400,8 +400,11 @@ class Session:
         def wait(cond, timeout):
             t0 = time.time()
             while time.time() - t0 < timeout:
-                if cond():
-                    return round(time.time() - t0, 1)
+                try:
+                    if cond():
+                        return round(time.time() - t0, 1)
+                except OSError:
+                    pass  # Prometheus vua khoi dong, chua nhan ket noi
                 time.sleep(2)
             return None
 

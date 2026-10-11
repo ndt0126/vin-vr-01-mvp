@@ -1,0 +1,2 @@
+NAME                               READY   STATUS    RESTARTS   AGE   IP           NODE           NOMINATED NODE   READINESS GATES
+vr01-inspection-7bd888b647-bl5p8   2/2     Running   0          11s   10.42.0.20   4fb419784216   <none>           <none>

@@ -1,0 +1,4 @@
+SAN SANG
+recipe active : recipe-b@0.1.0  (sha256 6ee3711f1bf3)
+model         : model-b@0.1.0  (sha256 dcf1542894dc)
+kich hoat luc : 2026-10-11T06:26:18.941Z

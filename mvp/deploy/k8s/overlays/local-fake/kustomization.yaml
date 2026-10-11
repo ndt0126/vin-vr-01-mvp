@@ -1,0 +1,37 @@
+# CHI DE THU MANIFESTS tren may dev: thay Triton bang inference server GIA (tests/fake_triton.py, chay tu image api).
+# Khong dung de danh gia Triton. Moi thu khac (init, api, probe, Service, NetworkPolicy, hostPath) giu nguyen nhu base.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+images:
+  - name: vr01-mvp-api
+    newName: vr01-mvp-api
+    newTag: "0.1.0"
+  - name: tritonserver
+    newName: vr01-mvp-api
+    newTag: "0.1.0"
+patches:
+  - target: {kind: Deployment, name: vr01-inspection}
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/command
+        value: ["python", "tests/fake_triton.py"]
+      - op: replace
+        path: /spec/template/spec/containers/0/args
+        value: ["--examples=/models-src/examples", "--host=127.0.0.1", "--port=8000"]
+      - op: replace
+        path: /spec/template/spec/containers/0/startupProbe/exec/command
+        value: ["python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/v2/health/ready', timeout=2)"]
+      - op: replace
+        path: /spec/template/spec/containers/0/readinessProbe/exec/command
+        value: ["python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/v2/health/ready', timeout=2)"]
+      - op: replace
+        path: /spec/template/spec/containers/0/livenessProbe/exec/command
+        value: ["python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/v2/health/ready', timeout=2)"]
+      - op: replace
+        path: /spec/template/spec/containers/0/resources
+        value: {requests: {cpu: 50m, memory: 64Mi}, limits: {cpu: "1", memory: 256Mi}}
+      - op: add
+        path: /spec/template/spec/containers/0/volumeMounts/-
+        value: {name: run, mountPath: /models-src, readOnly: true}

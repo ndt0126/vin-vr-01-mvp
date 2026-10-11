@@ -1510,10 +1510,16 @@ def main():
     print(json.dumps({'inference_port': srv.port('inference'), 'management_port': srv.port('management'),
                       'metrics_port': srv.port('metrics') if args.metrics_port is not None else None,
                       'tls': bool(tls), 'backend': backend.name}), flush=True)
+    # SIGTERM (docker stop, kubelet xoa pod): dung nhan request va thoat ngay, khong doi het grace period.
+    import signal
+    stop = threading.Event()
+    signal.signal(signal.SIGTERM, lambda *_: stop.set())
     try:
-        threading.Event().wait()
+        stop.wait()
     except KeyboardInterrupt:
-        srv.close()
+        pass
+    app.trace('process.stopping', reason='SIGTERM' if stop.is_set() else 'SIGINT')
+    srv.close()
 
 
 if __name__ == '__main__':

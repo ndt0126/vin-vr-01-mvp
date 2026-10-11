@@ -163,6 +163,7 @@ class FakeKServe:
         self.models, self.calls = models, []
         self.loaded, self.lifecycle, self.wrong_id = set(), [], False
         self.delays = {}  # ten model -> giay ngu them (gia lap model cham)
+        self.fail_above = {}  # ten model -> nguong mean; >= nguong thi tra 400 (gia lap model hong)
         outer = self
 
         class H(BaseHTTPRequestHandler):
@@ -204,6 +205,8 @@ class FakeKServe:
                 time.sleep(outer.delays.get(name, 0))
                 p = outer.models[name]
                 x = body['inputs'][0]['data']
+                if name in outer.fail_above and body['id'] != 'golden' and sum(x) / len(x) >= outer.fail_above[name]:
+                    return self._send(400, {'error': 'injected runtime failure'})
                 score = min(1.0, max(0.0, p['gain'] * sum(x) / len(x) + p['bias']))
                 self._send(200, {'model_name': name, 'id': 'another-request' if outer.wrong_id and body['id'] != 'golden' else body['id'],
                                  'outputs': [{'name': 'SCORE', 'datatype': 'FP32', 'shape': [1], 'data': [score]}]})

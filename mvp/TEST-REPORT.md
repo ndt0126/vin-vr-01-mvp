@@ -4,9 +4,9 @@ File này được **sinh tự động** bằng `tools/make_test_report.py` từ
 
 ## Unit / contract / integration — local-2026-10-10
 
-Nguồn: `evidence/local-2026-10-10/test-report.json` (sha256 52a1ab9bc57df405…)
+Nguồn: `evidence/local-2026-10-10/test-report.json` (sha256 7aee15d0e5121737…)
 
-Kết luận: **PASS** · Python 3.12.7 · macOS-26.6-arm64-arm-64bit · 26.7 s · kiểm tĩnh OpenAPI 11/11 · API.md khớp spec: True
+Kết luận: **PASS** · Python 3.12.7 · macOS-26.6-arm64-arm-64bit · 25.8 s · kiểm tĩnh OpenAPI 11/11 · API.md khớp spec: True
 
 | Bộ test | Chạy | Đạt | Lỗi | Bỏ qua |
 |---|---|---|---|---|

@@ -3,15 +3,24 @@
 # Deploy tu namespace sach -> pod Ready dung dieu kien -> smoke qua NodePort -> xoa pod (tu phuc hoi)
 # -> rollout ban moi -> rollout undo -> rollback model. Ghi ket qua vao $OUT/k8s-report.txt.
 set -uo pipefail
-OVERLAY="${OVERLAY:-deploy/k8s/overlays/lab-cpu}"; RUN=/var/lib/vr01/run; OUT="${OUT:-/root/k8s-evidence}"; mkdir -p "$OUT"
+# Bien: OVERLAY (duong dan overlay nhu kubectl nhin thay), RUN (thu muc hostPath nhin tu may chay script), OUT, API_IMAGE.
+OVERLAY="${OVERLAY:-deploy/k8s/overlays/lab-cpu}"; RUN="${RUN:-/var/lib/vr01/run}"; OUT="${OUT:-/root/k8s-evidence}"; mkdir -p "$OUT"
+API_IMAGE="${API_IMAGE:-vr01-mvp-api:0.1.0}"
 R="$OUT/k8s-report.txt"; : > "$R"; FAIL=0
 step(){ if [ "$2" = ok ]; then echo "PASS  $1  $3" | tee -a "$R"; else echo "FAIL  $1  $3" | tee -a "$R"; FAIL=1; fi; }
 ctl(){ python3 tools/vr01ctl.py --run-dir "$RUN" --inference-port 30443 --management-port 30943 "$@"; }
-ready(){ kubectl -n vr01 rollout status deploy/vr01-inspection --timeout=300s >/dev/null 2>&1; }
+# Rollout xong chua du: cho them toi khi CA HAI NodePort tra readyz 200 (endpoint cua Service cap nhat cham hon pod vai giay).
+ready(){ kubectl -n vr01 rollout status deploy/vr01-inspection --timeout="${ROLLOUT_TIMEOUT:-300s}" >/dev/null 2>&1 || return 1
+  for _ in $(seq 1 60); do
+    a=$(curl -sk -m 3 -o /dev/null -w '%{http_code}' https://127.0.0.1:30443/readyz || true); b=$(curl -sk -m 3 -o /dev/null -w '%{http_code}' https://127.0.0.1:30943/readyz || true)
+    [ "$a" = 200 ] && [ "$b" = 200 ] && return 0; sleep 1
+  done; return 1; }
 T0=$(date +%s)
 kubectl delete namespace vr01 --ignore-not-found --wait=true >/dev/null 2>&1
+kubectl delete pv vr01-run --ignore-not-found --wait=true >/dev/null 2>&1   # PV Retain: du lieu tren o van con
 kubectl apply -k "$OVERLAY" > "$OUT/apply.log" 2>&1 && ready; rc=$?
 step "K1 deploy from a clean namespace, rollout complete" $([ $rc = 0 ] && echo ok || echo no) "$(( $(date +%s)-T0 ))s"
+if [ $rc != 0 ]; then kubectl -n vr01 get pods,events > "$OUT/k1-failure.txt" 2>&1; kubectl -n vr01 describe pods >> "$OUT/k1-failure.txt" 2>&1; for cn in init api triton; do kubectl -n vr01 logs deploy/vr01-inspection -c $cn --tail=40 >> "$OUT/k1-failure.txt" 2>&1; done; echo "K8S CHECK FAIL (deploy did not become ready; see k1-failure.txt)" | tee -a "$R"; exit 1; fi
 kubectl -n vr01 get pods -o wide > "$OUT/pods.txt" 2>&1; kubectl -n vr01 describe deploy/vr01-inspection > "$OUT/describe-deploy.txt" 2>&1
 RD=$(kubectl -n vr01 get pod -l app.kubernetes.io/name=vr01-inspection -o jsonpath='{.items[0].status.containerStatuses[*].ready}')
 step "K2 both containers Ready (api readiness = active recipe verified + model loaded)" $([ "$RD" = "true true" ] && echo ok || echo no) "ready=[$RD]"
@@ -19,8 +28,16 @@ ctl status > "$OUT/status-1.txt" 2>&1; step "K3 vr01ctl status through NodePort"
 python3 tests/smoke.py --run-dir "$RUN" --inference-port 30443 --management-port 30943 --output "$OUT/smoke-1.json" > "$OUT/smoke-1.log" 2>&1
 step "K4 smoke flow through NodePort" $([ $? = 0 ] && echo ok || echo no) "$(tail -1 "$OUT/smoke-1.log" | cut -c1-40)"
 POD_IP=$(kubectl -n vr01 get pod -l app.kubernetes.io/name=vr01-inspection -o jsonpath='{.items[0].status.podIP}')
-C=$(curl -s -m 3 -o /dev/null -w '%{http_code}' "http://$POD_IP:8000/v2/health/ready" || true)
-step "K5 Triton port 8000 is not reachable on the pod IP" $([ "$C" = 000 ] && echo ok || echo no) "http=$C"
+kubectl -n default delete pod vr01-probe --ignore-not-found >/dev/null 2>&1
+C=$(kubectl -n default run vr01-probe --rm -i --restart=Never --image="$API_IMAGE" --image-pull-policy=IfNotPresent --quiet -- python -c "
+import urllib.request as u, ssl
+def t(url, **k):
+    try:
+        u.urlopen(url, timeout=3, **k); return 'open'
+    except Exception as e:
+        return 'open' if 'HTTP Error' in str(e) else 'closed'
+print('triton8000=' + t('http://$POD_IP:8000/v2/health/ready'), 'api8443=' + t('https://$POD_IP:8443/healthz', context=ssl._create_unverified_context()), 'metrics9090=' + t('http://$POD_IP:9090/metrics'))" 2>/dev/null | tail -1)
+step "K5 from another pod: Triton 8000 closed, API 8443 open, metrics 9090 closed by NetworkPolicy" $([ "$C" = "triton8000=closed api8443=open metrics9090=closed" ] && echo ok || echo no) "$C"
 BEFORE=$(ctl status | sed -n 2p); T1=$(date +%s)
 kubectl -n vr01 delete pod -l app.kubernetes.io/name=vr01-inspection --wait=true >/dev/null 2>&1; ready; rc=$?
 AFTER=$(ctl status | sed -n 2p)

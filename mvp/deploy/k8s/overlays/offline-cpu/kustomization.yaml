@@ -1,0 +1,24 @@
+# Cai tu GOI OFFLINE: ca hai image da duoc nap san vao containerd cua node (ctr images import), khong keo tu registry.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+images:
+  - name: vr01-mvp-api
+    newName: vr01-mvp-api
+    newTag: "0.1.0"
+  - name: tritonserver
+    newName: vr01-local/tritonserver
+    newTag: "2.60.0-25.08"
+patches:
+  - target: {kind: Deployment, name: vr01-inspection}
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/initContainers/0/imagePullPolicy
+        value: Never
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never
+      - op: replace
+        path: /spec/template/spec/containers/1/imagePullPolicy
+        value: Never

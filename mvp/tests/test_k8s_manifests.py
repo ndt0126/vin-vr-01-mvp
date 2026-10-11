@@ -1,4 +1,5 @@
 """W4-03: cac rang buoc thiet ke cua manifests Kubernetes (kiem tinh, khong can cluster)."""
+import json
 import re
 import unittest
 from pathlib import Path
@@ -53,7 +54,13 @@ class TestManifests(unittest.TestCase):
 
     def test_data_survives_pod_and_namespace_deletion(self):
         vol = {v['name']: v for v in self.pod['volumes']}
-        self.assertEqual(vol['run']['hostPath']['path'], '/var/lib/vr01/run')
+        self.assertEqual(vol['run']['persistentVolumeClaim']['claimName'], 'vr01-run')
+        self.assertNotIn('hostPath', json.dumps(self.pod))  # hostPath truc tiep trong pod bi PodSecurity baseline chan
+        pv, pvc = docs('storage.yaml')
+        self.assertEqual((pv['spec']['hostPath']['path'], pv['spec']['persistentVolumeReclaimPolicy']),
+                         ('/var/lib/vr01/run', 'Retain'))
+        self.assertEqual(pvc['spec']['volumeName'], pv['metadata']['name'])
+        self.assertEqual(docs('namespace.yaml')[0]['metadata']['labels']['pod-security.kubernetes.io/enforce'], 'baseline')
         triton_mount = self.c['triton']['volumeMounts'][0]
         self.assertTrue(triton_mount['readOnly'])
         self.assertEqual(triton_mount['subPath'], 'triton-repo')

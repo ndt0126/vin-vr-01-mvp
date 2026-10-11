@@ -68,8 +68,9 @@ Bật thêm Prometheus (`http://127.0.0.1:9091`) và Grafana (`http://127.0.0.1:
 
 ## Kubernetes (W4-03) và runbook (W4-05) — đã viết, chưa chạy trên cluster
 
-- `deploy/k8s/`: manifests kustomize (base + overlay CPU và GPU), script dựng kubeadm lab, script nạp image, và bài kiểm 10 bước. Đã kiểm tĩnh (render, schema Kubernetes 1.34, 7 test ràng buộc thiết kế). **Chưa triển khai lên cluster nào.** Xem `deploy/k8s/README.md`.
+- `deploy/k8s/`: manifests kustomize (base + overlay CPU, GPU, offline), script dựng kubeadm lab, nạp image, bài kiểm 10 bước, và bộ script gói offline cho lớp ứng dụng. Đã chạy thử 10/10 bước trên một cluster k3s trong Docker với inference server **giả**. **Chưa chạy trên kubeadm, chưa chạy với Triton thật, gói offline chưa thử.** Xem `deploy/k8s/README.md`.
 - `docs/RUNBOOK.md`: cài/bật/dừng, đổi và rollback model, sao lưu và khôi phục, nâng cấp, cây xử lý sự cố, gói chẩn đoán, giới hạn đã biết. Mỗi quy trình ghi rõ đã chạy thật, mới chạy trên laptop, hay chưa diễn tập. **Chưa có ai khác tự làm theo runbook.**
+- Kịch bản đã viết cho phiên VPS, chưa chạy trên Triton thật: tự rollback bằng fixture `model-bad` (qua golden nhưng lỗi trên ảnh sáng), ổ lưu ảnh đầy thật, nâng cấp và quay lại phiên bản app khi đang có tải, cắt mạng 10 giây (`tests/real_session.py --phase w4`); `tests/load_sweep.py` quét tải tới bão hòa.
 - Công cụ mới: `tools/vr01ctl.py` (status, activate, rollback, history, audit, pending, result) và `make diag` (gói chẩn đoán không chứa secret).
 
 ## Phiên kiểm trên stack thật

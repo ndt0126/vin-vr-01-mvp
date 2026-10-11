@@ -1,0 +1,25 @@
+# Du lieu (ledger, anh, log, token/chung chi lab, model repository) nam tren o cua node tai /var/lib/vr01/run.
+# Dung PV + PVC thay cho hostPath truc tiep trong pod de namespace giu duoc PodSecurity "baseline".
+# reclaimPolicy Retain: xoa PVC/namespace KHONG xoa du lieu. Sau khi xoa namespace, phai xoa PV (kubectl delete pv
+# vr01-run) roi apply lai thi PVC moi moi bind duoc; du lieu tren o van con.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: vr01-run
+  labels: {app.kubernetes.io/part-of: vr01}
+spec:
+  capacity: {storage: 20Gi}
+  accessModes: [ReadWriteOnce]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: vr01-local
+  hostPath: {path: /var/lib/vr01/run, type: DirectoryOrCreate}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: {name: vr01-run, namespace: vr01}
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: vr01-local
+  volumeName: vr01-run
+  resources:
+    requests: {storage: 20Gi}

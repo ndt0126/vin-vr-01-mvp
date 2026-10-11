@@ -47,6 +47,7 @@ class Client:
     def __init__(self, host, ports, tokens, ca):
         self.host, self.ports, self.tokens = host, ports, tokens
         self.ctx = ssl.create_default_context(cafile=str(ca))
+        self.timeout = 30
 
     def call(self, method, path, role=None, body=None, plane='inference'):
         headers, data = {}, None
@@ -57,7 +58,7 @@ class Client:
         req = urllib.request.Request(f'https://{self.host}:{self.ports[plane]}{path}', data=data, method=method,
                                      headers=headers)
         try:
-            with urllib.request.urlopen(req, timeout=30, context=self.ctx) as r:
+            with urllib.request.urlopen(req, timeout=self.timeout, context=self.ctx) as r:
                 raw, status = r.read(), r.status
         except urllib.error.HTTPError as e:
             raw, status = e.read(), e.code
@@ -76,12 +77,14 @@ def main():
     ap.add_argument('--allow-technical', action='store_true',
                     help='dung khi co chu y gay su co: FAILED/TIMEOUT/INDETERMINATE va request bi tu choi duoc DEM, '
                          'khong tinh la loi; van bat buoc khong thieu/trung/sai lineage')
+    ap.add_argument('--client-timeout', type=float, default=30, help='timeout moi HTTP call cua client (giay)')
     ap.add_argument('--output', type=Path)
     args = ap.parse_args()
     tokens = {v['role']: v['token'] for v in
               json.loads((args.run_dir / 'auth' / 'lab-tokens.secret.json').read_text()).values()}
     c = Client(args.host, {'inference': args.inference_port, 'management': args.management_port}, tokens,
                args.run_dir / 'tls' / 'ca.crt')
+    c.timeout = args.client_timeout
     pk = HERE.parent / 'packages' / 'examples'
     params = {d.name: json.loads((d / 'model.json').read_text()) for d in (pk / 'packages').iterdir() if d.is_dir()}
     recipes = {}

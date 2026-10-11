@@ -1,0 +1,17 @@
+NAME                                   READY   STATUS    RESTARTS   AGE   IP           NODE           NOMINATED NODE   READINESS GATES
+pod/vr01-inspection-7bd888b647-gkbj8   2/2     Running   0          8s    10.42.0.24   4fb419784216   <none>           <none>
+
+NAME                      TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)             AGE    SELECTOR
+service/vr01-inference    NodePort    10.43.183.207   <none>        8443:30443/TCP      2m4s   app.kubernetes.io/name=vr01-inspection
+service/vr01-management   NodePort    10.43.112.127   <none>        9443:30943/TCP      2m4s   app.kubernetes.io/name=vr01-inspection
+service/vr01-metrics      ClusterIP   10.43.93.33     <none>        9090/TCP,8002/TCP   2m4s   app.kubernetes.io/name=vr01-inspection
+
+NAME                              READY   UP-TO-DATE   AVAILABLE   AGE    CONTAINERS   IMAGES                                  SELECTOR
+deployment.apps/vr01-inspection   1/1     1            1           2m4s   triton,api   vr01-mvp-api:0.1.0,vr01-mvp-api:0.1.0   app.kubernetes.io/name=vr01-inspection
+
+NAME                                         DESIRED   CURRENT   READY   AGE    CONTAINERS   IMAGES                                  SELECTOR
+replicaset.apps/vr01-inspection-5cd7957c4c   0         0         0       48s    triton,api   vr01-mvp-api:0.1.0,vr01-mvp-api:0.1.0   app.kubernetes.io/name=vr01-inspection,pod-template-hash=5cd7957c4c
+replicaset.apps/vr01-inspection-7bd888b647   1         1         1       2m4s   triton,api   vr01-mvp-api:0.1.0,vr01-mvp-api:0.1.0   app.kubernetes.io/name=vr01-inspection,pod-template-hash=7bd888b647
+
+NAME                                              POD-SELECTOR                             AGE
+networkpolicy.networking.k8s.io/vr01-inspection   app.kubernetes.io/name=vr01-inspection   2m4s

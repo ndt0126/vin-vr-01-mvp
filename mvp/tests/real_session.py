@@ -456,6 +456,143 @@ class Session:
                   'vr01_ready' in m and host in ('000', ''), series_lines=len([x for x in m.splitlines() if x and x[0] != '#']),
                   host_port_9090_http=host or 'refused')
 
+    def p14_auto_rollback(self):
+        """Model 'hong' qua golden nhung loi khi suy luan anh sang -> 3 loi lien tiep sau cutover -> tu rollback."""
+        self.activate('recipe-a')
+        self.activate('recipe-bad')
+        ids = [self.rid('bad') for _ in range(3)]
+        for r in ids:
+            self.submit(r, 'recipe-bad@0.1.0', gray=220)
+        finals = [self.wait_state(r, TERMINAL, 60) for r in ids]
+        deadline, active = time.time() + 30, None
+        while time.time() < deadline:
+            active = self.active()
+            if active == 'recipe-a@0.1.0':
+                break
+            time.sleep(0.5)
+        ev = [e['event'] for e in self.trace() if e['event'].startswith('lifecycle.auto_rollback')]
+        after = self.rid('afterrollback')
+        self.submit(after, 'recipe-a@0.1.0', gray=220)
+        after_final = self.wait_state(after, TERMINAL, 60)
+        lineage = self.result(ids[0])['lineage']['model']['name']
+        ok = all(f['state'] == 'FAILED' and f['decision'] is None for f in finals) and active == 'recipe-a@0.1.0' \
+            and 'lifecycle.auto_rollback' in ev and after_final['state'] == 'COMPLETED' and lineage == 'model-bad'
+        self.step('P14 automatic rollback after 3 consecutive inference errors right after cutover', ok,
+                  failed_requests=[f['state'] + '/' + str(f['reason']) for f in finals], active_after=active,
+                  auto_rollback_logged='lifecycle.auto_rollback' in ev, failed_request_keeps_lineage=lineage,
+                  request_after_rollback=after_final['state'] + '/' + str(after_final['decision']))
+
+    def p15_disk_full(self):
+        """O luu anh day that (tmpfs 64 KiB gan len run/data/images): he thong tu choi sach, khong tra ket qua chua luu."""
+        images = self.run / 'data' / 'images'
+        self.activate('recipe-a')
+        self.sh('make', 'stop')
+        self.sh('mount', '-t', 'tmpfs', '-o', 'size=64k', 'tmpfs', str(images))
+        try:
+            self.sh('make', 'start', 'SLOW=1')
+            self.wait_ready()
+            accepted, refused, first_refusal = [], [], None
+            for i in range(60):
+                rid = self.rid('disk')
+                st, b = self.submit(rid, 'recipe-a@0.1.0', gray=i * 4 % 256, product=f'PCB1-DISK-{i:03d}')
+                if st == 202:
+                    accepted.append(rid)
+                else:
+                    refused.append((rid, st, b.get('code')))
+                    first_refusal = first_refusal or (st, b.get('code'))
+                    if len(refused) >= 5:
+                        break
+            rz = self.c.call('GET', '/readyz')
+            no_record = all(self.c.call('GET', f'/v1/inspections/{r}', 'viewer')[0] == 404 for r, _, _ in refused)
+            done = [self.wait_state(r, TERMINAL, 60)['state'] for r in accepted]
+            old_ok = self.result(accepted[0])['state'] == 'COMPLETED' if accepted else False
+        finally:
+            self.sh('make', 'stop')
+            self.sh('umount', str(images))
+            self.sh('make', 'start', 'SLOW=1')
+            ready_after = self.wait_ready()
+        back = self.rid('afterdisk')
+        st, _ = self.submit(back, 'recipe-a@0.1.0', gray=7, product='PCB1-DISK-BACK')
+        back_state = self.wait_state(back, TERMINAL, 60)['state'] if st == 202 else f'HTTP {st}'
+        ok = bool(accepted) and len(refused) >= 5 and first_refusal == (503, 'STORAGE_UNAVAILABLE') and rz[0] == 503 \
+            and 'STORAGE_UNAVAILABLE' in rz[1].get('reasons', []) and no_record and set(done) == {'COMPLETED'} \
+            and old_ok and back_state == 'COMPLETED'
+        self.step('P15 image store really full (64 KiB tmpfs): clean 503, no record for refused, recovery after space is back',
+                  ok, accepted_before_full=len(accepted), refused=len(refused), first_refusal=first_refusal,
+                  readyz=rz, refused_have_no_record=no_record, accepted_all_completed=set(done) == {'COMPLETED'},
+                  ready_after_space_back_s=ready_after, request_after_recovery=back_state)
+
+    def p16_app_upgrade_rollback(self):
+        """Doi phien ban image API (0.1.0 -> 0.1.1-test -> 0.1.0) khi dang co tai; do so request bi tu choi va thoi gian."""
+        env_file = ROOT / 'deploy' / '.env'
+        original = env_file.read_text()
+        self.activate('recipe-a')
+        out = self.run / 'session-load-app-upgrade.json'
+        proc = subprocess.Popen([sys.executable, '-B', str(HERE / 'load_cutover.py'), '--run-dir', str(self.run),
+                                 '--host', self.a.host, '--inference-port', str(self.a.inference_port),
+                                 '--management-port', str(self.a.management_port), '--rate', '10', '--duration', '90',
+                                 '--cutover-every', '100000', '--allow-technical', '--client-timeout', '5',
+                                 '--output', str(out)], cwd=ROOT, stdout=subprocess.PIPE, text=True)
+        marks = {}
+        try:
+            time.sleep(8)
+            env_file.write_text(original.replace('MVP_VERSION=0.1.0', 'MVP_VERSION=0.1.1-test'))
+            t0 = time.time()
+            self.sh('make', 'start', 'SLOW=1')
+            self.wait_ready()
+            marks['upgrade_s'] = round(time.time() - t0, 1)
+            marks['image_after_upgrade'] = self.sh('docker', 'inspect', '-f', '{{.Config.Image}}', API).stdout.strip()
+            marks['active_after_upgrade'] = self.active()
+            time.sleep(8)
+        finally:
+            env_file.write_text(original)
+        t1 = time.time()
+        self.sh('make', 'start', 'SLOW=1')
+        self.wait_ready()
+        marks['rollback_s'] = round(time.time() - t1, 1)
+        marks['image_after_rollback'] = self.sh('docker', 'inspect', '-f', '{{.Config.Image}}', API).stdout.strip()
+        proc.wait(600)
+        r = json.loads(out.read_text())
+        q = r['requests']
+        ok = marks['image_after_upgrade'].endswith(':0.1.1-test') and marks['image_after_rollback'].endswith(':0.1.0') \
+            and marks['active_after_upgrade'] == 'recipe-a@0.1.0' and self.active() == 'recipe-a@0.1.0' \
+            and q['missing_or_wrong'] == 0 and q['duplicate_or_extra_products'] == 0
+        self.step('P16 app image upgrade and rollback under load (Compose): no wrong result, active recipe kept', ok,
+                  **marks, sent=q['sent'], completed=q['completed'], technical=q['technical_states'],
+                  not_accepted=q['not_accepted'], client_retries=r['client_retries_same_request_id'],
+                  wrong=q['missing_or_wrong'], duplicates=q['duplicate_or_extra_products'],
+                  note='upgrade_s/rollback_s gom ca build image va cho healthy; khong phai thoi gian gian doan')
+
+    def p17_network_interruption(self):
+        """Chan cong 8443 bang iptables 10 giay khi dang co tai: client gui lai cung request_id, khong mat/trung."""
+        self.activate('recipe-a')
+        out = self.run / 'session-load-network-cut.json'
+        proc = subprocess.Popen([sys.executable, '-B', str(HERE / 'load_cutover.py'), '--run-dir', str(self.run),
+                                 '--host', self.a.host, '--inference-port', str(self.a.inference_port),
+                                 '--management-port', str(self.a.management_port), '--rate', '10', '--duration', '40',
+                                 '--cutover-every', '100000', '--allow-technical', '--client-timeout', '2',
+                                 '--output', str(out)], cwd=ROOT, stdout=subprocess.PIPE, text=True)
+        rule = ['-p', 'tcp', '--dport', str(self.a.inference_port), '-j', 'DROP']
+        time.sleep(8)
+        # Compose publish cong qua DOCKER-USER/nat; chan o ca INPUT (loopback) va DOCKER-USER cho chac.
+        applied = []
+        for chain in ('INPUT', 'DOCKER-USER', 'OUTPUT'):
+            if subprocess.run(['iptables', '-I', chain, *rule], capture_output=True).returncode == 0:
+                applied.append(chain)
+        try:
+            time.sleep(10)
+        finally:
+            for chain in applied:
+                subprocess.run(['iptables', '-D', chain, *rule], capture_output=True)
+        proc.wait(600)
+        r = json.loads(out.read_text())
+        q = r['requests']
+        errs = r['client_retries_same_request_id']['send_errors']
+        ok = q['missing_or_wrong'] == 0 and q['duplicate_or_extra_products'] == 0 and errs > 0 and q['completed'] > 0
+        self.step('P17 network cut between client and API for 10 s under load: retries with same request_id, no loss/duplicate',
+                  ok, iptables_chains=applied, sent=q['sent'], completed=q['completed'], not_accepted=q['not_accepted'],
+                  client_send_errors=errs, wrong=q['missing_or_wrong'], duplicates=q['duplicate_or_extra_products'])
+
     def p10_state_for_reboot(self):
         probe = self.rid('reboot')
         self.submit(probe, self.active())
@@ -482,7 +619,7 @@ class Session:
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--phase', choices=['main', 'post-reboot', 'extra', 'obs'], required=True)
+    ap.add_argument('--phase', choices=['main', 'post-reboot', 'extra', 'obs', 'w4'], required=True)
     ap.add_argument('--run-dir', type=Path, default=ROOT / 'run')
     ap.add_argument('--host', default='127.0.0.1')
     ap.add_argument('--inference-port', type=int, default=8443)
@@ -499,6 +636,12 @@ def main():
         s.report_path = s.run / 'session-obs-report.json'
         s.steps = []
         s.guarded('p13_observability', s.p13_observability)
+    elif args.phase == 'w4':
+        s.report_path = s.run / 'session-w4-report.json'
+        s.steps = []
+        for fn in (s.p1_smoke, s.p13_observability, s.p14_auto_rollback, s.p16_app_upgrade_rollback,
+                   s.p17_network_interruption, s.p15_disk_full):
+            s.guarded(fn.__name__, fn)
     elif args.phase == 'extra':
         if s.report_path.is_file():
             s.report_path = s.run / 'session-extra-report.json'
@@ -508,7 +651,7 @@ def main():
         s.guarded('R1 after full machine reboot', s.post_reboot)
     else:
         steps = [s.p1_smoke, s.p2_load_cutover, s.p3_slow_model, s.p4_cancel_processing, s.p5_cancel_queued,
-                 s.p6_drain_before_unload]
+                 s.p6_drain_before_unload, s.p14_auto_rollback]
         if not args.no_docker:
             steps.insert(2, s.p0_calibrate_slow)
             steps += [s.p7_kill_api, s.p8_kill_triton_under_load, s.p9_backup_restore, s.p11_execution_timeout,

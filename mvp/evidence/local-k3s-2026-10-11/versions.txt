@@ -1,0 +1,7 @@
+Client Version: v1.34.1+k3s1
+Kustomize Version: v5.7.1
+Server Version: v1.34.1+k3s1
+deploy/k8s/k8s_check.sh: line 59: kubeadm: command not found
+deploy/k8s/k8s_check.sh: line 59: containerd: command not found
+NAME           STATUS   ROLES           AGE   VERSION        INTERNAL-IP   EXTERNAL-IP   OS-IMAGE           KERNEL-VERSION     CONTAINER-RUNTIME
+4fb419784216   Ready    control-plane   22m   v1.34.1+k3s1   172.17.0.2    <none>        K3s v1.34.1+k3s1   6.12.76-linuxkit   containerd://2.1.4-k3s2

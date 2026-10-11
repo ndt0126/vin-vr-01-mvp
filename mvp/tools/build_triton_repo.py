@@ -104,8 +104,31 @@ def _burn_nodes(n, rounds):
     return nodes, [_bytes(5, _int64_tensor('burn_shape', [n, n])), _bytes(5, _tensor('burn_zero', [], [0.0]))]
 
 
-def linear_score_onnx(gain, bias, burn=None):
-    """SCORE = clip(gain * mean(IMAGE) + bias, 0, 1).  burn={'n':..,'rounds':..} chi dung cho fixture test."""
+def _fail_nodes(threshold):
+    """Fixture 'model hong': suy luan LOI khi mean(IMAGE) >= threshold, dung khi nho hon (golden van dat).
+    Cach lam: Reshape gia tri mean (1 phan tu) sang kich thuoc 1 + floor(mean/threshold); >= nguong thi kich thuoc
+    la 2 va onnxruntime bao loi luc chay."""
+    scale = b''.join(_int(1, d) for d in [1]) + _int(2, FLOAT) + _bytes(8, 'fail_scale') + _bytes(9, struct.pack('<f', 1.0 / threshold))
+    one = b''.join(_int(1, d) for d in [1]) + _int(2, FLOAT) + _bytes(8, 'fail_one') + _bytes(9, struct.pack('<f', 1.0))
+    nodes = [_node('Mul', ['mean0', 'fail_scale'], ['fail_ratio']), _node('Floor', ['fail_ratio'], ['fail_floor']),
+             _node('Min', ['fail_floor', 'fail_one'], ['fail_capped']), _node('Add', ['fail_capped', 'fail_one'], ['fail_dim_f']),
+             _node('Cast', ['fail_dim_f'], ['fail_dim'], _attr_int('to', INT64)),
+             _node('Reshape', ['mean0', 'fail_dim'], ['mean_1'])]
+    return nodes, [_bytes(5, scale), _bytes(5, one)]
+
+
+def linear_score_onnx(gain, bias, burn=None, fail_above_mean=None):
+    """SCORE = clip(gain * mean(IMAGE) + bias, 0, 1).  burn / fail_above_mean chi dung cho fixture test."""
+    if fail_above_mean:
+        extra, extra_init = _fail_nodes(float(fail_above_mean))
+        nodes = [_node('ReduceMean', ['IMAGE'], ['mean0'], _attr_ints('axes', [1, 2, 3]) + _attr_int('keepdims', 0))] + extra + [
+            _node('Mul', ['mean_1', 'gain'], ['scaled']), _node('Add', ['scaled', 'bias'], ['raw']),
+            _node('Clip', ['raw', 'lo', 'hi'], ['SCORE'])]
+        graph = b''.join(_bytes(1, x) for x in nodes) + _bytes(2, 'vr01_linear_score_failing') + b''.join(extra_init)
+        for name, dims, vals in (('gain', [1], [gain]), ('bias', [1], [bias]), ('lo', [], [0.0]), ('hi', [], [1.0])):
+            graph += _bytes(5, _tensor(name, dims, vals))
+        graph += _bytes(11, _value_info('IMAGE', [1, 1, 2, 2])) + _bytes(12, _value_info('SCORE', [1]))
+        return _int(1, 7) + _bytes(2, 'vr01-mvp') + _bytes(7, graph) + _bytes(8, _bytes(1, '') + _int(2, 13))
     if burn:
         extra, extra_init = _burn_nodes(int(burn['n']), int(burn['rounds']))
         head = [_node('ReduceMean', ['IMAGE'], ['mean0'], _attr_ints('axes', [1, 2, 3]) + _attr_int('keepdims', 0))]
@@ -165,10 +188,11 @@ def build(packages_dir, out_dir, kind='KIND_CPU', config=None):
             pkg, digest, _ = validate_design.validate_package(manifest, config)
             params = json.loads((manifest.parent / pkg['artifact']['path']).read_bytes())
             burn_file = manifest.parent / 'triton-build.json'  # chi fixture test moi co file nay
-            burn = json.loads(burn_file.read_text()).get('burn') if burn_file.is_file() else None
+            build_cfg = json.loads(burn_file.read_text()) if burn_file.is_file() else {}
+            burn, fail_above = build_cfg.get('burn'), build_cfg.get('fail_above_mean')
             if burn and os.environ.get('VR01_SLOW_ROUNDS'):  # hieu chinh do cham theo may dang chay
                 burn = dict(burn, rounds=int(os.environ['VR01_SLOW_ROUNDS']))
-            onnx_bytes = linear_score_onnx(float(params['gain']), float(params['bias']), burn)
+            onnx_bytes = linear_score_onnx(float(params['gain']), float(params['bias']), burn, fail_above)
             golden_in = json.loads((manifest.parent / pkg['golden']['input']['path']).read_bytes())
             actual = run_golden(onnx_bytes, golden_in)
             g = pkg['golden']
@@ -184,7 +208,7 @@ def build(packages_dir, out_dir, kind='KIND_CPU', config=None):
         (mdir / 'model.onnx').write_bytes(onnx_bytes)
         cfg = config_pbtxt(pkg['name'], kind)
         (out_dir / pkg['name'] / 'config.pbtxt').write_text(cfg)
-        accepted.append({'name': pkg['name'], 'version': pkg['version'], 'manifest_sha256': digest, 'burn': burn,
+        accepted.append({'name': pkg['name'], 'version': pkg['version'], 'manifest_sha256': digest, 'burn': burn, 'fail_above_mean': fail_above,
                          'instance_kind': kind, 'golden_expected': g['expected_score'], 'golden_onnx': actual,
                          'files': {'1/model.onnx': hashlib.sha256(onnx_bytes).hexdigest(),
                                    'config.pbtxt': hashlib.sha256(cfg.encode()).hexdigest()}})

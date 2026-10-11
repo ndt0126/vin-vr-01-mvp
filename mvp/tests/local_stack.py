@@ -27,7 +27,8 @@ def main():
     run = args.run_dir
     pk = run / 'examples' / 'packages'
     fake = FakeKServe({d.name: json.loads((d / 'model.json').read_text()) for d in pk.iterdir() if d.is_dir()})
-    fake.delays['model-slow'] = 0.8  # gia lap do cham cua fixture
+    fake.delays['model-slow'] = 0.8
+    fake.fail_above['model-bad'] = 0.5  # gia lap do cham cua fixture
     proc = subprocess.Popen([sys.executable, '-B', str(HERE.parent / 'backend' / 'inspection_api.py'),
                              '--data-dir', str(run / 'data'), '--principals', str(run / 'auth' / 'principals.json'),
                              '--tls-cert', str(run / 'tls' / 'server.crt'), '--tls-key', str(run / 'tls' / 'server.key'),

@@ -14,7 +14,7 @@ Trạng thái: **đã xong cả bốn phần** (Compose, Kubernetes, soak 8 gi�
 
 Giới hạn cần đọc trước:
 
-- Đây là **GPU NVIDIA trên cloud**, cài có Internet. Không phải máy AMD của nhà máy, không phải air gap.
+- Đây là **GPU NVIDIA trên cloud**, cài có Internet. RTX A6000 là cấu hình lab tham chiếu của dự án, chưa phải máy đích của nhà máy (cấu hình máy đích chưa được IT duyệt), và phiên này không phải air gap.
 - Model nặng là mạng tích chập **tự sinh** (trọng số tất định, không phải model QC). Số đo cho biết hệ thống chịu tải ra sao, không phải hiệu năng của model thật.
 - Mọi con số chỉ có nghĩa trên máy này.
 - Gói offline chỉ gồm lớp ứng dụng và chưa ký; Kubernetes, containerd, driver và device plugin đã cài sẵn có Internet. Cắt Internet bằng iptables, không phải air gap vật lý; sau reboot luật iptables mất nên Internet mở lại.

@@ -119,7 +119,7 @@ def main():
                 out.append(f"| {lines[0]} | {'<br>'.join(x.replace('|', '/')[:150] for x in lines[1:5])} |")
             out.append('')
     out += ['## Chưa có trong báo cáo này', '',
-            '- Máy AMD của nhà máy; air gap đầy đủ (lớp nền Kubernetes vẫn cài online); model QC thật.',
+            '- Máy đích của nhà máy (cấu hình chưa được IT duyệt); air gap đầy đủ (lớp nền Kubernetes vẫn cài online); model QC thật.',
             '- Người vận hành (không phải agent AI) tự chạy theo README/runbook trên máy sạch.',
             '- Mất điện thật; soak dài hơn 8 giờ.', '']
     (ROOT / 'TEST-REPORT.md').write_text('\n'.join(out), encoding='utf-8')

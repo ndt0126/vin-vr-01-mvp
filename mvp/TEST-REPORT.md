@@ -275,6 +275,6 @@ Kết luận: **OFFLINE CHECK FAIL  5/7  (egress stays cut; reboot or flush ipta
 
 ## Chưa có trong báo cáo này
 
-- Máy AMD của nhà máy; air gap đầy đủ (lớp nền Kubernetes vẫn cài online); model QC thật.
+- Máy đích của nhà máy (cấu hình chưa được IT duyệt); air gap đầy đủ (lớp nền Kubernetes vẫn cài online); model QC thật.
 - Người vận hành (không phải agent AI) tự chạy theo README/runbook trên máy sạch.
 - Mất điện thật; soak dài hơn 8 giờ.

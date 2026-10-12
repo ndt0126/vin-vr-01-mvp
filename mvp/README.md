@@ -1,6 +1,6 @@
 # VR-01 MVP — Inspection API + lifecycle + Triton (W3-01 → W3-05)
 
-Trạng thái 11/10/2026: **bản lab, đã chạy với Triton thật trên VPS amd64, cả CPU và GPU NVIDIA (RTX A6000), cả Compose và kubeadm**. Soak 8 giờ trên GPU đã xong (12/10). Chưa chạy trên máy AMD của nhà máy, chưa air gap đầy đủ, chưa được mentor review.
+Trạng thái 11/10/2026: **bản lab, đã chạy với Triton thật trên VPS amd64, cả CPU và GPU NVIDIA (RTX A6000), cả Compose và kubeadm**. Soak 8 giờ trên GPU đã xong (12/10). Chưa chạy trên máy đích của nhà máy, chưa air gap đầy đủ, chưa được mentor review.
 
 ## Cấu trúc
 
@@ -185,7 +185,7 @@ Số liệu chi tiết và file nguồn: `TEST-REPORT.md` (sinh bằng `make rep
 
 ## Chưa kiểm chứng
 
-- **GPU AMD của nhà máy:** mới chạy trên GPU NVIDIA thuê (RTX A6000). Chưa chạy trên phần cứng AMD; kết quả NVIDIA không suy ra được cho AMD.
+- **Máy đích của nhà máy:** mới chạy trên GPU NVIDIA thuê (RTX A6000, cấu hình lab tham chiếu của dự án). Cấu hình máy đích (GPU, OS, driver) chưa được IT duyệt, nên chưa có lượt chạy nào trên đúng máy đó.
 - Xu hướng RAM của container Triton trong soak (tăng khoảng 7,7 MiB mỗi giờ) chưa có kết luận; cần soak 24 giờ.
 - **Máy sạch bởi người khác:** ngày 11/10 có hai lượt do agent AI độc lập (không phải người) chỉ đọc README, mỗi lượt trên một VPS mới 2 vCPU / 4 GB. Lượt 1 phải đoán 3 bước và bắt được lỗi `make test`; sau khi sửa, **lượt 2 chạy trọn Quick start không cần can thiệp nào** (`make start`, smoke 18/18, test 72/73), ở commit `c83b893`. Biên bản: `evidence/person-b-2026-10-11/` và `evidence/person-b-2026-10-11-run2/`. Chưa có **người** reviewer tự làm.
 - Mất điện thật; tải cao với model QC thật (mới quét tải bằng model tự sinh).

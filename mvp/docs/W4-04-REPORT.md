@@ -13,7 +13,7 @@ Trạng thái 12/10/2026: **bản nộp lần đầu, chưa được mentor revi
 | Model | Fixture tự sinh: mạng tích chập Conv3×3 + ReLU, trọng số tất định. **Không phải model QC.** |
 
 - Các số cho biết **hệ thống cư xử ra sao** khi bão hòa, khi chuyển model, khi có sự cố. Chúng **không** phải hiệu năng của model QC thật, và không phải năng lực của máy đích.
-- GPU là NVIDIA trên cloud. Chưa chạy trên máy AMD của nhà máy; không suy kết quả này sang AMD.
+- GPU là NVIDIA RTX A6000 thuê trên cloud (cấu hình lab tham chiếu của dự án). Cấu hình máy đích của nhà máy chưa được IT duyệt; số đo cần chạy lại trên đúng máy đó.
 - Mỗi bài chạy một lượt. Chưa có độ lặp lại.
 - Qua API chỉ có trục "tốc độ gửi" vì API gửi từng request (batch 1) qua 1 worker. Trục số instance và mức đồng thời được đo bằng cách gọi thẳng Triton (mục 3b). Chưa quét theo batch: model có kích thước đầu vào cố định, không bật batching.
 
@@ -125,7 +125,7 @@ Cấu hình: 28.800 giây, 0,678 request mỗi giây (GPU bận khoảng 40%), c
 ## 8. Chưa làm
 
 - Quét theo batch; soak 24 giờ để trả lời xu hướng RAM của Triton.
-- Model QC thật; máy AMD; mất điện thật.
+- Model QC thật; máy đích của nhà máy; mất điện thật.
 - Lặp lại mỗi bài nhiều lượt để có khoảng dao động.
 
 ## 9. Chạy lại

@@ -55,7 +55,7 @@ Lệnh này build image API, tạo token + chứng chỉ TLS lab + model reposit
 make smoke
 ```
 
-**Toàn bộ test trong container** (không cần Triton, chạy được khi stack đang bật hoặc tắt). Dòng cuối mong đợi bắt đầu bằng `MVP tests: PASS  107/111 passed, static 11/11` (4 test bỏ qua vì image không cài `onnxruntime`); báo cáo ghi ở `run/test-report-container.json`.
+**Toàn bộ test trong container** (không cần Triton, chạy được khi stack đang bật hoặc tắt). Dòng cuối mong đợi bắt đầu bằng `MVP tests: PASS  105/111 passed, static 11/11` (6 test bỏ qua vì image không cài `onnxruntime`); báo cáo ghi ở `run/test-report-container.json`.
 
 ```bash
 make test
@@ -92,7 +92,7 @@ make e2e-setup
 make e2e
 ```
 
-`make e2e-setup` cần Node.js ≥ 18, npm và Internet (tải Playwright + Chromium); trên Ubuntu cài bằng `apt-get install -y nodejs npm`. `make e2e` chạy trên stack đang bật, đổi recipe trong lúc chạy và trả về `recipe-a` khi xong; kết quả và ảnh chụp màn hình ở `run/e2e/`. Kịch bản E07 cần fixture `model-bad` (luôn có), E08 cần `make start SLOW=1`.
+`make e2e-setup` cần Node.js ≥ 18, npm và Internet (tải Playwright + Chromium); trên Ubuntu cài bằng `apt-get install -y nodejs npm`. `make e2e` chạy trên stack đang bật, đổi recipe trong lúc chạy và trả về `recipe-a` khi xong; kết quả và ảnh chụp màn hình ở `run/e2e/`. Kịch bản E07 (lỗi kỹ thuật + tự rollback) và E08 (hủy) cần các fixture `model-bad`, `model-slow`: bật stack bằng `make start SLOW=1`; với `make start` thường hai kịch bản này được bỏ qua (SKIP) kèm lý do.
 
 **Giới hạn:** token lab nằm trong trình duyệt (sessionStorage của tab), chưa có đăng nhập người dùng (B11, chờ quyết định định danh/PKI); chưa thử trên màn cảm ứng thật; chưa kiểm accessibility đầy đủ; phạm vi B1–B7 là đề xuất của mình, **chưa được mentor/stakeholder duyệt** (W5-01).
 

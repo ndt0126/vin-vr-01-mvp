@@ -196,7 +196,9 @@ record('E06 B5 operator/viewer goi thang API quan tri -> 403; admin -> 200', asy
   await ensureRecipe('recipe-a');
 });
 
-record('E07 B2/B7 loi ky thuat hien "chua co ket luan" (khong bao gio OK/NG); tu rollback hien canh bao', async () => {
+record('E07 B2/B7 loi ky thuat hien "chua co ket luan" (khong bao gio OK/NG); tu rollback hien canh bao', async (t) => {
+  const recipes = (await apiCall('/v1/admin/recipes', {mgmt: true})).body.items.map(r => r.recipe.name);
+  if (!recipes.includes('recipe-bad')) { t.skip('can make start SLOW=1'); return 'SKIP'; }
   await ensureRecipe('recipe-bad');  // model-bad: qua golden, loi khi anh sang (mean >= 0.5)
   const {ctx, page} = await open('operator');
   const verdicts = [];

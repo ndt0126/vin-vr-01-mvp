@@ -68,10 +68,10 @@ trace:              ## make trace ID=<request_id>: toan bo duong di cua mot requ
 	@$(PY) tools/trace_request.py --run-dir run $(ID)
 
 e2e-setup:          ## mot lan: cai Playwright (can node >= 20 va Internet) cho test UI
-	cd tests/e2e && npm ci --no-audit --no-fund && npx playwright-core install chromium
+	cd tests/e2e && npm ci --no-audit --no-fund && npx playwright-core install --with-deps chromium ffmpeg
 
 e2e:                ## test E2E giao dien /ui/ tren stack dang chay (W5-02); ket qua + anh chup trong run/e2e/
-	cd tests/e2e && VR01_RUN_DIR=../../run VR01_E2E_OUT=../../run/e2e \
+	cd tests/e2e && VR01_RUN_DIR=../../run VR01_E2E_OUT=../../run/e2e VR01_E2E_VIDEO=../../run/e2e/video \
 	  VR01_UI_URL=https://localhost:$$(grep -s '^INFERENCE_PORT=' ../../deploy/.env | cut -d= -f2 | grep . || echo 8443) \
 	  VR01_STOP_BACKEND="$${VR01_STOP_BACKEND-docker stop vr01-mvp-triton-1}" \
 	  VR01_START_BACKEND="$${VR01_START_BACKEND-docker start vr01-mvp-triton-1}" node --test ui.e2e.mjs

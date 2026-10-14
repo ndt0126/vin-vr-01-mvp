@@ -14,10 +14,12 @@ import {chromium} from 'playwright-core';
 const RUN = process.env.VR01_RUN_DIR || '../../run';
 const BASE = (process.env.VR01_UI_URL || 'https://localhost:8443').replace(/\/$/, '');
 const OUT = process.env.VR01_E2E_OUT || '';
+const VIDEO = process.env.VR01_E2E_VIDEO || '';  // thu muc: quay video webm moi kich ban giao dien (demo evidence)
 const toks = JSON.parse(fs.readFileSync(path.join(RUN, 'auth', 'lab-tokens.secret.json'), 'utf8'));
 const TOKEN = Object.fromEntries(Object.values(toks).map(v => [v.role, v.token]));
 const results = [];
-let browser, mgmtPort, station;
+let browser, mgmtPort, station, current = '';
+const pages = [];
 
 async function apiCall(p, {role = 'admin', method = 'GET', body, mgmt = false} = {}) {
   // Goi API truc tiep qua trinh duyet (bo qua chung chi lab) de chuan bi/kiem du lieu.
@@ -38,8 +40,10 @@ async function ensureRecipe(name) {
 }
 
 async function open(role, {stub} = {}) {
-  const ctx = await browser.newContext({ignoreHTTPSErrors: true, viewport: {width: 1280, height: 900}});
+  const ctx = await browser.newContext({ignoreHTTPSErrors: true, viewport: {width: 1280, height: 900},
+    ...(VIDEO ? {recordVideo: {dir: VIDEO, size: {width: 1280, height: 900}}} : {})});
   const page = await ctx.newPage();
+  pages.push([current, page]);
   const requests = [];
   page.on('request', r => requests.push(r.url()));
   const errors = [];
@@ -62,6 +66,7 @@ function record(name, opts, fn) {
   if (typeof opts === 'function') [fn, opts] = [opts, {}];
   test(name, opts, async (t) => {
     const t0 = Date.now();
+    current = name.split(' ')[0];
     try { if (await fn(t) === 'SKIP') { results.push({name, result: 'SKIP'}); return; } results.push({name, result: 'PASS', ms: Date.now() - t0}); }
     catch (e) { results.push({name, result: 'FAIL', ms: Date.now() - t0, error: String(e).slice(0, 500)}); throw e; }
   });
@@ -88,6 +93,14 @@ before(async () => {
 
 after(async () => {
   try { await ensureRecipe('recipe-a'); } finally { await browser?.close(); }
+  if (VIDEO) {  // dat ten video theo kich ban: E04-1.webm ...
+    const seen = {};
+    for (const [name, page] of pages) {
+      const v = page.video(); if (!v) continue;
+      seen[name] = (seen[name] || 0) + 1;
+      try { fs.renameSync(await v.path(), path.join(VIDEO, `${name}-${seen[name]}.webm`)); } catch (e) { /* video co the khong ton tai */ }
+    }
+  }
   if (OUT) fs.writeFileSync(path.join(OUT, 'e2e-results.json'), JSON.stringify(
     {base: BASE, at: new Date().toISOString(), passed: results.filter(r => r.result === 'PASS').length,
       failed: results.filter(r => r.result === 'FAIL').length, results}, null, 2));

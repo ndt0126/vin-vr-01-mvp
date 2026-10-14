@@ -1,0 +1,82 @@
+cd tests/e2e && VR01_RUN_DIR=../../run VR01_E2E_OUT=../../run/e2e VR01_E2E_VIDEO=../../run/e2e/video \
+  VR01_UI_URL=https://localhost:$(grep -s '^INFERENCE_PORT=' ../../deploy/.env | cut -d= -f2 | grep . || echo 8443) \
+  VR01_STOP_BACKEND="${VR01_STOP_BACKEND-docker stop vr01-mvp-triton-1}" \
+  VR01_START_BACKEND="${VR01_START_BACKEND-docker start vr01-mvp-triton-1}" node --test ui.e2e.mjs
+TAP version 13
+# Subtest: E01 token sai bi tu choi, khong vao duoc man hinh nao
+ok 1 - E01 token sai bi tu choi, khong vao duoc man hinh nao
+  ---
+  duration_ms: 1782.974619
+  ...
+# Subtest: E02 B1/B5 viewer: thay trang thai + recipe dang chon, chi co Tong quan/Lich su, khong goi cong quan tri
+ok 2 - E02 B1/B5 viewer: thay trang thai + recipe dang chon, chi co Tong quan/Lich su, khong goi cong quan tri
+  ---
+  duration_ms: 1376.606602
+  ...
+# Subtest: E03 B1 khi /readyz bao chua san sang: banner do kem ly do, nut gui bi tat
+ok 3 - E03 B1 khi /readyz bao chua san sang: banner do kem ly do, nut gui bi tat
+  ---
+  duration_ms: 565.687403
+  ...
+# Subtest: E04 B2/B3 operator gui anh -> OK/NG/REVIEW kem truy vet; tim lai trong Lich su, chi tiet khop
+ok 4 - E04 B2/B3 operator gui anh -> OK/NG/REVIEW kem truy vet; tim lai trong Lich su, chi tiet khop
+  ---
+  duration_ms: 1698.622143
+  ...
+# Subtest: E05 B4 admin chuyen recipe qua hop thoai co ly do, rollback; audit ghi nguoi + ly do
+ok 5 - E05 B4 admin chuyen recipe qua hop thoai co ly do, rollback; audit ghi nguoi + ly do
+  ---
+  duration_ms: 1567.492387
+  ...
+# Subtest: E06 B5 operator/viewer goi thang API quan tri -> 403; admin -> 200
+ok 6 - E06 B5 operator/viewer goi thang API quan tri -> 403; admin -> 200
+  ---
+  duration_ms: 1151.922608
+  ...
+# Subtest: E07 B2/B7 loi ky thuat hien "chua co ket luan" (khong bao gio OK/NG); tu rollback hien canh bao
+not ok 7 - E07 B2/B7 loi ky thuat hien "chua co ket luan" (khong bao gio OK/NG); tu rollback hien canh bao
+  ---
+  duration_ms: 64.085197
+  location: 'file:///root/vin-vr-01-mvp/mvp/tests/e2e/ui.e2e.mjs:67:3'
+  failureType: 'testCodeFailure'
+  error: '{"type":"urn:vr01:problem:RECIPE_NOT_FOUND","title":"Unprocessable content","status":422,"code":"RECIPE_NOT_FOUND","detail":"recipe recipe-bad@0.1.0 is not registered","trace_id":"10ec13d1cf1e401b839d77b768dac214","request_id":null,"retryable":false}'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 200
+  actual: 422
+  operator: 'strictEqual'
+  stack: |-
+    ensureRecipe (file:///root/vin-vr-01-mvp/mvp/tests/e2e/ui.e2e.mjs:39:10)
+    async file:///root/vin-vr-01-mvp/mvp/tests/e2e/ui.e2e.mjs:200:3
+    async TestContext.<anonymous> (file:///root/vin-vr-01-mvp/mvp/tests/e2e/ui.e2e.mjs:70:15)
+    async Test.run (node:internal/test_runner/test:632:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:374:7)
+  ...
+# Subtest: E08 B2 huy lan kiem dang chay -> "Da huy", khong co ket luan
+ok 8 - E08 B2 huy lan kiem dang chay -> "Da huy", khong co ket luan # SKIP can make start SLOW=1
+  ---
+  duration_ms: 54.21256
+  ...
+# vr01-mvp-triton-1
+# vr01-mvp-triton-1
+# Subtest: E09 B1 dung inference server that -> trong 10 s man hinh bao chua san sang; bat lai -> san sang
+ok 9 - E09 B1 dung inference server that -> trong 10 s man hinh bao chua san sang; bat lai -> san sang
+  ---
+  duration_ms: 13747.803477
+  ...
+# Subtest: E10 man hep 390 px (dien thoai/tablet doc): khong tran ngang o moi man hinh cua operator
+ok 10 - E10 man hep 390 px (dien thoai/tablet doc): khong tran ngang o moi man hinh cua operator
+  ---
+  duration_ms: 1347.993822
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 8
+# fail 1
+# cancelled 0
+# skipped 1
+# todo 0
+# duration_ms 24812.746787
+make: *** [Makefile:74: e2e] Error 1
+EXIT=2 dur=25s

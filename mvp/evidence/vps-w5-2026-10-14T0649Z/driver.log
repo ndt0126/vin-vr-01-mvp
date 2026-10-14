@@ -1,0 +1,7 @@
+[06:49:54] preflight
+[06:49:57] stack cu (nguoi B) neu co: make down
+down: /root/vin-vr-01-mvp/mvp
+0
+[06:50:04] goi + ma nguon (f89aafc)
+[06:50:23] bat dau w5_remote.sh (tach khoi SSH)
+[07:01:30] dang chay tren VPS. Keo ket qua: tools/w5_wait_and_pull.sh   (ket qua ve /Users/amc/src/VIN/VIN - VR - 01/mvp/evidence/vps-w5-2026-10-14T0649Z)

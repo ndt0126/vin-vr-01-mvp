@@ -81,6 +81,16 @@ class TestTritonRepo(unittest.TestCase):
         self.assertIn('kind: KIND_GPU', (self.out / 'model-a' / 'config.pbtxt').read_text())
         self.assertEqual({m['instance_kind'] for m in accepted}, {'KIND_GPU'})
 
+    def test_slow_fixture_stays_on_cpu_when_models_go_to_gpu(self):
+        shutil.copytree(Path(__file__).parent / 'fixtures' / 'slow' / 'packages' / 'model-slow',
+                        self.examples / 'packages' / 'model-slow')
+        accepted, rejected = self.build('KIND_GPU')
+        self.assertEqual(rejected, [])
+        kinds = {m['name']: m['instance_kind'] for m in accepted}
+        self.assertEqual(kinds['model-slow'], 'KIND_CPU')  # fixture mo phong do cham: GPU qua nhanh (phien 14/10)
+        self.assertEqual(kinds['model-a'], 'KIND_GPU')
+        self.assertIn('kind: KIND_CPU', (self.out / 'model-slow' / 'config.pbtxt').read_text())
+
     def test_new_valid_package_is_added_without_source_change(self):
         self.add_package('model-c', 0.8, 0.1)
         accepted, rejected = self.build()

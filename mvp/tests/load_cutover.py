@@ -134,10 +134,13 @@ def main():
         rid, product = f'load-{run_id}-{i:06d}', f'PCB1-LOAD-{i % 50:03d}'
         rec = {'rid': rid, 'product': product, 'gray': gray, 'sha': hashlib.sha256(image).hexdigest(),
                'attempts': 0, 'accepted_recipe': None}
+        # captured_at co dinh cho MOI lan gui lai: payload phai giong het, neu khong server tra 409 IDEMPOTENCY_CONFLICT
+        # (loi client lo ra o phien GPU 14/10, P17: lan gui lai roi qua ranh gioi giay).
+        captured_at = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
         for _ in range(50):  # cung request_id cho moi lan thu lai
             recipe = current['recipe']
             body = {'request_id': rid, 'product_id': product, 'product_type': 'PCB1', 'recipe_version': recipe,
-                    'captured_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'station_id': STATION,
+                    'captured_at': captured_at, 'station_id': STATION,
                     'retry_of': None, 'image': {'content_type': 'image/png',
                                                 'data_base64': base64.b64encode(image).decode()}}
             rec['attempts'] += 1

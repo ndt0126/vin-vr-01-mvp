@@ -55,7 +55,7 @@ Lệnh này build image API, tạo token + chứng chỉ TLS lab + model reposit
 make smoke
 ```
 
-**Toàn bộ test trong container** (không cần Triton, chạy được khi stack đang bật hoặc tắt). Dòng cuối mong đợi bắt đầu bằng `MVP tests: PASS  105/111 passed, static 11/11` (6 test bỏ qua vì image không cài `onnxruntime`); báo cáo ghi ở `run/test-report-container.json`.
+**Toàn bộ test trong container** (không cần Triton, chạy được khi stack đang bật hoặc tắt). Dòng cuối mong đợi bắt đầu bằng `MVP tests: PASS  106/112 passed, static 11/11` (6 test bỏ qua vì image không cài `onnxruntime`); báo cáo ghi ở `run/test-report-container.json`.
 
 ```bash
 make test

@@ -1,0 +1,62 @@
+{
+  "base": "https://localhost:8443",
+  "at": "2026-10-14T06:47:06.603Z",
+  "passed": 8,
+  "failed": 1,
+  "results": [
+    {
+      "name": "E01 token sai bi tu choi, khong vao duoc man hinh nao",
+      "result": "PASS",
+      "ms": 382
+    },
+    {
+      "name": "E02 B1/B5 viewer: thay trang thai + recipe dang chon, chi co Tong quan/Lich su, khong goi cong quan tri",
+      "result": "PASS",
+      "ms": 1376
+    },
+    {
+      "name": "E03 B1 khi /readyz bao chua san sang: banner do kem ly do, nut gui bi tat",
+      "result": "PASS",
+      "ms": 566
+    },
+    {
+      "name": "E04 B2/B3 operator gui anh -> OK/NG/REVIEW kem truy vet; tim lai trong Lich su, chi tiet khop",
+      "result": "PASS",
+      "ms": 1696
+    },
+    {
+      "name": "E05 B4 admin chuyen recipe qua hop thoai co ly do, rollback; audit ghi nguoi + ly do",
+      "result": "PASS",
+      "ms": 1567
+    },
+    {
+      "name": "E06 B5 operator/viewer goi thang API quan tri -> 403; admin -> 200",
+      "result": "PASS",
+      "ms": 1151
+    },
+    {
+      "name": "E07 B2/B7 loi ky thuat hien \"chua co ket luan\" (khong bao gio OK/NG); tu rollback hien canh bao",
+      "result": "FAIL",
+      "ms": 63,
+      "error": "AssertionError [ERR_ASSERTION]: {\"type\":\"urn:vr01:problem:RECIPE_NOT_FOUND\",\"title\":\"Unprocessable content\",\"status\":422,\"code\":\"RECIPE_NOT_FOUND\",\"detail\":\"recipe recipe-bad@0.1.0 is not registered\",\"trace_id\":\"10ec13d1cf1e401b839d77b768dac214\",\"request_id\":null,\"retryable\":false}"
+    },
+    {
+      "name": "E08 B2 huy lan kiem dang chay -> \"Da huy\", khong co ket luan",
+      "result": "SKIP"
+    },
+    {
+      "name": "E09 not-ready seconds",
+      "value": 2.814
+    },
+    {
+      "name": "E09 B1 dung inference server that -> trong 10 s man hinh bao chua san sang; bat lai -> san sang",
+      "result": "PASS",
+      "ms": 13748
+    },
+    {
+      "name": "E10 man hep 390 px (dien thoai/tablet doc): khong tran ngang o moi man hinh cua operator",
+      "result": "PASS",
+      "ms": 1347
+    }
+  ]
+}

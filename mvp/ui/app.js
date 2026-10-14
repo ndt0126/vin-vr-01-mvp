@@ -258,7 +258,9 @@ async function imagePayload() {
 async function startRun(product, retryOf) {
   const I = S.inspect;
   I.product = product;
-  I.run = {request_id: newId('ui'), product, retry_of: retryOf, phase: 'sending', status: null, result: null, error: null};
+  // captured_at co dinh cho ca lan gui lai: payload phai giong het de server coi la cung mot request (khong 409).
+  I.run = {request_id: newId('ui'), product, retry_of: retryOf, captured_at: new Date().toISOString(), phase: 'sending',
+    status: null, result: null, error: null};
   renderRun();
   let image;
   try { image = await imagePayload(); } catch (e) { I.run.phase = 'error'; I.run.error = e; return renderRun(); }
@@ -270,7 +272,7 @@ async function submitRun(image, attempt) {
   try {
     if (!S.active || attempt > 0) S.active = await api(`/v1/stations/${encodeURIComponent(S.me.station_id)}/active-recipe`);
     const body = {request_id: run.request_id, product_id: run.product, product_type: S.me.product_types[0],
-      recipe_version: S.active.recipe_version, captured_at: new Date().toISOString(), station_id: S.me.station_id, image};
+      recipe_version: S.active.recipe_version, captured_at: run.captured_at, station_id: S.me.station_id, image};
     if (run.retry_of) body.retry_of = run.retry_of;
     run.status = await api('/v1/inspections', {method: 'POST', body});
     run.phase = 'processing';

@@ -1,0 +1,7 @@
+Ubuntu 24.04.4 LTS
+6.17.0-14-generic x86_64
+6
+Mem:           32139        3216       12934         273       16732       28922
+/dev/sda2       251G   24G  217G  10% /
+NVIDIA RTX A6000, 49140 MiB, 580.126.16
+Docker version 29.2.1, build a5c7197

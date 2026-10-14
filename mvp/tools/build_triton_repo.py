@@ -225,10 +225,13 @@ def build(packages_dir, out_dir, kind='KIND_CPU', config=None):
         mdir = out_dir / pkg['name'] / '1'
         mdir.mkdir(parents=True)
         (mdir / 'model.onnx').write_bytes(onnx_bytes)
-        cfg = config_pbtxt(pkg['name'], kind)
+        # Fixture cham (burn) luon chay CPU: tren GPU vong MatMul qua nhanh (~90 ms o 2000 vong, phien 14/10),
+        # khong mo phong duoc suy luan dai can cho bai huy/timeout/drain. Model that van theo `kind`.
+        kind_m = 'KIND_CPU' if burn else kind
+        cfg = config_pbtxt(pkg['name'], kind_m)
         (out_dir / pkg['name'] / 'config.pbtxt').write_text(cfg)
         accepted.append({'name': pkg['name'], 'version': pkg['version'], 'manifest_sha256': digest, 'burn': burn, 'fail_above_mean': fail_above,
-                         'instance_kind': kind, 'golden_expected': g['expected_score'], 'golden_onnx': actual,
+                         'instance_kind': kind_m, 'golden_expected': g['expected_score'], 'golden_onnx': actual,
                          'files': {'1/model.onnx': hashlib.sha256(onnx_bytes).hexdigest(),
                                    'config.pbtxt': hashlib.sha256(cfg.encode()).hexdigest()}})
     manifest = json.dumps({'models': accepted, 'rejected': rejected,

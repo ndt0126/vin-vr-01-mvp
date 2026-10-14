@@ -52,6 +52,7 @@ class Session:
     def save(self):
         failed = [s['step'] for s in self.steps if s['result'] != 'PASS']
         self.report_path.write_text(json.dumps({'verdict': 'FAIL' if failed else 'PASS', 'failed': failed,
+                                                'submit_retries_on_503_429': getattr(self, 'retried_503', 0),
                                                 'steps': self.steps}, indent=2, ensure_ascii=False) + '\n')
 
     def rid(self, tag):
@@ -64,8 +65,17 @@ class Session:
                 'station_id': STATION, 'retry_of': retry_of,
                 'image': {'content_type': 'image/png', 'data_base64': base64.b64encode(png(gray)).decode()}}
 
-    def submit(self, rid, recipe, **kw):
-        return self.c.call('POST', '/v1/inspections', 'operator', self.body(rid, recipe, **kw))
+    def submit(self, rid, recipe, retry=True, **kw):
+        # Nhu client dung hop dong: 503/429 la 'retryable', gui lai CUNG body (cung request_id, cung captured_at).
+        # Phien GPU 14/10: ngay sau mot lan chuyen model, Triton bao chua san sang vai ms -> API tra 503 (khong tao ban ghi).
+        body = self.body(rid, recipe, **kw)
+        for _ in range(40 if retry else 1):
+            s, b = self.c.call('POST', '/v1/inspections', 'operator', body)
+            if s not in (429, 503):
+                return s, b
+            self.retried_503 = getattr(self, 'retried_503', 0) + 1
+            time.sleep(0.25)
+        return s, b
 
     def status(self, rid):
         return self.c.call('GET', f'/v1/inspections/{rid}', 'viewer')[1]
@@ -505,7 +515,7 @@ class Session:
             accepted, refused, first_refusal = [], [], None
             for i in range(60):
                 rid = self.rid('disk')
-                st, b = self.submit(rid, 'recipe-a@0.1.0', gray=i * 4 % 256, product=f'PCB1-DISK-{i:03d}')
+                st, b = self.submit(rid, 'recipe-a@0.1.0', retry=False, gray=i * 4 % 256, product=f'PCB1-DISK-{i:03d}')
                 if st == 202:
                     accepted.append(rid)
                 else:

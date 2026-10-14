@@ -6,7 +6,8 @@ Trạng thái 11/10/2026: **bản lab, đã chạy với Triton thật trên VPS
 
 | Thư mục | Nội dung |
 |---|---|
-| `backend/` | `inspection_api.py` (business API hai cổng + lifecycle controller), `openapi.v1.yaml` (hợp đồng, bản 1.2.0-draft.1), `requirements.txt` (pin version) |
+| `backend/` | `inspection_api.py` (business API hai cổng + lifecycle controller), `openapi.v1.yaml` (hợp đồng, bản 1.3.0-draft.1), `requirements.txt` (pin version) |
+| `ui/` | Giao diện trạm (W5-02): HTML + JavaScript thuần, do API phục vụ tại `https://<máy>:8443/ui/`, không cần build |
 | `packages/` | Chuẩn ModelPackage/Recipe của W2-05: validator, schema, 2 package + 2 recipe mẫu |
 | `tools/` | `build_triton_repo.py` (package → Triton model repository), `init_lab.py` (token, chứng chỉ TLS lab, model repository) |
 | `deploy/` | `Dockerfile`, `docker-compose.yml`, `.env.sample` |
@@ -55,6 +56,33 @@ make stop
 ```
 
 Lệnh khác: `make backup`, `make restore BACKUP=run/backup/<tên>`, `make load`, `make logs`, `make down`, `make digests`, `make clean` (xóa `run/`).
+
+## Giao diện trạm (W5-02, W5-03) — bản đầu 14/10/2026, phạm vi chờ mentor duyệt
+
+Mở `https://<máy>:8443/ui/` (trên chính máy chạy stack: `https://localhost:8443/ui/`) rồi dán token của một vai trò trong `run/auth/lab-tokens.secret.json`. Chứng chỉ là chứng chỉ lab tự ký nên trình duyệt sẽ cảnh báo; tài khoản admin còn phải mở `https://<máy>:9443/healthz` một lần để trình duyệt chấp nhận cổng quản trị.
+
+| Mục backlog | Màn hình | Vai trò |
+|---|---|---|
+| B1 trạng thái sẵn sàng + lý do, recipe/model đang chọn kèm digest | Tổng quan, chip trên đầu (tự kiểm mỗi 5 giây) | mọi vai trò |
+| B2 gửi ảnh (3 ảnh mẫu hoặc ảnh từ máy), hiện OK/NG/REVIEW; lỗi kỹ thuật hiện "CHƯA CÓ KẾT LUẬN"; hủy; kiểm lại bằng `retry_of` | Kiểm tra | operator |
+| B3 lịch sử lọc theo trạng thái/sản phẩm, chi tiết có request_id, trace, recipe, model, SHA-256 ảnh | Lịch sử | mọi vai trò |
+| B4 chuyển recipe và rollback qua hộp thoại bắt buộc ghi lý do | Recipe và model | admin |
+| B5 viewer/operator không thấy màn quản trị, UI không gọi cổng 9443 | — | — |
+| B6 số đếm OK/NG/REVIEW/chưa có kết luận từ 00:00 | Tổng quan | mọi vai trò |
+| B7 lịch sử chuyển recipe, cảnh báo khi hệ thống tự rollback | Tổng quan | mọi vai trò |
+
+API thêm cho UI (hợp đồng 1.3.0, chỉ bổ sung, không phá client cũ): `GET /v1/me`, `GET /v1/stations/{id}/summary`, `GET /v1/stations/{id}/activations`, và `GET /v1/inspections` không cần bộ lọc. Cổng quản trị trả header CORS chỉ cho trang cùng hostname (hoặc danh sách `--ui-origin`); xác thực vẫn bằng token, không dùng cookie.
+
+**Test:** `tests/test_ui.py` (11 test phía server, nằm trong `make test`) và test E2E bằng trình duyệt thật `tests/e2e/ui.e2e.mjs` (10 kịch bản E01–E10, Playwright):
+
+```bash
+make e2e-setup
+make e2e
+```
+
+`make e2e-setup` cần Node.js ≥ 20 và Internet (tải Playwright + Chromium). `make e2e` chạy trên stack đang bật, đổi recipe trong lúc chạy và trả về `recipe-a` khi xong; kết quả và ảnh chụp màn hình ở `run/e2e/`. Kịch bản E07 cần fixture `model-bad` (luôn có), E08 cần `make start SLOW=1`.
+
+**Giới hạn:** token lab nằm trong trình duyệt (sessionStorage của tab), chưa có đăng nhập người dùng (B11, chờ quyết định định danh/PKI); chưa thử trên màn cảm ứng thật; chưa kiểm accessibility đầy đủ; phạm vi B1–B7 là đề xuất của mình, **chưa được mentor/stakeholder duyệt** (W5-01).
 
 ## Phiên VPS Tuần 4 (11/10/2026, CPU) — tóm tắt
 
@@ -190,7 +218,7 @@ Số liệu chi tiết và file nguồn: `TEST-REPORT.md` (sinh bằng `make rep
 - **Máy sạch bởi người khác:** ngày 11/10 có hai lượt do agent AI độc lập (không phải người) chỉ đọc README, mỗi lượt trên một VPS mới 2 vCPU / 4 GB. Lượt 1 phải đoán 3 bước và bắt được lỗi `make test`; sau khi sửa, **lượt 2 chạy trọn Quick start không cần can thiệp nào** (`make start`, smoke 18/18, test 72/73), ở commit `c83b893`. Biên bản: `evidence/person-b-2026-10-11/` và `evidence/person-b-2026-10-11-run2/`. Chưa có **người** reviewer tự làm.
 - Mất điện thật; tải cao với model QC thật (mới quét tải bằng model tự sinh).
 - Hủy không giải phóng GPU: inference đang chạy vẫn chạy hết (đã thấy trên Triton thật ở bước P4).
-- Chưa có UI.
+- UI bản đầu (14/10): chưa thử trên màn cảm ứng thật, chưa có người dùng thật thao tác (UAT có người), chưa kiểm accessibility đầy đủ.
 
 ## Giới hạn
 

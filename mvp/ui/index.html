@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VR-01 Trạm QC</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="app" id="app">
+  <header>
+    <h1>VR-01 · Trạm QC <span class="mono muted" id="stationName"></span></h1>
+    <span class="sp"></span>
+    <span id="readyChip" data-testid="ready-chip"></span>
+    <span id="roleChip" data-testid="role-chip"></span>
+    <button class="btn small" id="logoutBtn" hidden>Đăng xuất</button>
+  </header>
+  <nav id="nav" aria-label="Màn hình"></nav>
+  <main id="main" aria-live="polite"></main>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

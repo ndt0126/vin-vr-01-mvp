@@ -7,10 +7,10 @@ resources:
 images:
   - name: vr01-mvp-api
     newName: vr01-mvp-api
-    newTag: "0.1.0"
+    newTag: "0.5.0-rc1"
   - name: tritonserver
     newName: vr01-mvp-api
-    newTag: "0.1.0"
+    newTag: "0.5.0-rc1"
 patches:
   - target: {kind: Deployment, name: vr01-inspection}
     patch: |-

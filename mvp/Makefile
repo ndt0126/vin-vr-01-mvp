@@ -7,7 +7,7 @@ INIT_EXTRA = $(if $(SLOW),--with-slow-fixture,) $(if $(HEAVY),--with-heavy-fixtu
 COMPOSE = HOST_UID=$$(id -u) HOST_GID=$$(id -g) INIT_EXTRA="$(INIT_EXTRA)" docker compose --env-file deploy/.env -f deploy/docker-compose.yml $(if $(GPU),-f deploy/docker-compose.gpu.yml,)
 PY ?= python3
 
-.PHONY: env build init start stop down logs smoke load docs report backup restore obs-start obs-stop alerts-test trace diag status test test-local digests clean
+.PHONY: env build init start stop down logs smoke load docs report backup restore obs-start obs-stop alerts-test trace diag status test test-local e2e e2e-setup digests clean
 
 env:
 	@test -f deploy/.env || cp deploy/.env.sample deploy/.env
@@ -66,6 +66,15 @@ alerts-test: env    ## kiem luat canh bao bang promtool (offline, khong can stac
 
 trace:              ## make trace ID=<request_id>: toan bo duong di cua mot request (ledger + log + audit)
 	@$(PY) tools/trace_request.py --run-dir run $(ID)
+
+e2e-setup:          ## mot lan: cai Playwright (can node >= 20 va Internet) cho test UI
+	cd tests/e2e && npm ci --no-audit --no-fund && npx playwright-core install chromium
+
+e2e:                ## test E2E giao dien /ui/ tren stack dang chay (W5-02); ket qua + anh chup trong run/e2e/
+	cd tests/e2e && VR01_RUN_DIR=../../run VR01_E2E_OUT=../../run/e2e \
+	  VR01_UI_URL=https://localhost:$$(grep -s '^INFERENCE_PORT=' ../../deploy/.env | cut -d= -f2 | grep . || echo 8443) \
+	  VR01_STOP_BACKEND="$${VR01_STOP_BACKEND-docker stop vr01-mvp-triton-1}" \
+	  VR01_START_BACKEND="$${VR01_START_BACKEND-docker start vr01-mvp-triton-1}" node --test ui.e2e.mjs
 
 status:             ## san sang chua, recipe/model nao dang active
 	@$(PY) tools/vr01ctl.py --run-dir run status

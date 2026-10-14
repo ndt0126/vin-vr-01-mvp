@@ -1,0 +1,5 @@
+run
+**/node_modules
+**/__pycache__
+evidence
+deploy/.env

@@ -1,4 +1,4 @@
-# VR-01 Business API — 1.2.0-draft.1
+# VR-01 Business API — 1.3.0-draft.1
 
 File này được **sinh tự động** từ `backend/openapi.v1.yaml` bằng `tools/gen_api_docs.py`. Không sửa tay; sửa spec rồi chạy lại lệnh sinh.
 
@@ -9,11 +9,14 @@ File này được **sinh tự động** từ `backend/openapi.v1.yaml` bằng `
 | GET | `/healthz` | `getLiveness` | anonymous | Liveness - tiến trình còn sống. | 200 |
 | GET | `/readyz` | `getReadiness` | anonymous | Readiness - có nhận request kiểm tra mới hay không. | 200, 503 |
 | POST | `/v1/inspections` | `submitInspection` | operator | Gửi một ảnh của một sản phẩm để kiểm tra (một ảnh/request, batch 1). | 200, 202, 400, 401, 403, 408, 409, 413, 415, 422, 429, 503 |
-| GET | `/v1/inspections` | `listInspections` | viewer, operator, admin | Tra lịch sử kiểm tra theo product_id (QC UI, MES simulator). | 200, 400, 401, 403 |
+| GET | `/v1/inspections` | `listInspections` | viewer, operator, admin | Tra lịch sử kiểm tra, lọc theo product_id và/hoặc state (QC UI, MES simulator). | 200, 400, 401, 403 |
 | GET | `/v1/inspections/{request_id}` | `getInspectionStatus` | viewer, operator, admin | Trạng thái xử lý của một request. | 200, 401, 403, 404 |
 | GET | `/v1/inspections/{request_id}/result` | `getInspectionResult` | viewer, operator, admin | Kết quả terminal kèm lineage đầy đủ. | 200, 401, 403, 404, 409 |
 | POST | `/v1/inspections/{request_id}/cancel` | `cancelInspection` | operator | Hủy một lần kiểm đã nhận nhưng chưa có kết quả. | 200, 400, 401, 403, 404, 409, 415, 503 |
 | GET | `/v1/stations/{station_id}/active-recipe` | `getActiveRecipe` | viewer, operator, admin | Recipe đang active của station (để camera/replay gửi đúng recipe_version). | 200, 401, 403, 404, 503 |
+| GET | `/v1/me` | `getMe` | viewer, operator, admin | Danh tính và vai trò của token đang dùng, station của edge (để UI chọn màn hình theo quyền). | 200, 401, 403 |
+| GET | `/v1/stations/{station_id}/summary` | `getStationSummary` | viewer, operator, admin | Số đếm OK/NG/REVIEW/lỗi kỹ thuật/đã hủy/đang xử lý từ một mốc thời gian (màn Tổng quan). | 200, 400, 401, 403, 404 |
+| GET | `/v1/stations/{station_id}/activations` | `listStationActivations` | viewer, operator, admin | Lịch sử chuyển recipe (ai, lúc nào, vì sao, có phải tự rollback) cho mọi vai trò; chỉ đọc, không lộ phần audit khác. | 200, 400, 401, 403, 404 |
 
 ## Management plane (cổng 9443)
 

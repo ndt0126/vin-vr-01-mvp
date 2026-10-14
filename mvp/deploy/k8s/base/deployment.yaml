@@ -17,7 +17,7 @@ spec:
     metadata:
       labels: {app.kubernetes.io/name: vr01-inspection, app.kubernetes.io/part-of: vr01}
       annotations:
-        vr01.io/release: "0.1.0"
+        vr01.io/release: "0.5.0-rc1"
     spec:
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: 30
@@ -88,6 +88,7 @@ spec:
             - --examples=/run-data/examples
             - --kserve-url=http://127.0.0.1:8000
             - --metrics-port=9090
+            - --ui-management-port=30943   # NodePort quan tri ma trinh duyet cua UI goi toi
           ports:
             - {name: inference, containerPort: 8443}
             - {name: management, containerPort: 9443}

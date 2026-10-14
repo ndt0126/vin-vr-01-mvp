@@ -419,6 +419,9 @@ class Ledger:
 
 
 class App:
+    ui_origins = ()  # rong = cho phep origin cung hostname (xem _cors_origin)
+    ui_management_port = 9443
+
     def __init__(self, data_dir, principals, backend=None, registry=None, spec=None, overrides=None,
                  default_recipe=('recipe-a', '0.1.0')):
         self.spec = spec or Spec()
@@ -1023,9 +1026,7 @@ class App:
         unknown = set(query) - {'product_id', 'state', 'limit', 'cursor'}
         if unknown:
             raise ApiError(400, 'INVALID_REQUEST', f'unknown query parameter {sorted(unknown)[0]}')
-        pid, state = single('product_id'), single('state')
-        if pid is None and state is None:
-            raise ApiError(400, 'INVALID_REQUEST', 'product_id or state is required')
+        pid, state = single('product_id'), single('state')  # ca hai bo trong = moi nhat (man Lich su, 1.3.0)
         if pid is not None and not re.fullmatch(r'[A-Za-z0-9._-]{1,64}', pid):
             raise ApiError(400, 'INVALID_REQUEST', 'product_id must match ^[A-Za-z0-9._-]{1,64}$')
         if state is not None and state not in STATES:
@@ -1046,6 +1047,71 @@ class App:
                                (*args, limit + 1))
         nxt = str(rows[limit - 1]['seq']) if len(rows) > limit else None
         return {'items': [self.status_view(r) for r in rows[:limit]], 'next_cursor': nxt}
+
+    # ---------- doc cho UI (W5-03): danh tinh, so dem, lich su chuyen recipe
+    def me_view(self, principal):
+        return {'principal_id': principal['id'], 'role': principal['role'], 'station_id': self.registry.station_id,
+                'product_types': list(self.registry.product_types)}
+
+    def station_summary(self, station_id, query):
+        self.station_or_404(station_id)
+        unknown = set(query) - {'since'}
+        if unknown:
+            raise ApiError(400, 'INVALID_REQUEST', f'unknown query parameter {sorted(unknown)[0]}')
+        vals = query.get('since')
+        if vals is None:
+            since = datetime.now(timezone.utc).strftime('%Y-%m-%dT00:00:00.000Z')
+        else:
+            try:
+                if len(vals) != 1 or not _is_datetime(vals[0]):
+                    raise ValueError(vals)
+                since = datetime.fromisoformat(vals[0].replace('Z', '+00:00')).astimezone(timezone.utc).isoformat(
+                    timespec='milliseconds').replace('+00:00', 'Z')
+            except ValueError:
+                raise ApiError(400, 'INVALID_REQUEST', 'since must be one RFC 3339 date-time with timezone')
+        until = now_iso()
+        rows = self.ledger.all('SELECT state, decision, COUNT(*) AS n FROM inspections WHERE station_id=? AND'
+                               ' received_at >= ? GROUP BY state, decision', (station_id, since))
+        out = {'station_id': station_id, 'since': since, 'until': until, 'total': 0, 'ok': 0, 'ng': 0, 'review': 0,
+               'technical_error': 0, 'cancelled': 0, 'in_progress': 0}
+        for r in rows:
+            out['total'] += r['n']
+            if r['state'] == 'COMPLETED':
+                key = {'OK': 'ok', 'NG': 'ng', 'REVIEW': 'review'}.get(r['decision'], 'technical_error')
+            elif r['state'] == 'CANCELLED':
+                key = 'cancelled'
+            elif r['state'] in ('RECEIVED', 'PROCESSING'):
+                key = 'in_progress'
+            else:
+                key = 'technical_error'  # FAILED/TIMEOUT/INDETERMINATE: khong bao gio gop vao OK/NG
+            out[key] += r['n']
+        return out
+
+    def station_activations(self, station_id, query):
+        self.station_or_404(station_id)
+        unknown = set(query) - {'limit'}
+        if unknown:
+            raise ApiError(400, 'INVALID_REQUEST', f'unknown query parameter {sorted(unknown)[0]}')
+        vals = query.get('limit', ['10'])
+        if len(vals) != 1 or not re.fullmatch(r'[0-9]{1,2}', vals[0]) or not 1 <= int(vals[0]) <= 50:
+            raise ApiError(400, 'INVALID_REQUEST', 'limit must be 1..50')
+        rows = self.ledger.all('SELECT * FROM activations WHERE station_id=? ORDER BY activation_id DESC LIMIT ?',
+                               (station_id, int(vals[0])))
+        items = []
+        for r in rows:
+            ref = lambda j: f"{j['name']}@{j['version']}"  # noqa: E731
+            frm = json.loads(r['from_json']) if r['from_json'] else None
+            if frm is None:
+                kind = 'initial'
+            else:
+                act = self.ledger.one("SELECT action FROM audit WHERE trace_id=? AND outcome='OK' AND action IN"
+                                      " ('activate','rollback','auto_rollback') ORDER BY seq DESC LIMIT 1",
+                                      (r['trace_id'],))
+                kind = act['action'] if act else ('auto_rollback' if r['actor'] == 'system' else 'activate')
+            items.append({'at': r['at'], 'kind': kind, 'actor': r['actor'],
+                          'from_recipe_version': ref(frm) if frm else None,
+                          'to_recipe_version': ref(json.loads(r['to_json'])), 'reason': r['reason']})
+        return {'station_id': station_id, 'items': items}
 
     # ---------- management
     def station_or_404(self, station_id):
@@ -1228,6 +1294,11 @@ INFERENCE_ROUTES = [
     ('POST', r'/v1/inspections/(?P<request_id>[A-Za-z0-9._:-]{1,128})/cancel', 'cancelInspection', {'operator'}),
     ('GET', r'/v1/stations/(?P<station_id>[a-z][a-z0-9-]{0,63})/active-recipe', 'getActiveRecipe',
      {'viewer', 'operator', 'admin'}),
+    ('GET', r'/v1/me', 'getMe', {'viewer', 'operator', 'admin'}),
+    ('GET', r'/v1/stations/(?P<station_id>[a-z][a-z0-9-]{0,63})/summary', 'getStationSummary',
+     {'viewer', 'operator', 'admin'}),
+    ('GET', r'/v1/stations/(?P<station_id>[a-z][a-z0-9-]{0,63})/activations', 'listStationActivations',
+     {'viewer', 'operator', 'admin'}),
 ]
 MANAGEMENT_ROUTES = [
     ('GET', r'/healthz', 'getLiveness', ANON),
@@ -1240,6 +1311,17 @@ MANAGEMENT_ROUTES = [
     ('POST', r'/v1/admin/stations/(?P<station_id>[a-z][a-z0-9-]{0,63})/rollback', 'rollbackRecipe', {'admin'}),
     ('GET', r'/v1/admin/audit', 'listAudit', {'admin'}),
 ]
+UI_DIR = HERE.parent / 'ui'
+UI_FILES = {'index.html': 'text/html; charset=utf-8', 'app.js': 'text/javascript; charset=utf-8',
+            'app.css': 'text/css; charset=utf-8'}
+# UI tinh, khong chua du lieu; moi du lieu di qua API voi token. connect-src https: vi trang goi cong quan tri khac port.
+UI_HEADERS = {'Content-Security-Policy': "default-src 'self'; img-src 'self' data: blob:; connect-src 'self' https:; "
+                                         "frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+              'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'no-referrer',
+              'Cache-Control': 'no-cache'}
+CORS_HEADERS = {'Access-Control-Allow-Methods': 'GET, POST',
+                'Access-Control-Allow-Headers': 'Authorization, Content-Type, If-Match, X-Trace-Id',
+                'Access-Control-Expose-Headers': 'X-Trace-Id', 'Access-Control-Max-Age': '600', 'Vary': 'Origin'}
 JSON_BODY_OPS = {'submitInspection', 'validatePackage', 'activateRecipe', 'rollbackRecipe', 'cancelInspection'}
 
 
@@ -1255,8 +1337,23 @@ def make_handler(app, plane, routes):
         def log_message(self, fmt, *args):  # access log vao trace, khong in stderr
             pass
 
+        def _cors_origin(self):
+            """Chi cong quan tri: cho trang UI (cong inference, khac port) goi bang token. Khong dung cookie nen CORS
+            khong mo them duong CSRF; origin la thiet lap ro (--ui-origin) hoac cung hostname voi Host."""
+            origin = self.headers.get('Origin')
+            if plane != 'management' or not origin:
+                return None
+            if app.ui_origins:
+                return origin if origin in app.ui_origins else None
+            o = urlsplit(origin)
+            host = (self.headers.get('Host') or '').rsplit(':', 1)[0].strip('[]').lower()
+            return origin if o.scheme in ('https', 'http') and o.hostname and o.hostname.lower() == host else None
+
         def _send(self, status, body, trace_id, headers=None, problem=False, close=False):
             data = json.dumps(body, ensure_ascii=False).encode()
+            cors = self._cors_origin()
+            if cors:
+                headers = {**(headers or {}), **CORS_HEADERS, 'Access-Control-Allow-Origin': cors}
             self.send_response(status)
             self.send_header('Content-Type', 'application/problem+json' if problem else 'application/json')
             self.send_header('Content-Length', str(len(data)))
@@ -1328,7 +1425,40 @@ def make_handler(app, plane, routes):
             except (UnicodeDecodeError, ValueError):
                 raise ApiError(400, 'INVALID_REQUEST', 'body is not valid UTF-8 JSON')
 
+        def _serve_ui(self, path):
+            """Trang UI tinh (W5-02) chi tren cong inference; GET khong token vi file khong chua du lieu."""
+            if path in ('/', '/ui'):
+                self.send_response(302)
+                self.send_header('Location', '/ui/')
+                self.send_header('Content-Length', '0')
+                self.end_headers()
+                return
+            name = path[len('/ui/'):] or 'index.html'
+            if name == 'config.json':
+                data = json.dumps({'management_port': app.ui_management_port}).encode()
+                ctype = 'application/json'
+            elif name in UI_FILES and (UI_DIR / name).is_file():
+                data, ctype = (UI_DIR / name).read_bytes(), UI_FILES[name]
+            else:
+                data, ctype = b'not found', 'text/plain'
+                self.send_response(404)
+            if ctype != 'text/plain':
+                self.send_response(200)
+            self.send_header('Content-Type', ctype)
+            self.send_header('Content-Length', str(len(data)))
+            for k, v in UI_HEADERS.items():
+                self.send_header(k, v)
+            self.end_headers()
+            self.wfile.write(data)
+
         def _dispatch(self, method):
+            path0 = urlsplit(self.path).path
+            if plane == 'inference' and method == 'GET' and (path0 in ('/', '/ui') or path0.startswith('/ui/')):
+                try:
+                    self._serve_ui(path0)
+                except (BrokenPipeError, ConnectionResetError):
+                    self.close_connection = True
+                return
             trace_id = self.headers.get('X-Trace-Id', '')
             if not TRACE_RE.match(trace_id):
                 trace_id = uuid.uuid4().hex
@@ -1379,6 +1509,12 @@ def make_handler(app, plane, routes):
                 return 200, app.result_view(row), {}
             if op == 'getActiveRecipe':
                 return 200, app.active_recipe_view(p['station_id']), {}
+            if op == 'getMe':
+                return 200, app.me_view(principal), {}
+            if op == 'getStationSummary':
+                return 200, app.station_summary(p['station_id'], q), {}
+            if op == 'listStationActivations':
+                return 200, app.station_activations(p['station_id'], q), {}
             if op == 'listPackages':
                 return 200, app.list_packages(), {}
             if op == 'validatePackage':
@@ -1425,6 +1561,18 @@ def make_handler(app, plane, routes):
 
         def do_PATCH(self):
             self._dispatch('PATCH')
+
+        def do_OPTIONS(self):
+            # Preflight CORS cho cong quan tri; khong xac thuc (trinh duyet khong gui token trong preflight).
+            cors = self._cors_origin()
+            if not cors:
+                self._send(404, ApiError(404, 'NOT_FOUND', 'no CORS for this origin').body(uuid.uuid4().hex),
+                           uuid.uuid4().hex, problem=True)
+                return
+            self.send_response(204)
+            for k, v in {**CORS_HEADERS, 'Access-Control-Allow-Origin': cors, 'Content-Length': '0'}.items():
+                self.send_header(k, v)
+            self.end_headers()
 
     return Handler
 
@@ -1541,6 +1689,11 @@ def main():
     ap.add_argument('--tls-key')
     ap.add_argument('--kserve-url', help='URL noi bo cua inference server KServe v2/Triton; bo trong = stub')
     ap.add_argument('--examples', help='thu muc package/recipe (mac dinh: packages/examples trong ma nguon)')
+    ap.add_argument('--ui-management-port', type=int,
+                    help='cong quan tri ma trinh duyet thay (Compose: MANAGEMENT_PORT, K8s: NodePort 30943); mac dinh = --management-port')
+    ap.add_argument('--ui-origin', action='append', default=[],
+                    help='origin duoc goi cong quan tri tu trinh duyet, vd https://edge.local:8443 (lap lai duoc); '
+                         'bo trong = cung hostname')
     args = ap.parse_args()
     if args.init_lab_principals:
         tok, pr = init_lab_principals(args.init_lab_principals)
@@ -1556,6 +1709,8 @@ def main():
               overrides=overrides)
     if overrides:
         app.trace('config.limit_overrides', overrides=overrides)
+    app.ui_origins = tuple(args.ui_origin)
+    app.ui_management_port = args.ui_management_port or args.management_port
     tls = {'cert': args.tls_cert, 'key': args.tls_key} if args.tls_cert else None
     srv = Server(app, args.host, args.inference_port, args.management_port, tls, metrics_port=args.metrics_port)
     print(json.dumps({'inference_port': srv.port('inference'), 'management_port': srv.port('management'),

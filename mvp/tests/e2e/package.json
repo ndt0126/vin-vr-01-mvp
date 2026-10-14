@@ -1,0 +1,9 @@
+{
+  "name": "vr01-ui-e2e",
+  "private": true,
+  "description": "E2E test UI VR-01 (W5-02) bang Playwright. Chay: npm ci && npx playwright-core install chromium && node --test ui.e2e.mjs",
+  "type": "module",
+  "dependencies": {
+    "playwright-core": "1.55.0"
+  }
+}

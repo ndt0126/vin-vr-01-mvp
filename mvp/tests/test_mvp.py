@@ -56,8 +56,8 @@ class TestW203Gaps(Base):
         self.assertEqual(ids('state=COMPLETED'), ['ok-1'])
         self.assertEqual(ids('state=FAILED&product_id=PCB1-SN-0001'), [])
         self.assertEqual(ids('product_id=PCB1-SN-0002'), ['bad-1'])
-        for bad in ('state=DONE', 'limit=5'):
-            self.assertEqual(self.client.call('listInspections', role='viewer', query=bad).status, 400)
+        self.assertEqual(self.client.call('listInspections', role='viewer', query='state=DONE').status, 400)
+        self.assertEqual(ids('limit=5'), ['bad-1', 'ok-1'])  # 1.3.0: khong loc = moi nhat (man Lich su UI)
 
     def test_G5_original_image_is_stored_once_by_sha256(self):
         image = png(gray=77)

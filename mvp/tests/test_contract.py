@@ -418,7 +418,7 @@ class TestHappyPath(Base):
                               query=f"product_id=PCB1-SN-PAGE&limit=2&cursor={p1.body['next_cursor']}")
         self.assertEqual([i['request_id'] for i in p2.body['items']], ['pg-0'])
         self.assertIsNone(p2.body['next_cursor'])
-        for q in ('', 'product_id=bad%20id', 'product_id=X&limit=0', 'product_id=X&limit=101', 'product_id=X&foo=1'):
+        for q in ('product_id=bad%20id', 'product_id=X&limit=0', 'product_id=X&limit=101', 'product_id=X&foo=1'):
             self.assertEqual(self.client.call('listInspections', role='viewer', query=q).status, 400, q)
 
 
@@ -898,6 +898,7 @@ class TestSecurity(Base):
             'getInspectionStatus': {'path_params': {'request_id': 'tk-1'}},
             'getInspectionResult': {'path_params': {'request_id': 'tk-1'}},
             'getActiveRecipe': {'path_params': sp},
+            'getMe': {}, 'getStationSummary': {'path_params': sp}, 'listStationActivations': {'path_params': sp},
             'listPackages': {}, 'listRecipes': {}, 'listAudit': {}, 'getStation': {'path_params': sp},
             'validatePackage': {'body': {'package_name': 'model-a', 'package_version': '0.1.0'}},
             'activateRecipe': {'path_params': sp, 'body': {'recipe_name': 'recipe-b', 'recipe_version': '0.1.0',
@@ -922,6 +923,9 @@ class TestSecurity(Base):
             'getInspectionStatus': ({'path_params': rid}, {'viewer', 'operator', 'admin'}),
             'getInspectionResult': ({'path_params': rid}, {'viewer', 'operator', 'admin'}),
             'getActiveRecipe': ({'path_params': sp}, {'viewer', 'operator', 'admin'}),
+            'getMe': ({}, {'viewer', 'operator', 'admin'}),
+            'getStationSummary': ({'path_params': sp}, {'viewer', 'operator', 'admin'}),
+            'listStationActivations': ({'path_params': sp}, {'viewer', 'operator', 'admin'}),
             'cancelInspection': ({'path_params': rid, 'body': {'reason': 'rbac check'}}, {'operator'}),  # rb-1 da xong -> 409
             'listPackages': ({}, {'admin'}),
             'validatePackage': ({'body': {'package_name': 'model-a', 'package_version': '0.1.0'}}, {'admin'}),

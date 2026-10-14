@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: VIN VR 01 Business API (PCB1 inspection)
-  version: 1.2.0-draft.1
+  version: 1.3.0-draft.1
   summary: Business API cho module khác gửi ảnh kiểm tra và đọc kết quả; tách khỏi API nội bộ của Triton.
   description: |
     Hợp đồng W2-04, draft-1 ngày 06/10/2026. Trạng thái: ĐÃ NỘP, CHỜ MENTOR/INTEGRATION REVIEW.
@@ -187,7 +187,7 @@ paths:
     get:
       tags: [inspections]
       operationId: listInspections
-      summary: Tra lịch sử kiểm tra theo product_id (QC UI, MES simulator).
+      summary: Tra lịch sử kiểm tra, lọc theo product_id và/hoặc state (QC UI, MES simulator).
       x-plane: inference
       x-roles: [viewer, operator, admin]
       parameters:
@@ -195,7 +195,7 @@ paths:
         - name: product_id
           in: query
           required: false
-          description: Bắt buộc có `product_id` hoặc `state` (hoặc cả hai).
+          description: Lọc theo sản phẩm. Bỏ trống cả `product_id` và `state` = các lần kiểm mới nhất (màn Lịch sử, từ 1.3.0).
           schema: {$ref: '#/components/schemas/ProductId'}
         - name: state
           in: query
@@ -357,6 +357,84 @@ paths:
         '403': {$ref: '#/components/responses/Forbidden'}
         '404': {$ref: '#/components/responses/NotFound'}
         '503': {$ref: '#/components/responses/Unavailable'}
+  /v1/me:
+    servers:
+      - url: https://{edge_host}:8443
+        variables: {edge_host: {default: edge.local}}
+    get:
+      tags: [inspections]
+      operationId: getMe
+      summary: Danh tính và vai trò của token đang dùng, station của edge (để UI chọn màn hình theo quyền).
+      x-plane: inference
+      x-roles: [viewer, operator, admin]
+      parameters:
+        - $ref: '#/components/parameters/TraceIdHeader'
+      responses:
+        '200':
+          description: Không trả token hay hash token.
+          headers: {X-Trace-Id: {$ref: '#/components/headers/X-Trace-Id'}}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Me'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /v1/stations/{station_id}/summary:
+    servers:
+      - url: https://{edge_host}:8443
+        variables: {edge_host: {default: edge.local}}
+    get:
+      tags: [inspections]
+      operationId: getStationSummary
+      summary: Số đếm OK/NG/REVIEW/lỗi kỹ thuật/đã hủy/đang xử lý từ một mốc thời gian (màn Tổng quan).
+      x-plane: inference
+      x-roles: [viewer, operator, admin]
+      parameters:
+        - $ref: '#/components/parameters/TraceIdHeader'
+        - $ref: '#/components/parameters/StationIdPath'
+        - name: since
+          in: query
+          required: false
+          description: Mốc `received_at` (UTC, ISO 8601). Bỏ trống = 00:00 UTC hôm nay.
+          schema: {$ref: '#/components/schemas/Timestamp'}
+      responses:
+        '200':
+          description: Đếm trực tiếp từ ledger; lỗi kỹ thuật (FAILED/TIMEOUT/INDETERMINATE) không bao giờ gộp vào OK/NG.
+          headers: {X-Trace-Id: {$ref: '#/components/headers/X-Trace-Id'}}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/StationSummary'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /v1/stations/{station_id}/activations:
+    servers:
+      - url: https://{edge_host}:8443
+        variables: {edge_host: {default: edge.local}}
+    get:
+      tags: [inspections]
+      operationId: listStationActivations
+      summary: Lịch sử chuyển recipe (ai, lúc nào, vì sao, có phải tự rollback) cho mọi vai trò; chỉ đọc, không lộ phần audit khác.
+      x-plane: inference
+      x-roles: [viewer, operator, admin]
+      parameters:
+        - $ref: '#/components/parameters/TraceIdHeader'
+        - $ref: '#/components/parameters/StationIdPath'
+        - name: limit
+          in: query
+          required: false
+          schema: {type: integer, minimum: 1, maximum: 50, default: 10}
+      responses:
+        '200':
+          description: Mới nhất trước.
+          headers: {X-Trace-Id: {$ref: '#/components/headers/X-Trace-Id'}}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ActivationHistory'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
   /v1/admin/packages:
     servers:
       - url: https://{edge_host}:9443
@@ -787,6 +865,57 @@ components:
     Timestamp:
       type: string
       format: date-time
+    Me:
+      type: object
+      additionalProperties: false
+      required: [principal_id, role, station_id, product_types]
+      properties:
+        principal_id: {type: string}
+        role: {type: string, enum: [viewer, operator, admin]}
+        station_id: {$ref: '#/components/schemas/StationId'}
+        product_types:
+          type: array
+          items: {type: string}
+      example: {principal_id: qc-ui-01, role: viewer, station_id: station-sim, product_types: [PCB1]}
+    StationSummary:
+      type: object
+      additionalProperties: false
+      required: [station_id, since, until, total, ok, ng, review, technical_error, cancelled, in_progress]
+      properties:
+        station_id: {$ref: '#/components/schemas/StationId'}
+        since: {$ref: '#/components/schemas/Timestamp'}
+        until: {$ref: '#/components/schemas/Timestamp'}
+        total: {type: integer, minimum: 0}
+        ok: {type: integer, minimum: 0}
+        ng: {type: integer, minimum: 0}
+        review: {type: integer, minimum: 0}
+        technical_error: {type: integer, minimum: 0, description: FAILED + TIMEOUT + INDETERMINATE (chưa có kết luận).}
+        cancelled: {type: integer, minimum: 0}
+        in_progress: {type: integer, minimum: 0, description: RECEIVED + PROCESSING.}
+      example: {station_id: station-sim, since: '2026-10-14T00:00:00.000Z', until: '2026-10-14T05:00:00.000Z',
+                total: 12, ok: 8, ng: 1, review: 1, technical_error: 1, cancelled: 1, in_progress: 0}
+    ActivationHistory:
+      type: object
+      additionalProperties: false
+      required: [station_id, items]
+      properties:
+        station_id: {$ref: '#/components/schemas/StationId'}
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [at, kind, actor, from_recipe_version, to_recipe_version, reason]
+            properties:
+              at: {$ref: '#/components/schemas/Timestamp'}
+              kind: {type: string, enum: [initial, activate, rollback, auto_rollback]}
+              actor: {type: string}
+              from_recipe_version: {oneOf: [{$ref: '#/components/schemas/RecipeVersionRef'}, {type: 'null'}]}
+              to_recipe_version: {$ref: '#/components/schemas/RecipeVersionRef'}
+              reason: {type: string}
+      example: {station_id: station-sim, items: [{at: '2026-10-14T05:00:00.000Z', kind: auto_rollback, actor: system,
+                from_recipe_version: recipe-bad@0.1.0, to_recipe_version: recipe-a@0.1.0,
+                reason: 'auto rollback: 3 consecutive backend errors after cutover'}]}
     InspectionSubmit:
       type: object
       additionalProperties: false

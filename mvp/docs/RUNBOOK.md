@@ -19,6 +19,7 @@ Ngày 11/10/2026 một agent AI độc lập (không phải người), chỉ đ�
 | Tôi muốn | Lệnh |
 |---|---|
 | Biết hệ thống có sẵn sàng không, model nào đang chạy | `make status` |
+| Dùng giao diện thay cho dòng lệnh | Mở `https://<máy>:8443/ui/`, dán token theo vai trò (xem README mục Giao diện trạm) |
 | Bật / dừng | `make start` / `make stop` |
 | Kiểm nhanh toàn luồng | `make smoke` |
 | Đổi model | `python3 tools/vr01ctl.py activate <recipe> --reason "..."` |
@@ -244,7 +245,7 @@ Tạo `run/diag/vr01-diag-<giờ UTC>.tar.gz`. Trong gói: `summary.json` (trạ
 
 - Bản Compose, một máy, một worker. Hỏng máy hoặc hỏng ổ là dừng trạm.
 - Cần Internet để cài; chưa có gói offline cho bản này.
-- Model mẫu là hàm tuyến tính, không phải model QC; chưa chạy GPU.
+- Model mẫu là hàm tuyến tính hoặc mạng tích chập tự sinh, không phải model QC. Đã chạy trên GPU thuê (RTX A6000), chưa chạy trên máy đích nhà máy.
 - Token lab và chứng chỉ TLS tự ký 30 ngày; chưa có quy trình cấp và thu hồi; chưa PKI nhà máy. Chứng chỉ hết hạn thì client không kết nối được: xóa `run/tls/` rồi `make start` để tạo lại (chỉ dùng cho lab).
 - Hủy request không giải phóng GPU.
 - Sao lưu thủ công, trên cùng ổ.

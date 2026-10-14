@@ -13,6 +13,7 @@ import base64
 import hashlib
 import json
 import os
+import re
 import shutil
 import sqlite3
 import subprocess
@@ -533,9 +534,10 @@ class Session:
                   ready_after_space_back_s=ready_after, request_after_recovery=back_state)
 
     def p16_app_upgrade_rollback(self):
-        """Doi phien ban image API (0.1.0 -> 0.1.1-test -> 0.1.0) khi dang co tai; do so request bi tu choi va thoi gian."""
+        """Doi phien ban image API (<ban hien tai> -> <ban>-uptest -> <ban hien tai>) khi dang co tai; do so request bi tu choi va thoi gian."""
         env_file = ROOT / 'deploy' / '.env'
         original = env_file.read_text()
+        cur = re.search(r'^MVP_VERSION=(\S+)', original, re.M).group(1)
         self.activate('recipe-a')
         out = self.run / 'session-load-app-upgrade.json'
         proc = subprocess.Popen([sys.executable, '-B', str(HERE / 'load_cutover.py'), '--run-dir', str(self.run),
@@ -546,7 +548,7 @@ class Session:
         marks = {}
         try:
             time.sleep(8)
-            env_file.write_text(original.replace('MVP_VERSION=0.1.0', 'MVP_VERSION=0.1.1-test'))
+            env_file.write_text(original.replace(f'MVP_VERSION={cur}', f'MVP_VERSION={cur}-uptest'))
             t0 = time.time()
             self.sh('make', 'start', 'SLOW=1')
             self.wait_ready()
@@ -564,7 +566,7 @@ class Session:
         proc.wait(600)
         r = json.loads(out.read_text())
         q = r['requests']
-        ok = marks['image_after_upgrade'].endswith(':0.1.1-test') and marks['image_after_rollback'].endswith(':0.1.0') \
+        ok = marks['image_after_upgrade'].endswith(f':{cur}-uptest') and marks['image_after_rollback'].endswith(f':{cur}') \
             and marks['active_after_upgrade'] == 'recipe-a@0.1.0' and self.active() == 'recipe-a@0.1.0' \
             and q['missing_or_wrong'] == 0 and q['duplicate_or_extra_products'] == 0
         self.step('P16 app image upgrade and rollback under load (Compose): no wrong result, active recipe kept', ok,
@@ -839,7 +841,7 @@ class Session:
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--phase', choices=['main', 'post-reboot', 'extra', 'obs', 'w4', 'rerun', 'gpu', 'gpu-post'], required=True)
+    ap.add_argument('--phase', choices=['main', 'pre-reboot', 'post-reboot', 'extra', 'obs', 'w4', 'rerun', 'gpu', 'gpu-post'], required=True)
     ap.add_argument('--run-dir', type=Path, default=ROOT / 'run')
     ap.add_argument('--host', default='127.0.0.1')
     ap.add_argument('--inference-port', type=int, default=8443)
@@ -884,6 +886,8 @@ def main():
             s.report_path = s.run / 'session-extra-report.json'
         for fn in (s.p9_backup_restore, s.p11_execution_timeout, s.p12_long_triton_outage):
             s.guarded(fn.__name__, fn)
+    elif args.phase == 'pre-reboot':  # luu lai trang thai ngay truoc reboot (sau cac phase khac da doi recipe)
+        s.guarded('p10_state_for_reboot', s.p10_state_for_reboot)
     elif args.phase == 'post-reboot':
         s.guarded('R1 after full machine reboot', s.post_reboot)
     else:

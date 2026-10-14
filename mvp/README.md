@@ -1,6 +1,6 @@
 # VR-01 MVP — Inspection API + lifecycle + Triton (W3-01 → W3-05)
 
-Trạng thái 11/10/2026: **bản lab, đã chạy với Triton thật trên VPS amd64, cả CPU và GPU NVIDIA (RTX A6000), cả Compose và kubeadm**. Soak 8 giờ trên GPU đã xong (12/10). Chưa chạy trên máy đích của nhà máy, chưa air gap đầy đủ, chưa được mentor review.
+Trạng thái 14/10/2026 (bản `0.5.0-rc1`, có giao diện trạm): **bản lab, đã chạy với Triton thật trên VPS amd64, cả CPU và GPU NVIDIA (RTX A6000), cả Compose và kubeadm**. Soak 8 giờ trên GPU đã xong (12/10). Chưa chạy trên máy đích của nhà máy, chưa air gap đầy đủ, chưa được mentor review.
 
 ## Cấu trúc
 
@@ -29,6 +29,12 @@ apt-get update && apt-get install -y docker.io docker-compose-v2 make git python
 git clone https://github.com/ndt0126/vin-vr-01-mvp.git && cd vin-vr-01-mvp/mvp
 ```
 
+**Máy có GPU NVIDIA** (đã có driver và NVIDIA Container Toolkit): trước lần `make start` đầu tiên, bật cấu hình GPU cho Triton. Máy không có GPU thì bỏ qua bước này.
+
+```bash
+make env && sed -i 's/^TRITON_INSTANCE_KIND=.*/TRITON_INSTANCE_KIND=KIND_GPU/; s/^VR01_GPU=.*/VR01_GPU=1/' deploy/.env
+```
+
 **Bật stack:**
 
 ```bash
@@ -43,7 +49,7 @@ Lệnh này build image API, tạo token + chứng chỉ TLS lab + model reposit
 make smoke
 ```
 
-**Toàn bộ test trong container** (không cần Triton, chạy được khi stack đang bật hoặc tắt). Dòng cuối mong đợi bắt đầu bằng `MVP tests: PASS  92/96 passed, static 11/11` (4 test bỏ qua vì image không cài `onnxruntime`); báo cáo ghi ở `run/test-report-container.json`.
+**Toàn bộ test trong container** (không cần Triton, chạy được khi stack đang bật hoặc tắt). Dòng cuối mong đợi bắt đầu bằng `MVP tests: PASS  107/111 passed, static 11/11` (4 test bỏ qua vì image không cài `onnxruntime`); báo cáo ghi ở `run/test-report-container.json`.
 
 ```bash
 make test

@@ -1,6 +1,6 @@
 # VR-01 MVP 0.5.0-rc1 — release candidate và gói bàn giao (W5-05)
 
-Trạng thái: **release candidate của bản lab**, lập ngày 14/10/2026. Chưa được mentor/QC/IT nghiệm thu. Tên đúng là "release candidate cài thử nghiệm", không phải bản production.
+Trạng thái: **release candidate của bản lab**, lập ngày 14/10/2026; đã kiểm trên GPU thuê cùng ngày (mục 4). Chưa được mentor/QC/IT nghiệm thu. Tên đúng là "release candidate cài thử nghiệm", không phải bản production.
 
 Kết quả phiên chạy trên stack thật cho đúng bản này được ghi ở mục 4 sau khi phiên chạy xong. Chưa có phiên thì mục 4 ghi "chưa chạy".
 
@@ -44,7 +44,18 @@ Kiểm đầy đủ như phiên của mình: `tools/run_w5_session.sh <user@IP> 
 
 ## 4. Kết quả trên stack thật cho bản này
 
-Chưa chạy (điền sau phiên VPS W5).
+Phiên 14/10/2026 trên GPU thuê RTX A6000 (Ubuntu 24.04.4, driver 580.126.16), Compose, Triton `KIND_GPU`. Chi tiết và raw: `evidence/vps-w5-2026-10-14T0649Z/README.md`, bảng UAT `evidence/vps-w5-2026-10-14T0649Z/UAT-RESULT.md`.
+
+| Kiểm | Kết quả |
+|---|---|
+| Người B (agent AI) cài từ README trên máy sạch | Không can thiệp; smoke 18/18; lộ 2 chỗ README sai (số test, fixture của E07), đã sửa — `evidence/person-b-2026-10-14-w5/` |
+| UAT tự động theo checklist W5-04 | **24/24 dòng đạt** (A1–E3 + U1–U4) |
+| Giao diện E2E (Playwright, Triton thật) | 10/10 ba lần: trước sự cố, sau toàn bộ bài sự cố/nâng cấp, sau reboot cả máy |
+| Dừng Triton thật → UI báo chưa sẵn sàng | 1,3–2,8 s (tiêu chí ≤ 10 s) |
+| Bài sự cố/vận hành `real_session` | phase `main` 15/15, phase `w4` 12/12, R1/R2 sau reboot đạt |
+| `make test` trong container | 106/112 (6 bỏ qua vì image không có onnxruntime) |
+
+Ba lỗi tìm thấy trong phiên, **đều ở fixture/script kiểm và ở UI, không ở API**, đã sửa trước khi gắn tag: fixture chậm phải chạy CPU; client tải và nút "Gửi lại" của UI tính lại `captured_at` khi gửi lại (server trả đúng 409); script kiểm không gửi lại khi gặp 503 ngắn ngay sau lần chuyển model. Tag `mvp-0.5.0-rc1` trỏ vào commit có cả ba bản sửa; phần đã chạy trên GPU là `abede1b` + `5e31175` (bản sau chỉ khác script kiểm và tài liệu).
 
 ## 5. Giới hạn đã biết
 

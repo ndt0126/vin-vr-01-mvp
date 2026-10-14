@@ -47,7 +47,8 @@ def load(p):
 def collect(ev):
     run = ev / 'run' if (ev / 'run').is_dir() else ev
     found = {}
-    for rep in ('session-report.json', 'session-w4-report.json', 'session-extra-report.json'):
+    # session-report-run2.json: luot truoc khi chay lai main (gom R1/R2 sau reboot); file sau ghi de ket qua cung buoc
+    for rep in ('session-report-run2.json', 'session-report.json', 'session-w4-report.json', 'session-extra-report.json'):
         d = load(run / rep)
         for s in (d or {}).get('steps', []):
             key = s['step'].split(' ')[0]
@@ -64,9 +65,12 @@ def collect(ev):
         found['TEST'] = {'result': test['verdict'], 'source': 'run/test-report-container.json',
                          'name': f'make test {ok}/{n} (contract/unit)'}
     for sub, tag in (('e2e', ''), ('e2e-again', 'AGAIN'), ('e2e-after-reboot', 'REBOOT')):
-        d = load(run / 'w5' / sub / 'e2e-results.json')
-        if not d:
+        # Lay ket qua MOI NHAT theo truong 'at': phien 14/10 co ban cu cua luot 1 o <sub>/ va ban luot 2 o <sub>/e2e/
+        # (cp -r vao thu muc da ton tai tao thu muc long); khong di chuyen file de MANIFEST van khop.
+        cands = [(x, f) for f in (sub, f'{sub}/e2e') if (x := load(run / 'w5' / f / 'e2e-results.json'))]
+        if not cands:
             continue
+        d, sub = max(cands, key=lambda c: c[0]['at'])
         if tag:
             found['E2E_' + tag] = {'result': 'PASS' if d['failed'] == 0 and d['passed'] > 0 else 'FAIL',
                                   'source': f'run/w5/{sub}/e2e-results.json', 'name': f"E2E {sub}: {d['passed']} PASS, {d['failed']} FAIL"}

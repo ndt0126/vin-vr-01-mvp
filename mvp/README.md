@@ -96,6 +96,10 @@ make e2e
 
 **Giới hạn:** token lab nằm trong trình duyệt (sessionStorage của tab), chưa có đăng nhập người dùng (B11, chờ quyết định định danh/PKI); chưa thử trên màn cảm ứng thật; chưa kiểm accessibility đầy đủ; phạm vi B1–B7 là đề xuất của mình, **chưa được mentor/stakeholder duyệt** (W5-01).
 
+## Phiên GPU Tuần 5 (14/10/2026) — tóm tắt
+
+Máy RTX A6000 thuê, Compose, Triton `KIND_GPU`, bản `0.5.0-rc1`. Người B (agent AI) cài từ README không cần can thiệp. UAT tự động theo checklist W5-04: **24/24 đạt**; giao diện E2E 10/10 trước sự cố, sau sự cố/nâng cấp và sau reboot cả máy; dừng Triton thật thì UI báo chưa sẵn sàng sau 1,3–2,8 s. Phiên lộ 3 lỗi ở fixture/script kiểm và UI (không ở API), đã sửa và chạy lại đạt. Chi tiết: `evidence/vps-w5-2026-10-14T0649Z/README.md`, `docs/RELEASE-0.5.0-rc1.md`.
+
 ## Phiên VPS Tuần 4 (11/10/2026, CPU) — tóm tắt
 
 Trên một VPS mới 4 vCPU / 8 GB, Triton thật, model chạy CPU. Chi tiết, số liệu và giới hạn: `evidence/vps-w4-2026-10-11T0754Z/README.md`.

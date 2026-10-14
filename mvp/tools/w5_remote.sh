@@ -22,14 +22,14 @@ step 02-status python3 tools/vr01ctl.py --run-dir run status
 step 03-smoke make smoke
 step 04-e2e-setup make e2e-setup
 step 05-e2e make e2e
-cp -r run/e2e "$W/e2e" 2>/dev/null
+rm -rf "$W/e2e"; rm -rf "$W/e2e"; cp -r run/e2e "$W/e2e" 2>/dev/null
 # UAT tu dong theo checklist W5-04: phase main (P0-P12, P14), w4 (P13-P18, can Prometheus/Grafana)
 step 06-uat-main python3 -B tests/real_session.py --phase main
 step 08-obs-start make obs-start
 step 09-uat-w4 python3 -B tests/real_session.py --phase w4
 step 10-make-test make test
 step 11-e2e-again make e2e   # UI van dung sau moi su co/nang cap o tren
-cp -r run/e2e "$W/e2e-again" 2>/dev/null
+rm -rf "$W/e2e-again"; rm -rf "$W/e2e-again"; cp -r run/e2e "$W/e2e-again" 2>/dev/null
 step 12-status-final python3 tools/vr01ctl.py --run-dir run status
 step 13-diag make diag
 docker logs vr01-mvp-triton-1 > "$W/triton.log" 2>&1; docker logs vr01-mvp-api-1 > "$W/api.log" 2>&1

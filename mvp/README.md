@@ -92,7 +92,7 @@ make e2e-setup
 make e2e
 ```
 
-`make e2e-setup` cần Node.js ≥ 20 và Internet (tải Playwright + Chromium). `make e2e` chạy trên stack đang bật, đổi recipe trong lúc chạy và trả về `recipe-a` khi xong; kết quả và ảnh chụp màn hình ở `run/e2e/`. Kịch bản E07 cần fixture `model-bad` (luôn có), E08 cần `make start SLOW=1`.
+`make e2e-setup` cần Node.js ≥ 18, npm và Internet (tải Playwright + Chromium); trên Ubuntu cài bằng `apt-get install -y nodejs npm`. `make e2e` chạy trên stack đang bật, đổi recipe trong lúc chạy và trả về `recipe-a` khi xong; kết quả và ảnh chụp màn hình ở `run/e2e/`. Kịch bản E07 cần fixture `model-bad` (luôn có), E08 cần `make start SLOW=1`.
 
 **Giới hạn:** token lab nằm trong trình duyệt (sessionStorage của tab), chưa có đăng nhập người dùng (B11, chờ quyết định định danh/PKI); chưa thử trên màn cảm ứng thật; chưa kiểm accessibility đầy đủ; phạm vi B1–B7 là đề xuất của mình, **chưa được mentor/stakeholder duyệt** (W5-01).
 

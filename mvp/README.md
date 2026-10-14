@@ -23,6 +23,12 @@ Trạng thái 14/10/2026 (bản `0.5.0-rc1`, có giao diện trạm): **bản la
 apt-get update && apt-get install -y docker.io docker-compose-v2 make git python3
 ```
 
+Nếu máy **đã có Docker** (ví dụ image máy GPU của nhà cung cấp cài sẵn Docker CE và NVIDIA Container Toolkit; kiểm bằng `docker compose version`), **không** cài `docker.io` vì sẽ xung đột với Docker CE; chỉ cài phần còn thiếu:
+
+```bash
+apt-get update && apt-get install -y make git python3
+```
+
 **Lấy mã nguồn và vào thư mục `mvp/`** (mọi lệnh `make` bên dưới chạy trong thư mục này):
 
 ```bash

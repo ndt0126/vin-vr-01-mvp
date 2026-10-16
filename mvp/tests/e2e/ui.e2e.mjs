@@ -58,6 +58,13 @@ async function open(role, {stub} = {}) {
   return {ctx, page, requests, errors};
 }
 
+async function finish(ctx) {
+  // Khi quay video: giu trinh duyet them 1,5 s truoc khi dong, de video ghi duoc trang thai cuoi
+  // (phien 14/10: video E01 chi dai 0,16-0,24 s, 3/4 video ket thuc truoc khung co dong bao loi).
+  if (VIDEO) await new Promise(r => setTimeout(r, 1500));
+  await ctx.close();
+}
+
 async function shot(page, name) {
   if (OUT) await page.screenshot({path: path.join(OUT, name + '.png'), fullPage: true});
 }
@@ -112,7 +119,7 @@ record('E01 token sai bi tu choi, khong vao duoc man hinh nao', async () => {
   await page.getByTestId('login-btn').click();
   await page.getByRole('alert').getByText('Token không đúng').waitFor();
   assert.equal(await page.getByTestId('nav-overview').count(), 0);
-  await ctx.close();
+  await finish(ctx);
 });
 
 record('E02 B1/B5 viewer: thay trang thai + recipe dang chon, chi co Tong quan/Lich su, khong goi cong quan tri', async () => {
@@ -125,7 +132,7 @@ record('E02 B1/B5 viewer: thay trang thai + recipe dang chon, chi co Tong quan/L
   await shot(page, 'E02-viewer');
   assert.deepEqual(requests.filter(u => u.includes(':' + mgmtPort)), []);
   assert.deepEqual(errors, []);
-  await ctx.close();
+  await finish(ctx);
 });
 
 record('E03 B1 khi /readyz bao chua san sang: banner do kem ly do, nut gui bi tat', async () => {
@@ -137,7 +144,7 @@ record('E03 B1 khi /readyz bao chua san sang: banner do kem ly do, nut gui bi ta
   await page.getByTestId('nav-inspect').click();
   assert.equal(await page.getByTestId('submit-btn').isDisabled(), true);
   await shot(page, 'E03-not-ready');
-  await ctx.close();
+  await finish(ctx);
 });
 
 record('E04 B2/B3 operator gui anh -> OK/NG/REVIEW kem truy vet; tim lai trong Lich su, chi tiet khop', async () => {
@@ -157,7 +164,7 @@ record('E04 B2/B3 operator gui anh -> OK/NG/REVIEW kem truy vet; tim lai trong L
   assert.equal(res.body.decision, r.verdict);
   assert.equal(res.body.lineage.submitted_by, 'cam-sim-01');
   assert.deepEqual(requests.filter(u => u.includes(':' + mgmtPort)), []);
-  await ctx.close();
+  await finish(ctx);
 });
 
 record('E05 B4 admin chuyen recipe qua hop thoai co ly do, rollback; audit ghi nguoi + ly do', async () => {
@@ -182,7 +189,7 @@ record('E05 B4 admin chuyen recipe qua hop thoai co ly do, rollback; audit ghi n
   const hist = (await apiCall(`/v1/stations/${station}/activations?limit=2`, {role: 'viewer'})).body.items;
   assert.deepEqual(hist.map(h => [h.kind, h.reason]), [['rollback', 'e2e rollback ve a'], ['activate', 'e2e chuyen sang b']]);
   assert.deepEqual(errors, []);
-  await ctx.close();
+  await finish(ctx);
 });
 
 record('E06 B5 operator/viewer goi thang API quan tri -> 403; admin -> 200', async () => {
@@ -220,7 +227,7 @@ record('E07 B2/B7 loi ky thuat hien "chua co ket luan" (khong bao gio OK/NG); tu
   await page.getByTestId('active-recipe').getByText('recipe-a@0.1.0').waitFor();
   assert.ok(+(await page.getByTestId('count-tech').textContent()) >= 3);
   await shot(page, 'E07-auto-rollback');
-  await ctx.close();
+  await finish(ctx);
 });
 
 record('E08 B2 huy lan kiem dang chay -> "Da huy", khong co ket luan', async (t) => {
@@ -241,7 +248,7 @@ record('E08 B2 huy lan kiem dang chay -> "Da huy", khong co ket luan', async (t)
   await card.waitFor({timeout: 30000});
   assert.equal(await card.getAttribute('data-verdict'), 'CANCELLED');
   await ensureRecipe('recipe-a');
-  await ctx.close();
+  await finish(ctx);
 });
 
 const stop = process.env.VR01_STOP_BACKEND, start = process.env.VR01_START_BACKEND;
@@ -256,7 +263,7 @@ record('E09 B1 dung inference server that -> trong 10 s man hinh bao chua san sa
     await shot(page, 'E09-backend-stopped');
   } finally { execSync(start, {stdio: 'inherit'}); }
   await page.locator('[data-testid=ready-banner][data-ready=true]').waitFor({timeout: 120000});
-  await ctx.close();
+  await finish(ctx);
 });
 
 record('E10 man hep 390 px (dien thoai/tablet doc): khong tran ngang o moi man hinh cua operator', async () => {
@@ -269,5 +276,5 @@ record('E10 man hep 390 px (dien thoai/tablet doc): khong tran ngang o moi man h
     assert.ok(sw <= iw, `${s}: scrollWidth ${sw} > ${iw}`);
   }
   await shot(page, 'E10-narrow-history');
-  await ctx.close();
+  await finish(ctx);
 });

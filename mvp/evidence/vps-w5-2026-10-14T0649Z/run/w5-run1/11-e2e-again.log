@@ -1,0 +1,85 @@
+cd tests/e2e && VR01_RUN_DIR=../../run VR01_E2E_OUT=../../run/e2e VR01_E2E_VIDEO=../../run/e2e/video \
+  VR01_UI_URL=https://localhost:$(grep -s '^INFERENCE_PORT=' ../../deploy/.env | cut -d= -f2 | grep . || echo 8443) \
+  VR01_STOP_BACKEND="${VR01_STOP_BACKEND-docker stop vr01-mvp-triton-1}" \
+  VR01_START_BACKEND="${VR01_START_BACKEND-docker start vr01-mvp-triton-1}" node --test ui.e2e.mjs
+TAP version 13
+# Subtest: E01 token sai bi tu choi, khong vao duoc man hinh nao
+ok 1 - E01 token sai bi tu choi, khong vao duoc man hinh nao
+  ---
+  duration_ms: 1047.40746
+  ...
+# Subtest: E02 B1/B5 viewer: thay trang thai + recipe dang chon, chi co Tong quan/Lich su, khong goi cong quan tri
+ok 2 - E02 B1/B5 viewer: thay trang thai + recipe dang chon, chi co Tong quan/Lich su, khong goi cong quan tri
+  ---
+  duration_ms: 1393.409425
+  ...
+# Subtest: E03 B1 khi /readyz bao chua san sang: banner do kem ly do, nut gui bi tat
+ok 3 - E03 B1 khi /readyz bao chua san sang: banner do kem ly do, nut gui bi tat
+  ---
+  duration_ms: 693.616599
+  ...
+# Subtest: E04 B2/B3 operator gui anh -> OK/NG/REVIEW kem truy vet; tim lai trong Lich su, chi tiet khop
+ok 4 - E04 B2/B3 operator gui anh -> OK/NG/REVIEW kem truy vet; tim lai trong Lich su, chi tiet khop
+  ---
+  duration_ms: 1833.41376
+  ...
+# Subtest: E05 B4 admin chuyen recipe qua hop thoai co ly do, rollback; audit ghi nguoi + ly do
+ok 5 - E05 B4 admin chuyen recipe qua hop thoai co ly do, rollback; audit ghi nguoi + ly do
+  ---
+  duration_ms: 2211.845616
+  ...
+# Subtest: E06 B5 operator/viewer goi thang API quan tri -> 403; admin -> 200
+ok 6 - E06 B5 operator/viewer goi thang API quan tri -> 403; admin -> 200
+  ---
+  duration_ms: 1115.447601
+  ...
+# Subtest: E07 B2/B7 loi ky thuat hien "chua co ket luan" (khong bao gio OK/NG); tu rollback hien canh bao
+ok 7 - E07 B2/B7 loi ky thuat hien "chua co ket luan" (khong bao gio OK/NG); tu rollback hien canh bao
+  ---
+  duration_ms: 3887.725475
+  ...
+# Subtest: E08 B2 huy lan kiem dang chay -> "Da huy", khong co ket luan
+not ok 8 - E08 B2 huy lan kiem dang chay -> "Da huy", khong co ket luan
+  ---
+  duration_ms: 1517.452972
+  location: 'file:///opt/vin-vr-01-mvp/mvp/tests/e2e/ui.e2e.mjs:67:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'REVIEW'
+    - 'CANCELLED'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'CANCELLED'
+  actual: 'REVIEW'
+  operator: 'strictEqual'
+  stack: |-
+    file:///opt/vin-vr-01-mvp/mvp/tests/e2e/ui.e2e.mjs:242:10
+    async TestContext.<anonymous> (file:///opt/vin-vr-01-mvp/mvp/tests/e2e/ui.e2e.mjs:70:15)
+    async Test.run (node:internal/test_runner/test:632:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:374:7)
+  ...
+# vr01-mvp-triton-1
+# vr01-mvp-triton-1
+# Subtest: E09 B1 dung inference server that -> trong 10 s man hinh bao chua san sang; bat lai -> san sang
+ok 9 - E09 B1 dung inference server that -> trong 10 s man hinh bao chua san sang; bat lai -> san sang
+  ---
+  duration_ms: 17047.414151
+  ...
+# Subtest: E10 man hep 390 px (dien thoai/tablet doc): khong tran ngang o moi man hinh cua operator
+ok 10 - E10 man hep 390 px (dien thoai/tablet doc): khong tran ngang o moi man hinh cua operator
+  ---
+  duration_ms: 1390.156309
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 9
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 35373.388261
+make: *** [Makefile:74: e2e] Error 1

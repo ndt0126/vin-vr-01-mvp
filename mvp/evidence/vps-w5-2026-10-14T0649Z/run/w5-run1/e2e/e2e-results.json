@@ -1,0 +1,63 @@
+{
+  "base": "https://localhost:8443",
+  "at": "2026-10-14T06:51:41.826Z",
+  "passed": 9,
+  "failed": 1,
+  "results": [
+    {
+      "name": "E01 token sai bi tu choi, khong vao duoc man hinh nao",
+      "result": "PASS",
+      "ms": 466
+    },
+    {
+      "name": "E02 B1/B5 viewer: thay trang thai + recipe dang chon, chi co Tong quan/Lich su, khong goi cong quan tri",
+      "result": "PASS",
+      "ms": 1351
+    },
+    {
+      "name": "E03 B1 khi /readyz bao chua san sang: banner do kem ly do, nut gui bi tat",
+      "result": "PASS",
+      "ms": 619
+    },
+    {
+      "name": "E04 B2/B3 operator gui anh -> OK/NG/REVIEW kem truy vet; tim lai trong Lich su, chi tiet khop",
+      "result": "PASS",
+      "ms": 1824
+    },
+    {
+      "name": "E05 B4 admin chuyen recipe qua hop thoai co ly do, rollback; audit ghi nguoi + ly do",
+      "result": "PASS",
+      "ms": 2247
+    },
+    {
+      "name": "E06 B5 operator/viewer goi thang API quan tri -> 403; admin -> 200",
+      "result": "PASS",
+      "ms": 1980
+    },
+    {
+      "name": "E07 B2/B7 loi ky thuat hien \"chua co ket luan\" (khong bao gio OK/NG); tu rollback hien canh bao",
+      "result": "PASS",
+      "ms": 4091
+    },
+    {
+      "name": "E08 B2 huy lan kiem dang chay -> \"Da huy\", khong co ket luan",
+      "result": "FAIL",
+      "ms": 1665,
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'REVIEW'\n- 'CANCELLED'"
+    },
+    {
+      "name": "E09 not-ready seconds",
+      "value": 1.825
+    },
+    {
+      "name": "E09 B1 dung inference server that -> trong 10 s man hinh bao chua san sang; bat lai -> san sang",
+      "result": "PASS",
+      "ms": 14014
+    },
+    {
+      "name": "E10 man hep 390 px (dien thoai/tablet doc): khong tran ngang o moi man hinh cua operator",
+      "result": "PASS",
+      "ms": 1581
+    }
+  ]
+}

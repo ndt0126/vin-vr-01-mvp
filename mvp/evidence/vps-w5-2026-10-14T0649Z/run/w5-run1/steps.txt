@@ -1,0 +1,12 @@
+01-start rc=0 seconds=24
+02-status rc=0 seconds=0
+03-smoke rc=0 seconds=1
+04-e2e-setup rc=0 seconds=6
+05-e2e rc=2 seconds=33
+06-uat-main rc=1 seconds=262
+08-obs-start rc=0 seconds=19
+09-uat-w4 rc=1 seconds=238
+10-make-test rc=0 seconds=32
+11-e2e-again rc=2 seconds=35
+12-status-final rc=0 seconds=0
+13-diag rc=0 seconds=1

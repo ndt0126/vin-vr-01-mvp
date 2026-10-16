@@ -1,0 +1,47 @@
+{
+  "verdict": "PASS",
+  "run_id": "20261014T072118",
+  "recipes": [
+    "recipe-a",
+    "recipe-b"
+  ],
+  "score_recomputed_by_client_for": 599,
+  "config": {
+    "rate_per_s": 10.0,
+    "duration_s": 60.0,
+    "cutover_every_s": 100000.0,
+    "send_period_s": 0.1
+  },
+  "requests": {
+    "sent": 601,
+    "with_terminal_result": 599,
+    "completed": 599,
+    "by_recipe": {
+      "recipe-a@0.1.0": 599
+    },
+    "missing_or_wrong": 0,
+    "duplicate_or_extra_products": 0,
+    "technical_states": {},
+    "not_accepted": 2
+  },
+  "cutovers": {
+    "requested": 0,
+    "succeeded": 0,
+    "detail": [],
+    "max_gap_s": null,
+    "gap_resolution_note": "gap khong the nho hon chu ky gui 0.1 s; day khong phai so do downtime"
+  },
+  "client_retries_same_request_id": {
+    "recipe_refresh_409": 0,
+    "queue_full_429": 0,
+    "not_ready_503": 147,
+    "send_errors": 0
+  },
+  "latency_total_ms": {
+    "p50": 3.557,
+    "p95": 5.061,
+    "max": 8.783
+  },
+  "problems": [],
+  "duplicates": []
+}

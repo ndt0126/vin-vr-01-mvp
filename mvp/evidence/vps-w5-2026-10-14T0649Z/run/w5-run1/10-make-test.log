@@ -1,0 +1,114 @@
+HOST_UID=$(id -u) HOST_GID=$(id -g) INIT_EXTRA=" " docker compose --env-file deploy/.env -f deploy/docker-compose.yml -f deploy/docker-compose.gpu.yml build init
+ Image vr01-mvp-api:0.5.0-rc1 Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 646B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 970B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1
+#3 DONE 0.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 96B done
+#4 DONE 0.0s
+
+#5 [ 1/15] FROM docker.io/library/python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 7.00kB 0.0s done
+#6 DONE 0.0s
+
+#7 [ 9/15] COPY tools tools
+#7 CACHED
+
+#8 [10/15] COPY tests tests
+#8 CACHED
+
+#9 [12/15] COPY deploy/observability deploy/observability
+#9 CACHED
+
+#10 [ 8/15] COPY packages packages
+#10 CACHED
+
+#11 [ 7/15] COPY ui ui
+#11 CACHED
+
+#12 [ 6/15] COPY backend backend
+#12 CACHED
+
+#13 [14/15] COPY deploy/.env.sample deploy/.env.sample
+#13 CACHED
+
+#14 [ 3/15] WORKDIR /app
+#14 CACHED
+
+#15 [13/15] COPY deploy/k8s deploy/k8s
+#15 CACHED
+
+#16 [ 5/15] RUN pip install --no-cache-dir -r backend/requirements.txt
+#16 CACHED
+
+#17 [ 2/15] RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+#17 CACHED
+
+#18 [ 4/15] COPY backend/requirements.txt backend/requirements.txt
+#18 CACHED
+
+#19 [11/15] COPY docs docs
+#19 CACHED
+
+#20 [15/15] RUN useradd --uid 10001 --create-home vr01 && mkdir -p /run-data && chown vr01 /run-data
+#20 CACHED
+
+#21 exporting to image
+#21 exporting layers done
+#21 writing image sha256:b335655d07a64496a1f67a35f844d72d0dd7744ca3a05a7d92aa77f89dd60ccb done
+#21 naming to docker.io/library/vr01-mvp-api:0.5.0-rc1 done
+#21 DONE 0.0s
+
+#22 resolving provenance for metadata file
+#22 DONE 0.0s
+ Image vr01-mvp-api:0.5.0-rc1 Built 
+HOST_UID=$(id -u) HOST_GID=$(id -g) INIT_EXTRA=" " docker compose --env-file deploy/.env -f deploy/docker-compose.yml -f deploy/docker-compose.gpu.yml run --rm --no-deps -w /app/tests init python run_tests.py --output /run-data/test-report-container.json
+ Container vr01-mvp-init-run-8b740330fa8c Creating 
+ Container vr01-mvp-init-run-8b740330fa8c Created 
+.............................................
+----------------------------------------------------------------------
+Ran 45 tests in 11.814s
+
+OK
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 1.268s
+
+OK
+......................
+----------------------------------------------------------------------
+Ran 22 tests in 12.806s
+
+OK
+...s..
+----------------------------------------------------------------------
+Ran 6 tests in 0.089s
+
+OK (skipped=1)
+......
+----------------------------------------------------------------------
+Ran 6 tests in 3.043s
+
+OK
+........
+----------------------------------------------------------------------
+Ran 8 tests in 0.172s
+
+OK
+sss.......ss.
+----------------------------------------------------------------------
+Ran 13 tests in 0.106s
+
+OK (skipped=5)
+MVP tests: PASS  105/111 passed, static 11/11  -> /run-data/test-report-container.json

@@ -1,0 +1,101 @@
+HOST_UID=$(id -u) HOST_GID=$(id -g) INIT_EXTRA="--with-slow-fixture --with-heavy-fixture gpu" docker compose --env-file deploy/.env -f deploy/docker-compose.yml -f deploy/docker-compose.gpu.yml build init
+ Image vr01-mvp-api:0.5.0-rc1 Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 646B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 970B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1
+#3 DONE 0.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 96B done
+#4 DONE 0.0s
+
+#5 [ 1/15] FROM docker.io/library/python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 79.52kB 0.0s done
+#6 DONE 0.0s
+
+#7 [ 2/15] RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+#7 CACHED
+
+#8 [ 3/15] WORKDIR /app
+#8 CACHED
+
+#9 [ 5/15] RUN pip install --no-cache-dir -r backend/requirements.txt
+#9 CACHED
+
+#10 [ 4/15] COPY backend/requirements.txt backend/requirements.txt
+#10 CACHED
+
+#11 [ 6/15] COPY backend backend
+#11 CACHED
+
+#12 [ 7/15] COPY ui ui
+#12 DONE 0.1s
+
+#13 [ 8/15] COPY packages packages
+#13 DONE 0.0s
+
+#14 [ 9/15] COPY tools tools
+#14 DONE 0.0s
+
+#15 [10/15] COPY tests tests
+#15 DONE 0.0s
+
+#16 [11/15] COPY docs docs
+#16 DONE 0.0s
+
+#17 [12/15] COPY deploy/observability deploy/observability
+#17 DONE 0.0s
+
+#18 [13/15] COPY deploy/k8s deploy/k8s
+#18 DONE 0.0s
+
+#19 [14/15] COPY deploy/.env.sample deploy/.env.sample
+#19 DONE 0.0s
+
+#20 [15/15] RUN useradd --uid 10001 --create-home vr01 && mkdir -p /run-data && chown vr01 /run-data
+#20 DONE 0.2s
+
+#21 exporting to image
+#21 exporting layers 0.1s done
+#21 writing image sha256:5f0b1c7de0bf46c4835206a39d7f19816b1c78b16749e4e146c5c8d16cf890f2 done
+#21 naming to docker.io/library/vr01-mvp-api:0.5.0-rc1 done
+#21 DONE 0.1s
+
+#22 resolving provenance for metadata file
+#22 DONE 0.0s
+ Image vr01-mvp-api:0.5.0-rc1 Built 
+HOST_UID=$(id -u) HOST_GID=$(id -g) INIT_EXTRA="--with-slow-fixture --with-heavy-fixture gpu" docker compose --env-file deploy/.env -f deploy/docker-compose.yml -f deploy/docker-compose.gpu.yml run --rm init
+ Container vr01-mvp-init-run-0545f25f19ba Creating 
+ Container vr01-mvp-init-run-0545f25f19ba Created 
+auth: kept existing lab principals
+tls: kept existing lab certificate
+examples: added TEST FIXTURES model-slow / recipe-slow, model-bad / recipe-bad
+examples: added TEST FIXTURES model-heavy + model-heavy-b (gpu: 48 lop, 96 kenh, anh 512x512, 15263 KiB, device nvidia-gpu)
+model: model-a@0.1.0 KIND_GPU digest a700dc698dfe
+model: model-b@0.1.0 KIND_GPU digest dcf1542894dc
+model: model-bad@0.1.0 KIND_GPU digest 1b20488423db
+model: model-heavy@0.1.0 KIND_GPU digest 2a78e5ba998e
+model: model-heavy-b@0.1.0 KIND_GPU digest 79912c919c7a
+model: model-slow@0.1.0 KIND_CPU digest 26384c166524
+model: model-vram@0.1.0 KIND_GPU digest 5ee7860c2b86
+HOST_UID=$(id -u) HOST_GID=$(id -g) INIT_EXTRA="--with-slow-fixture --with-heavy-fixture gpu" docker compose --env-file deploy/.env -f deploy/docker-compose.yml -f deploy/docker-compose.gpu.yml up -d --wait triton api
+ Container vr01-mvp-triton-1 Running 
+ Container vr01-mvp-api-1 Recreate 
+ Container vr01-mvp-api-1 Recreated 
+ Container vr01-mvp-triton-1 Waiting 
+ Container vr01-mvp-triton-1 Healthy 
+ Container vr01-mvp-api-1 Starting 
+ Container vr01-mvp-api-1 Started 
+ Container vr01-mvp-triton-1 Waiting 
+ Container vr01-mvp-api-1 Waiting 
+ Container vr01-mvp-triton-1 Healthy 
+ Container vr01-mvp-api-1 Healthy 

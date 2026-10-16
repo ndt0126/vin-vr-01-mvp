@@ -1,0 +1,192 @@
+{
+  "verdict": "FAIL",
+  "failed": [
+    "P3 slow fixture model runs on the inference server",
+    "P11 execution timeout on the real inference server; late result ignored"
+  ],
+  "steps": [
+    {
+      "step": "P1 smoke flow",
+      "result": "PASS",
+      "at": "06:51:42",
+      "last": "SMOKE PASS  18/18  -> /opt/vin-vr-01-mvp/mvp/run/session-smoke.json"
+    },
+    {
+      "step": "P2 cutover A<->B under continuous load",
+      "result": "PASS",
+      "at": "06:52:46",
+      "sent": 601,
+      "missing_or_wrong": 0,
+      "duplicates": 0,
+      "cutovers": "11/11",
+      "max_gap_s": 0.222,
+      "p95_ms": 9.891
+    },
+    {
+      "step": "P0 calibrate slow fixture for this machine",
+      "result": "PASS",
+      "at": "06:52:53",
+      "first_measure_ms": 5.064,
+      "rounds": 2000
+    },
+    {
+      "step": "P3 slow fixture model runs on the inference server",
+      "result": "FAIL",
+      "at": "06:52:53",
+      "inference_ms": 90.859,
+      "score": 0.156863,
+      "decision": "OK",
+      "note": "can >= 300 ms de cac buoc P4-P8 bat duoc trang thai PROCESSING"
+    },
+    {
+      "step": "P4 cancel while PROCESSING: late result discarded",
+      "result": "PASS",
+      "at": "06:52:53",
+      "cancel_http": 200,
+      "state": "CANCELLED",
+      "discarded_logged": true,
+      "next_request": "COMPLETED"
+    },
+    {
+      "step": "P5 cancel while queued: never sent to the inference server",
+      "result": "PASS",
+      "at": "06:52:54",
+      "cancel_http": 200,
+      "finals": [
+        "COMPLETED",
+        "COMPLETED",
+        "CANCELLED"
+      ],
+      "inference_started_for_cancelled": false
+    },
+    {
+      "step": "P6 cutover drains the in-flight request before unloading the old model",
+      "result": "PASS",
+      "at": "06:52:54",
+      "in_flight_final": "COMPLETED",
+      "in_flight_model": "model-slow",
+      "new_recipe_request": "COMPLETED",
+      "old_model_unloaded_after_request_finished": true
+    },
+    {
+      "step": "P14 automatic rollback after 3 consecutive inference errors right after cutover",
+      "result": "PASS",
+      "at": "06:52:54",
+      "failed_requests": [
+        "FAILED/BACKEND_ERROR",
+        "FAILED/BACKEND_ERROR",
+        "FAILED/BACKEND_ERROR"
+      ],
+      "active_after": "recipe-a@0.1.0",
+      "auto_rollback_logged": true,
+      "failed_request_keeps_lineage": "model-bad",
+      "request_after_rollback": "COMPLETED/NG"
+    },
+    {
+      "step": "P7 kill -9 API with 1 running + 2 queued",
+      "result": "PASS",
+      "at": "06:52:56",
+      "before_kill": [
+        "PROCESSING",
+        "RECEIVED",
+        "RECEIVED"
+      ],
+      "after_restart": [
+        "INDETERMINATE",
+        "INDETERMINATE",
+        "INDETERMINATE"
+      ],
+      "ready_again_s": 0.5,
+      "active_recipe": "recipe-slow@0.1.0",
+      "retry_with_new_id": "COMPLETED"
+    },
+    {
+      "step": "P8 kill -9 Triton under load: no wrong/duplicate result, service recovers",
+      "result": "PASS",
+      "at": "06:53:52",
+      "sent": 429,
+      "completed": 428,
+      "technical": {
+        "TIMEOUT": 1
+      },
+      "not_accepted": 0,
+      "wrong": 0,
+      "duplicates": 0,
+      "cutovers": "5/5",
+      "ready_after_load_s": 0.0,
+      "active_recipe": "recipe-b@0.1.0",
+      "seconds_from_kill_to_end": 43.5
+    },
+    {
+      "step": "P9 make backup -> simulated data loss -> make restore (ledger + trace + images)",
+      "result": "PASS",
+      "at": "06:54:34",
+      "backup": {
+        "backup": "/opt/vin-vr-01-mvp/mvp/run/backup/backup-20261014T065357Z",
+        "integrity_check": "ok",
+        "inspections": 1059,
+        "files": 260,
+        "images": 258,
+        "has_trace": true,
+        "seconds": 0.13
+      },
+      "lookup_after_loss_http": 404,
+      "result_identical_after_restore": true,
+      "active_recipe_restored": true,
+      "trace_events_for_probe_before_after": [
+        4,
+        4
+      ],
+      "restore_rto_s_lab": 14.8,
+      "note": "backup nam tren cung may"
+    },
+    {
+      "step": "P11 execution timeout on the real inference server; late result ignored",
+      "result": "FAIL",
+      "at": "06:54:49",
+      "state": "COMPLETED",
+      "reason": null,
+      "late_result_logged": false,
+      "unchanged_after_late_result": true,
+      "readyz": 200,
+      "note": "execution_timeout_s ha xuong 0.3 s chi cho buoc nay"
+    },
+    {
+      "step": "P11b normal limits restored: slow request completes again",
+      "result": "PASS",
+      "at": "06:55:01",
+      "state": "COMPLETED"
+    },
+    {
+      "step": "P12 inference server down ~30 s under load: clean refusals, no wrong result, recovery",
+      "result": "PASS",
+      "at": "06:56:04",
+      "sent": 601,
+      "completed": 599,
+      "technical": {},
+      "not_accepted": 2,
+      "wrong": 0,
+      "duplicates": 0,
+      "client_503": 119,
+      "readyz_during_outage": [
+        503,
+        503,
+        503,
+        503,
+        503,
+        503
+      ],
+      "outage_s": 25.8,
+      "ready_after_start_s": 0.0,
+      "request_after_recovery": "COMPLETED",
+      "active_recipe": "recipe-a@0.1.0"
+    },
+    {
+      "step": "P10 state saved for reboot; docker starts on boot",
+      "result": "PASS",
+      "at": "06:56:04",
+      "docker_service": "enabled",
+      "active_recipe": "recipe-a@0.1.0"
+    }
+  ]
+}

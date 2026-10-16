@@ -1,0 +1,62 @@
+{
+  "base": "https://localhost:8443",
+  "at": "2026-10-14T07:17:13.775Z",
+  "passed": 10,
+  "failed": 0,
+  "results": [
+    {
+      "name": "E01 token sai bi tu choi, khong vao duoc man hinh nao",
+      "result": "PASS",
+      "ms": 477
+    },
+    {
+      "name": "E02 B1/B5 viewer: thay trang thai + recipe dang chon, chi co Tong quan/Lich su, khong goi cong quan tri",
+      "result": "PASS",
+      "ms": 1442
+    },
+    {
+      "name": "E03 B1 khi /readyz bao chua san sang: banner do kem ly do, nut gui bi tat",
+      "result": "PASS",
+      "ms": 642
+    },
+    {
+      "name": "E04 B2/B3 operator gui anh -> OK/NG/REVIEW kem truy vet; tim lai trong Lich su, chi tiet khop",
+      "result": "PASS",
+      "ms": 1784
+    },
+    {
+      "name": "E05 B4 admin chuyen recipe qua hop thoai co ly do, rollback; audit ghi nguoi + ly do",
+      "result": "PASS",
+      "ms": 1957
+    },
+    {
+      "name": "E06 B5 operator/viewer goi thang API quan tri -> 403; admin -> 200",
+      "result": "PASS",
+      "ms": 1165
+    },
+    {
+      "name": "E07 B2/B7 loi ky thuat hien \"chua co ket luan\" (khong bao gio OK/NG); tu rollback hien canh bao",
+      "result": "PASS",
+      "ms": 3899
+    },
+    {
+      "name": "E08 B2 huy lan kiem dang chay -> \"Da huy\", khong co ket luan",
+      "result": "PASS",
+      "ms": 2846
+    },
+    {
+      "name": "E09 not-ready seconds",
+      "value": 1.303
+    },
+    {
+      "name": "E09 B1 dung inference server that -> trong 10 s man hinh bao chua san sang; bat lai -> san sang",
+      "result": "PASS",
+      "ms": 12380
+    },
+    {
+      "name": "E10 man hep 390 px (dien thoai/tablet doc): khong tran ngang o moi man hinh cua operator",
+      "result": "PASS",
+      "ms": 1432
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+Ubuntu 24.04.4 LTS
+6.17.0-14-generic x86_64
+6
+Mem:           32139        3469       11227         273       18187       28669
+/dev/sda2       251G   25G  216G  11% /
+NVIDIA RTX A6000, 49140 MiB, 580.126.16
+Docker version 29.2.1, build a5c7197
+5.0.2
+v18.19.1
+MVP_VERSION=0.5.0-rc1
+TRITON_INSTANCE_KIND=KIND_GPU
+VR01_GPU=1

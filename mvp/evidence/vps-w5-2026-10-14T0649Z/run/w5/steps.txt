@@ -1,0 +1,16 @@
+01-start rc=0 seconds=12
+02-status rc=0 seconds=0
+03-smoke rc=0 seconds=1
+04-e2e-setup rc=0 seconds=5
+05-e2e rc=0 seconds=30
+06-uat-main rc=1 seconds=326
+08-obs-start rc=0 seconds=6
+09-uat-w4 rc=0 seconds=235
+10-make-test rc=0 seconds=31
+11-e2e-again rc=0 seconds=31
+12-status-final rc=0 seconds=0
+13-diag rc=0 seconds=1
+14-pre-reboot rc=0
+15-post-reboot rc=0
+16-e2e-after-reboot rc=0
+17-rerun-main rc=0

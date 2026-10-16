@@ -1,0 +1,2 @@
+PASS  P10 state saved for reboot; docker starts on boot  {"docker_service": "enabled", "active_recipe": "recipe-a@0.1.0"}
+SESSION pre-reboot: PASS  1/1 -> /opt/vin-vr-01-mvp/mvp/run/session-report.json

@@ -1,0 +1,79 @@
+{
+  "verdict": "PASS",
+  "run_id": "20261014T071919",
+  "recipes": [
+    "recipe-a",
+    "recipe-b"
+  ],
+  "score_recomputed_by_client_for": 501,
+  "config": {
+    "rate_per_s": 10.0,
+    "duration_s": 50.0,
+    "cutover_every_s": 8.0,
+    "send_period_s": 0.1
+  },
+  "requests": {
+    "sent": 501,
+    "with_terminal_result": 501,
+    "completed": 501,
+    "by_recipe": {
+      "recipe-a@0.1.0": 259,
+      "recipe-b@0.1.0": 242
+    },
+    "missing_or_wrong": 0,
+    "duplicate_or_extra_products": 0,
+    "technical_states": {},
+    "not_accepted": 0
+  },
+  "cutovers": {
+    "requested": 6,
+    "succeeded": 6,
+    "detail": [
+      {
+        "to": "recipe-b@0.1.0",
+        "activation_s": 0.045,
+        "gap_last_old_to_first_new_s": 0.102
+      },
+      {
+        "to": "recipe-a@0.1.0",
+        "activation_s": 0.036,
+        "gap_last_old_to_first_new_s": 0.109
+      },
+      {
+        "to": "recipe-b@0.1.0",
+        "activation_s": 0.044,
+        "gap_last_old_to_first_new_s": 0.218
+      },
+      {
+        "to": "recipe-a@0.1.0",
+        "activation_s": 0.034,
+        "gap_last_old_to_first_new_s": 0.109
+      },
+      {
+        "to": "recipe-b@0.1.0",
+        "activation_s": 0.038,
+        "gap_last_old_to_first_new_s": 0.106
+      },
+      {
+        "to": "recipe-a@0.1.0",
+        "activation_s": 0.034,
+        "gap_last_old_to_first_new_s": 0.107
+      }
+    ],
+    "max_gap_s": 0.218,
+    "gap_resolution_note": "gap khong the nho hon chu ky gui 0.1 s; day khong phai so do downtime"
+  },
+  "client_retries_same_request_id": {
+    "recipe_refresh_409": 6,
+    "queue_full_429": 0,
+    "not_ready_503": 20,
+    "send_errors": 0
+  },
+  "latency_total_ms": {
+    "p50": 3.485,
+    "p95": 4.446,
+    "max": 22.525
+  },
+  "problems": [],
+  "duplicates": []
+}

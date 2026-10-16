@@ -15,6 +15,12 @@ RUN = GPU / 'run'
 OUT = EV / 'XEM-VIDEO-W5.html'
 LOGIN_LEAD_S = 0.35  # mo trang + go token truoc khi /v1/me toi server (uoc tinh)
 
+# Video minh hoa: lan quay bi hut khung cuoi -> hien THEM video cua luot khac, ghi nhan ro. File goc giu nguyen.
+# E01: 4 luot deu PASS (test chi dat khi trinh duyet da thay "Token khong dung"); 3 luot GPU co dung 1 lan 401 trong log server.
+ILLUSTRATE = {'E01': ('reboot', 'Video lượt này kết thúc 0,16–0,2 s, trước khi dòng báo lỗi kịp vẽ. Kết quả vẫn đạt: test chỉ PASS khi trình duyệt '
+                               'đã thấy chữ "Token không đúng", và log máy chủ ghi đúng một lần từ chối 401 ở lượt này (lượt người B không có log máy chủ). '
+                               'Bên dưới là VIDEO MINH HỌA quay ở lượt "Sau reboot cả máy", cùng mã giao diện, để thấy dòng báo lỗi.')}
+
 SETS = [  # (khoa, nhan, thu muc video, file ket qua, co log server)
     ('before', 'Trước sự cố', RUN / 'w5/e2e/e2e', True),
     ('after', 'Sau toàn bộ bài sự cố + nâng cấp', RUN / 'w5/e2e-again/e2e', True),
@@ -242,6 +248,12 @@ def render(data):
                     body = '<p class="muted">Không có video cho kịch bản này ở lượt này.</p>'
                 if v['note']:
                     body += f'<p class="note">{html.escape(v["note"])}</p>'
+                ill = ILLUSTRATE.get(n)
+                if ill and v['key'] != ill[0] and v['video']:
+                    src = next(x for x in variants if x['key'] == ill[0])
+                    body += (f'<div class="illus"><p class="note"><b>Vì sao có thêm video:</b> {html.escape(ill[1])}</p>'
+                             f'<p class="illus-label">VIDEO MINH HỌA — quay ở lượt "{html.escape(src["label"])}", không phải lượt này</p>'
+                             f'<video controls preload="auto" src="{html.escape(src["video"])}#t=0.05"></video></div>')
                 panes.append(f'<div class="pane" id="{n}-{v["key"]}" {"" if i == 0 else "hidden"}>{body}</div>')
             if n == 'E06':
                 tabs, panes = [], ['<p class="muted">Kịch bản kiểm bằng cách gọi thẳng API, không mở giao diện nên không có video. '
@@ -278,7 +290,7 @@ h1{font-size:24px;margin:0 0 6px}h2{font-size:20px;margin:32px 0 12px}h3{font-si
 video{width:100%;max-height:70vh;background:#000;border-radius:8px}
 .speed{margin:6px 0;font-size:14px;color:var(--muted)}.speed button,.ts{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;padding:2px 8px;margin-left:4px;cursor:pointer;font:inherit;font-size:13px}
 .ts{font-family:ui-monospace,Menlo,monospace;margin:0 6px 0 0}.marks{padding-left:20px;margin:0}.marks li{margin:3px 0}
-.note,.muted{color:var(--muted);font-size:14px}
+.note,.muted{color:var(--muted);font-size:14px}.illus{margin-top:14px;border:2px dashed var(--line);border-radius:10px;padding:10px 12px}.illus-label{font-weight:700;font-size:13px;letter-spacing:.03em;margin:0 0 6px}
 @media (max-width:800px){.wrap{grid-template-columns:1fr}nav{position:static;max-height:none}}
 </style></head><body><div class="wrap">
 <nav><h1>Video giao diện</h1><p class="lead">Tuần 5 · phiên GPU 14/10/2026</p><ul>{{TOC}}</ul></nav>

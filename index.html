@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VR-01 MVP</title>
+<style>
+:root{--bg:#f4f5f2;--panel:#fff;--ink:#1b1f1d;--muted:#5d6661;--line:#d5d9d4;--accent:#0f5c4d}
+@media (prefers-color-scheme:dark){:root{--bg:#141716;--panel:#1e2321;--ink:#eef1ee;--muted:#a3ada7;--line:#353c38;--accent:#49b89f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:860px;margin:0 auto;padding:32px 16px 48px}
+h1{font-size:26px;margin:0 0 6px}
+h2{font-size:18px;margin:28px 0 10px}
+p{margin:0 0 10px}
+.muted{color:var(--muted)}
+.cards{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+a.card{display:block;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;color:var(--ink);text-decoration:none}
+a.card:hover{border-color:var(--accent)}
+a.card b{display:block;color:var(--accent);margin-bottom:4px}
+a.card span{font-size:14px;color:var(--muted)}
+ul{padding-left:20px}li{margin:4px 0}
+a{color:var(--accent)}
+.note{font-size:14px;color:var(--muted);border-left:3px solid var(--line);padding-left:12px}
+</style>
+</head>
+<body>
+<main>
+<h1>VR-01 MVP — kiểm tra chất lượng bằng AI (bản lab)</h1>
+<p class="muted">Release candidate <b>mvp-0.5.0-rc1</b> · cập nhật 16/10/2026</p>
+<p>Một trạm, một luồng PCB1, hai model mẫu: chọn recipe → nhận ảnh + mã sản phẩm → model đúng phiên bản (Triton) → OK/NG/REVIEW → lịch sử và truy vết, có giao diện trạm. Đã chạy trên GPU NVIDIA RTX A6000 thuê: UAT tự động 24/24 đạt, test giao diện 10/10 trước sự cố, sau sự cố và sau reboot.</p>
+<p class="note">Bản lab: chưa chạy trên máy đích của nhà máy, chưa air gap, model mẫu không phải model QC, chưa có UAT với người dùng nội bộ. Chi tiết giới hạn ở release notes.</p>
+
+<h2>Xem nhanh</h2>
+<div class="cards">
+<a class="card" href="mvp/evidence/XEM-VIDEO-W5.html"><b>Video giao diện (E2E)</b><span>10 kịch bản, quay trên GPU thật, có mốc thời gian và nút phát chậm</span></a>
+<a class="card" href="docs/Tuan_2/W2-06/prototype.html"><b>Prototype giao diện (W2-06)</b><span>Bấm thử được, dữ liệu giả, không cần máy chủ</span></a>
+<a class="card" href="https://github.com/ndt0126/vin-vr-01-mvp/blob/main/mvp/evidence/vps-w5-2026-10-14T0649Z/UAT-RESULT.md"><b>Kết quả UAT tự động</b><span>24 dòng checklist W5-04, mỗi dòng dẫn tới bằng chứng</span></a>
+<a class="card" href="https://github.com/ndt0126/vin-vr-01-mvp/blob/main/mvp/docs/RELEASE-0.5.0-rc1.md"><b>Release notes và bàn giao</b><span>Thành phần, cách kiểm, giới hạn, backlog tiếp theo</span></a>
+</div>
+
+<h2>Tài liệu</h2>
+<ul>
+<li><a href="https://github.com/ndt0126/vin-vr-01-mvp/blob/main/docs/Tuan_5/BAO-CAO-TONG-KET-VR-01-2026-10-16.md">Báo cáo tổng kết (21/09 – 16/10)</a></li>
+<li><a href="https://github.com/ndt0126/vin-vr-01-mvp/blob/main/docs/Tuan_5/W5-01-QUYET-DINH-PHAM-VI-2026-10-14.md">Phạm vi Tuần 5 và các quyết định tạm (W5-01)</a></li>
+<li><a href="https://github.com/ndt0126/vin-vr-01-mvp/blob/main/mvp/evidence/vps-w5-2026-10-14T0649Z/README.md">Phiên kiểm trên GPU 14/10 (evidence)</a></li>
+<li><a href="https://github.com/ndt0126/vin-vr-01-mvp/blob/main/mvp/docs/W4-04-REPORT.md">Báo cáo tải, soak 8 giờ và sự cố (W4-04)</a></li>
+<li><a href="https://github.com/ndt0126/vin-vr-01-mvp/blob/main/mvp/docs/RUNBOOK.md">Runbook vận hành (W4-05)</a></li>
+<li><a href="https://github.com/ndt0126/vin-vr-01-mvp/blob/main/mvp/docs/API.md">Tài liệu API</a> · <a href="https://github.com/ndt0126/vin-vr-01-mvp/blob/main/mvp/backend/openapi.v1.yaml">OpenAPI</a></li>
+<li><a href="https://github.com/ndt0126/vin-vr-01-mvp/tree/main/docs/Tuan_2">Thiết kế Tuần 2 (use case, kiến trúc, state machine, ModelPackage)</a></li>
+</ul>
+
+<h2>Mã nguồn</h2>
+<ul>
+<li><a href="https://github.com/ndt0126/vin-vr-01-mvp">Repo</a> · <a href="https://github.com/ndt0126/vin-vr-01-mvp/releases/tag/mvp-0.5.0-rc1">Release mvp-0.5.0-rc1</a> · <a href="https://github.com/ndt0126/vin-vr-01-mvp/blob/main/mvp/README.md">README (cài đặt)</a></li>
+</ul>
+<p class="muted">Giao diện trạm thật cần API và Triton phía sau nên không chạy trên trang tĩnh này; xem bản thật qua video, bản bấm thử qua prototype.</p>
+</main>
+</body>
+</html>

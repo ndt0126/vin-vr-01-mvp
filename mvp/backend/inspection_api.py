@@ -99,15 +99,26 @@ class ApiError(Exception):
 
 FORMATS = jsonschema.FormatChecker(formats=())
 
+READY_GRACE_S = 2.0  # sau cutover: bo qua "model chua ready" thoang qua cua Triton (review mentor 16/10, STT 18)
+
+
+def parse_rfc3339(value):
+    """RFC 3339 date-time co mui gio -> datetime. Chuan hoa truoc khi goi fromisoformat de chay giong nhau
+    tren Python 3.10+ (3.10 khong doc hau to 'Z' va chi doc phan le giay 3 hoac 6 chu so)."""
+    m = re.fullmatch(r'(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d{1,9}))?(Z|[+-]\d{2}:\d{2})', value)
+    if not m:
+        raise ValueError('not RFC 3339 date-time')
+    base, frac, tz = m.groups()
+    frac = f'.{(frac + "000000")[:6]}' if frac else ''
+    return datetime.fromisoformat(base + frac + ('+00:00' if tz == 'Z' else tz))
+
 
 @FORMATS.checks('date-time', raises=ValueError)
 def _is_datetime(value):
     """RFC 3339 date-time co mui gio (khong phu thuoc goi rfc3339-validator)."""
     if not isinstance(value, str):
         return True
-    if not re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,9})?(Z|[+-]\d{2}:\d{2})', value):
-        raise ValueError('not RFC 3339 date-time')
-    datetime.fromisoformat(value)  # Python >= 3.11 doc duoc 'Z' va phan le giay
+    parse_rfc3339(value)
     return True
 
 
@@ -454,6 +465,7 @@ class App:
         self.inflight = {}                        # model name -> so request da admission chua ket thuc
         self.cutover = None                       # theo doi loi ngay sau cutover de tu rollback
         self._last_heal = 0.0
+        self._fresh_active = (None, 0.0)          # (model, monotonic) vua qua golden trong activate()
         self.not_ready = set()
         self.storage_unhealthy = False
         self.stopping = False
@@ -607,6 +619,13 @@ class App:
         except Exception:  # noqa: BLE001
             loaded = False
         if loaded and 'WARMUP_FAILED' not in self.not_ready:
+            return
+        name, at = self._fresh_active
+        if not loaded and 'WARMUP_FAILED' not in self.not_ready and name == act['model']['name'] \
+                and time.monotonic() - at < READY_GRACE_S:
+            # Model vua qua load + golden trong activate(): Triton co the bao "chua ready" vai ms ngay sau cutover
+            # (GPU, soak 8h: 20 lan 503). Khong gan WARMUP_FAILED trong cua so nay; loi that sau cutover van bi
+            # bat boi request FAILED + auto-rollback, va sau READY_GRACE_S thi readiness kiem lai nhu thuong.
             return
         self.not_ready.add('WARMUP_FAILED')
         now = time.monotonic()
@@ -1065,7 +1084,7 @@ class App:
             try:
                 if len(vals) != 1 or not _is_datetime(vals[0]):
                     raise ValueError(vals)
-                since = datetime.fromisoformat(vals[0].replace('Z', '+00:00')).astimezone(timezone.utc).isoformat(
+                since = parse_rfc3339(vals[0]).astimezone(timezone.utc).isoformat(
                     timespec='milliseconds').replace('+00:00', 'Z')
             except ValueError:
                 raise ApiError(400, 'INVALID_REQUEST', 'since must be one RFC 3339 date-time with timezone')
@@ -1173,6 +1192,7 @@ class App:
                                retryable=True, retry_after=5)
             with self.active_lock:
                 self.active = resolved  # chi request moi dung recipe moi; request cu giu pin (F16)
+                self._fresh_active = (resolved['model']['name'], time.monotonic())
                 self.cutover = ({'at': time.monotonic(), 'failures': 0, 'previous': current}
                                 if current is not None and action != 'auto_rollback' else None)
             with self.pending_lock:

@@ -1,6 +1,6 @@
 # VR-01 MVP — Inspection API + lifecycle + Triton (W3-01 → W3-05)
 
-Trạng thái 14/10/2026 (bản `0.5.0-rc1`, có giao diện trạm): **bản lab, đã chạy với Triton thật trên VPS amd64, cả CPU và GPU NVIDIA (RTX A6000), cả Compose và kubeadm**. Soak 8 giờ trên GPU đã xong (12/10). Chưa chạy trên máy đích của nhà máy, chưa air gap đầy đủ, chưa được mentor review.
+Trạng thái 19/10/2026 (bản `0.5.0-rc2`, có giao diện trạm): **bản lab, đã chạy với Triton thật trên VPS amd64, cả CPU và GPU NVIDIA (RTX A6000), cả Compose và kubeadm**. Soak 8 giờ trên GPU đã xong (12/10). Mentor review 16/10: chấp nhận W2–W5; rc2 chỉ sửa các điểm nhỏ mentor nêu (Python 3.10, test flaky, 503 ngắn sau cutover), xem `docs/RELEASE-0.5.0-rc2.md`. Chưa chạy trên máy đích của nhà máy, chưa air gap đầy đủ.
 
 ## Cấu trúc
 
@@ -55,10 +55,16 @@ Lệnh này build image API, tạo token + chứng chỉ TLS lab + model reposit
 make smoke
 ```
 
-**Toàn bộ test trong container** (không cần Triton, chạy được khi stack đang bật hoặc tắt). Dòng cuối mong đợi bắt đầu bằng `MVP tests: PASS  106/112 passed, static 11/11` (6 test bỏ qua vì image không cài `onnxruntime`); báo cáo ghi ở `run/test-report-container.json`.
+**Toàn bộ test trong container** (không cần Triton, chạy được khi stack đang bật hoặc tắt). Dòng cuối mong đợi bắt đầu bằng `MVP tests: PASS  108/114 passed, static 11/11` (6 test bỏ qua vì image không cài `onnxruntime`); báo cáo ghi ở `run/test-report-container.json`.
 
 ```bash
 make test
+```
+
+Chạy test ngay trên host (không Docker): cần **Python ≥ 3.10** (đã thử 3.10.0 và 3.12.7) và `pip install -r backend/requirements.txt`; cài thêm `onnxruntime numpy` để chạy cả 6 test model ảnh. Dòng cuối mong đợi `MVP tests: PASS  114/114 passed, static 11/11`.
+
+```bash
+make test-local
 ```
 
 **Dừng** (giữ dữ liệu trong `run/`):

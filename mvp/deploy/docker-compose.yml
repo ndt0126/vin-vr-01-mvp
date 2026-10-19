@@ -3,7 +3,7 @@
 name: vr01-mvp
 services:
   init:
-    image: vr01-mvp-api:${MVP_VERSION:-0.5.0-rc1}
+    image: vr01-mvp-api:${MVP_VERSION:-0.5.0-rc2}
     build:
       context: ..
       dockerfile: deploy/Dockerfile
@@ -33,7 +33,7 @@ services:
     restart: unless-stopped
 
   api:
-    image: vr01-mvp-api:${MVP_VERSION:-0.5.0-rc1}
+    image: vr01-mvp-api:${MVP_VERSION:-0.5.0-rc2}
     user: "${HOST_UID:-10001}:${HOST_GID:-10001}"
     depends_on:
       triton:

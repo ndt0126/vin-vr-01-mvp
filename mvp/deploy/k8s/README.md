@@ -27,7 +27,7 @@ deploy/k8s/lab-kubeadm-cpu.sh
 ```
 
 ```bash
-deploy/k8s/load-images.sh 0.5.0-rc1
+deploy/k8s/load-images.sh 0.5.0-rc2
 ```
 
 ```bash

@@ -11,6 +11,8 @@ python3 -m pip install -r requirements.txt
 python3 -I verify_w2_04.py --output reviewer-result.json --evidence-dir evidence
 ```
 
+Cờ `-I` bỏ qua thư mục cài kiểu `pip install --user` và biến `PYTHONPATH`. Vì vậy hãy cài `requirements.txt` vào một venv (rồi gọi `python3` của venv đó) hoặc vào Python hệ thống. Bản đã nộp này cần Python ≥ 3.11 vì `fromisoformat()` với hậu tố `Z`. Bản hiện hành của hợp đồng trong `mvp/` (từ rc2, 19/10/2026) chạy được từ Python 3.10.
+
 Kết quả PASS chỉ có nghĩa là spec nhất quán và server tham chiếu trong lab đúng hợp đồng. Đây không phải nghiệm thu. Giới hạn xem mục 13 của tài liệu.
 
 `reference_api.py` dùng validator và package mẫu của W2-05 ở `../` (trong repo) hoặc `../W2-05/` (trong gói ZIP), và không sửa các file đó. `demo_walkthrough.py` sinh lại `examples/`.

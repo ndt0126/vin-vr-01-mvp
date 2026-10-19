@@ -5,7 +5,7 @@
 set -uo pipefail
 # Bien: OVERLAY (duong dan overlay nhu kubectl nhin thay), RUN (thu muc hostPath nhin tu may chay script), OUT, API_IMAGE.
 OVERLAY="${OVERLAY:-deploy/k8s/overlays/lab-cpu}"; RUN="${RUN:-/var/lib/vr01/run}"; OUT="${OUT:-/root/k8s-evidence}"; mkdir -p "$OUT"
-API_IMAGE="${API_IMAGE:-vr01-mvp-api:0.5.0-rc1}"
+API_IMAGE="${API_IMAGE:-vr01-mvp-api:0.5.0-rc2}"
 R="$OUT/k8s-report.txt"; : > "$R"; FAIL=0
 step(){ if [ "$2" = ok ]; then echo "PASS  $1  $3" | tee -a "$R"; else echo "FAIL  $1  $3" | tee -a "$R"; FAIL=1; fi; }
 ctl(){ python3 tools/vr01ctl.py --run-dir "$RUN" --inference-port 30443 --management-port 30943 "$@"; }
@@ -43,12 +43,12 @@ kubectl -n vr01 delete pod -l app.kubernetes.io/name=vr01-inspection --wait=true
 AFTER=$(ctl status | sed -n 2p)
 step "K6 pod deleted -> recreated, same active recipe" $([ $rc = 0 ] && [ "$BEFORE" = "$AFTER" ] && echo ok || echo no) "$(( $(date +%s)-T1 ))s; $AFTER"
 REV1=$(kubectl -n vr01 get deploy vr01-inspection -o jsonpath='{.metadata.annotations.deployment\.kubernetes\.io/revision}'); T2=$(date +%s)
-kubectl -n vr01 patch deploy vr01-inspection --type merge -p '{"spec":{"template":{"metadata":{"annotations":{"vr01.io/release":"0.5.0-rc1-uptest"}}}}}' >/dev/null && ready; rc=$?
+kubectl -n vr01 patch deploy vr01-inspection --type merge -p '{"spec":{"template":{"metadata":{"annotations":{"vr01.io/release":"0.5.0-rc2-uptest"}}}}}' >/dev/null && ready; rc=$?
 REV2=$(kubectl -n vr01 get deploy vr01-inspection -o jsonpath='{.metadata.annotations.deployment\.kubernetes\.io/revision}')
 step "K7 update to a new release revision" $([ $rc = 0 ] && [ "$REV2" != "$REV1" ] && echo ok || echo no) "rev $REV1 -> $REV2, $(( $(date +%s)-T2 ))s"
 T3=$(date +%s); kubectl -n vr01 rollout undo deploy/vr01-inspection >/dev/null && ready; rc=$?
 REL=$(kubectl -n vr01 get deploy vr01-inspection -o jsonpath='{.spec.template.metadata.annotations.vr01\.io/release}')
-step "K8 rollback to the previous release (rollout undo)" $([ $rc = 0 ] && [ "$REL" = "0.5.0-rc1" ] && echo ok || echo no) "release=$REL, $(( $(date +%s)-T3 ))s"
+step "K8 rollback to the previous release (rollout undo)" $([ $rc = 0 ] && [ "$REL" = "0.5.0-rc2" ] && echo ok || echo no) "release=$REL, $(( $(date +%s)-T3 ))s"
 ctl activate recipe-a --reason "k8s check" >/dev/null 2>&1; ctl activate recipe-b --reason "k8s check" > "$OUT/activate.txt" 2>&1; a=$?
 ctl rollback --reason "k8s check rollback" > "$OUT/rollback.txt" 2>&1; b=$?
 step "K9 model switch and model rollback" $([ $a = 0 ] && [ $b = 0 ] && grep -q "recipe-b@0.1.0 -> recipe-a@0.1.0" "$OUT/rollback.txt" && echo ok || echo no) "$(head -1 "$OUT/rollback.txt")"

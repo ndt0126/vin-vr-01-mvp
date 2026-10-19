@@ -159,8 +159,10 @@ class Metrics:
                     if n != name:
                         continue
                     for i, b in enumerate(LATENCY_BUCKETS):
-                        series.append(f'{name}_bucket{_labels(label_names, lv, f"le=\"{b}\"")} {h[i]}')
-                    series.append(f'{name}_bucket{_labels(label_names, lv, "le=\"+Inf\"")} {h[-1]}')
+                        le = 'le="%s"' % b  # khong long backslash trong f-string: chay duoc Python 3.10/3.11
+                        series.append(f'{name}_bucket{_labels(label_names, lv, le)} {h[i]}')
+                    le_inf = 'le="+Inf"'
+                    series.append(f'{name}_bucket{_labels(label_names, lv, le_inf)} {h[-1]}')
                     series.append(f'{name}_sum{_labels(label_names, lv)} {round(h[-2], 6)}')
                     series.append(f'{name}_count{_labels(label_names, lv)} {h[-1]}')
             else:

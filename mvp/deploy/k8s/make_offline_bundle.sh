@@ -3,7 +3,7 @@
 # Usage (trong mvp/): deploy/k8s/make_offline_bundle.sh /root/vr01-app-bundle [tag]
 # Goi KHONG gom Kubernetes/containerd/driver (lop nen offline cua du an la bo r4.x). CHUA CHAY THU.
 set -euo pipefail
-OUT="${1:?thu muc dich}"; TAG="${2:-0.5.0-rc1}"
+OUT="${1:?thu muc dich}"; TAG="${2:-0.5.0-rc2}"
 # Bien moi truong (chi doi khi thu tren may dev): TRITON_SRC, PLATFORM.
 TRITON_SRC="${TRITON_SRC:-nvcr.io/nvidia/tritonserver@sha256:f836551575df7c9fb71144073845c6b3911de57db91a8c95e0687a4d2ac9f7a5}"; PLATFORM="${PLATFORM:-linux/amd64}"
 TRITON_LOCAL="vr01-local/tritonserver:2.60.0-25.08"

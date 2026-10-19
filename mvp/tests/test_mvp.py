@@ -156,6 +156,27 @@ class TestLifecycle(Base):
         self.backend.fail_load = set()
         self.assertTrue(wait_until(lambda: self.client.call('getReadiness').status == 200, timeout=6))
 
+    def test_transient_not_ready_right_after_cutover_is_not_503(self):
+        # STT 18 (review 16/10): Triton bao "chua ready" vai ms ngay sau activate() -> truoc day API tra 503
+        self.activate('recipe-b')
+        self.backend.loaded.discard('model-b')
+        n_load = self.backend.lifecycle.count(('load', 'model-b'))
+        self.assertEqual(self.client.call('getReadiness').status, 200)
+        self.assertEqual(self.submit(submit_body('grace-0', recipe='recipe-b@0.1.0')).status, 202)
+        self.assertEqual(self.backend.lifecycle.count(('load', 'model-b')), n_load)  # khong nap lai trong grace
+        self.backend.loaded.add('model-b')
+        self.assertEqual(self.wait_terminal('grace-0').body['state'], 'COMPLETED')
+
+    def test_model_still_missing_after_grace_is_healed_as_usual(self):
+        orig, ra.READY_GRACE_S = ra.READY_GRACE_S, 0.2
+        self.addCleanup(setattr, ra, 'READY_GRACE_S', orig)
+        self.activate('recipe-b')
+        self.backend.loaded.discard('model-b')
+        time.sleep(0.3)
+        self.assertEqual(self.client.call('getReadiness').status, 200)  # het grace: kiem nhu thuong, tu nap lai
+        self.assertEqual(self.backend.lifecycle[-1], ('load', 'model-b'))
+        self.assertIn('lifecycle.model_restored', [e['event'] for e in self.trace_events()])
+
     def test_active_recipe_and_model_restored_after_crash(self):
         self.activate('recipe-b')
         self.restart(crash=True, backend=ra.StubBackend())
@@ -231,12 +252,17 @@ class TestCutoverUnderLoad(Base):
 
         t = threading.Thread(target=traffic)
         t.start()
-        for k in range(30):
+        # Chay toi khi du ca hai: >= 30 cutover VA >= 100 request duoc nhan (tran 15 s). Truoc 19/10 test dung
+        # sau dung 30 cutover (~0,9 s) roi doi > 100 request, nen flaky tren may cham (review 16/10: 94 request).
+        k, deadline = 0, time.monotonic() + 15
+        while (k < 30 or len(accepted) < 100) and time.monotonic() < deadline:
             time.sleep(0.03)
             self.activate('recipe-b' if k % 2 == 0 else 'recipe-a')
+            k += 1
         stop.set()
         t.join()
-        self.assertGreater(len(accepted), 100)
+        self.assertGreaterEqual(k, 30)
+        self.assertGreaterEqual(len(accepted), 100)
         for rid, recipe in accepted:
             res = self.wait_terminal(rid).body
             self.assertEqual(res['state'], 'COMPLETED', (rid, res))

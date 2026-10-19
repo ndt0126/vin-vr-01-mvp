@@ -75,7 +75,7 @@ make stop
 
 Lệnh khác: `make backup`, `make restore BACKUP=run/backup/<tên>`, `make load`, `make logs`, `make down`, `make digests`, `make clean` (xóa `run/`).
 
-## Giao diện trạm (W5-02, W5-03) — bản đầu 14/10/2026, phạm vi chờ mentor duyệt
+## Giao diện trạm (W5-02, W5-03) — bản đầu 14/10/2026, phạm vi B1–B7 mentor đã duyệt 16/10
 
 Mở `https://<máy>:8443/ui/` (trên chính máy chạy stack: `https://localhost:8443/ui/`) rồi dán token của một vai trò trong `run/auth/lab-tokens.secret.json`. Chứng chỉ là chứng chỉ lab tự ký nên trình duyệt sẽ cảnh báo; tài khoản admin còn phải mở `https://<máy>:9443/healthz` một lần để trình duyệt chấp nhận cổng quản trị.
 
@@ -250,3 +250,4 @@ Số liệu chi tiết và file nguồn: `TEST-REPORT.md` (sinh bằng `make rep
 - Package khai báo tham số (`model.json`); file ONNX được sinh từ tham số đó. Chuẩn package chưa mang trực tiếp file ONNX/TensorRT.
 - Auth là bearer token lab, chứng chỉ TLS tự ký 30 ngày. SQLite, 1 worker, 1 node. Chưa mTLS/PKI.
 - Compose và manifests Kubernetes đều là bản lab một node.
+- **Chưa build thành binary:** backend và công cụ chạy bằng mã nguồn Python trong image Docker. Yêu cầu dự án là code tự phát triển phải build thành binary; xem giới hạn 10 và backlog 8 trong `docs/RELEASE-0.5.0-rc2.md`.

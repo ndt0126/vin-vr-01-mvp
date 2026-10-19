@@ -23,6 +23,20 @@ Bản vá nhỏ sau review mentor ngày 16/10/2026. Phần lớn vẫn giống r
 | `vps-gpu-2026-10-11T0905Z` | 156/156 |
 | `vps-w5-2026-10-14T0649Z` | 218/220. Hai file không khớp là `run/w5/e2e/e2e/video/E01-1.webm` và `run/w5/e2e-again/e2e/video/E01-1.webm` |
 
+## Giới hạn và backlog cập nhật so với rc1
+
+Giữ nguyên 9 giới hạn ở mục 5 và backlog ở mục 6 của `RELEASE-0.5.0-rc1.md`, với các thay đổi sau:
+
+- Giới hạn 9 (phạm vi UI chưa duyệt): **đã giải quyết**, mentor duyệt B1–B7 ngày 16/10.
+- Giới hạn 8: ngưỡng của 10 luật cảnh báo và retention đã được mentor duyệt làm baseline cho pilot (16/10). RPO/RTO production vẫn chờ Operations/IT.
+- **Giới hạn 10 (mới, trước đây chưa khai báo): mã nguồn chưa được build thành binary.** Yêu cầu dự án ghi rằng code tự phát triển phải build thành binary. MVP hiện chạy mã nguồn Python (`backend/`, `tools/`) trong image Docker, và image Docker không bảo vệ được mã nguồn. Phần này chưa làm.
+- **Backlog 8 (mới):** build binary cho các thành phần tự phát triển.
+  - Chọn phương pháp, ví dụ Nuitka hoặc Cython cho backend, hoặc viết lại phần lõi bằng ngôn ngữ biên dịch.
+  - Đưa vào pipeline build có pin version, rồi chạy lại toàn bộ test và một phiên GPU.
+  - Kiểm giấy phép của các thư viện được đóng kèm.
+  - Binary chỉ làm việc dịch ngược khó hơn; nó không thay thế được kiểm soát truy cập máy, gói cài có ký và quản lý khóa.
+  - Phụ thuộc: IT/Security chốt mức bảo vệ cần đạt.
+
 ## Che kubeadm token sau tag (19/10, commit trên `main` sau `mvp-0.5.0-rc2`)
 
 - Hai log `vps-gpu-2026-10-11T0905Z/k8s/kubeadm-gpu-install.log` và `vps-w4-2026-10-11T0754Z/k8s/kubeadm-install.log` có dòng `kubeadm join … --token`. Đã che phần bí mật thành `<ID>.<REDACTED>`, giống cách làm ở Item 11.

@@ -27,7 +27,7 @@ I1011 09:13:17.676881   19439 version.go:260] remote version is much newer: v1.3
 
 Then you can join any number of worker nodes by running the following on each as root:
 
-kubeadm join 64.247.196.50:6443 --token 3de5o4.jgx67iokv4u9ne0i \
+kubeadm join 64.247.196.50:6443 --token 3de5o4.<REDACTED> \
 	--discovery-token-ca-cert-hash sha256:b8e6a07b726797abab117bc994a2a40a25f16e9e2bf0967091962e9550efae06 
 node/0006-kci-prxmx10075 untainted
 node/0006-kci-prxmx10075 condition met

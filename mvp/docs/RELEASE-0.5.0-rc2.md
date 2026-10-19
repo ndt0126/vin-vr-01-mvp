@@ -23,6 +23,12 @@ Bản vá nhỏ sau review mentor ngày 16/10/2026. Phần lớn vẫn giống r
 | `vps-gpu-2026-10-11T0905Z` | 156/156 |
 | `vps-w5-2026-10-14T0649Z` | 218/220. Hai file không khớp là `run/w5/e2e/e2e/video/E01-1.webm` và `run/w5/e2e-again/e2e/video/E01-1.webm` |
 
+## Che kubeadm token sau tag (19/10, commit trên `main` sau `mvp-0.5.0-rc2`)
+
+- Hai log `vps-gpu-2026-10-11T0905Z/k8s/kubeadm-gpu-install.log` và `vps-w4-2026-10-11T0754Z/k8s/kubeadm-install.log` có dòng `kubeadm join … --token`. Đã che phần bí mật thành `<ID>.<REDACTED>`, giống cách làm ở Item 11.
+- Mỗi thư mục có thêm `REDACTIONS.txt` ghi hash gốc (khớp MANIFEST) và hash sau khi che. Vì vậy trên `main`, `vps-gpu` cho 155/156 và `vps-w4` cho 84/85, và file lệch chính là file đã che. MANIFEST gốc giữ nguyên.
+- Token đã hết hạn (bootstrap token chỉ sống 24 giờ) và cả hai máy đã bị terminate. Tag `mvp-0.5.0-rc2` vẫn chứa bản chưa che; không viết lại lịch sử git để khỏi làm hỏng các tag đã công bố.
+
 ## Chưa kiểm cho rc2
 
 - Bản rc2 chưa chạy với Triton thật, GPU hay Kubernetes. Phần code đổi chỉ chạm readiness sau cutover, cách parse thời gian và metrics, và đều đã có unit test.

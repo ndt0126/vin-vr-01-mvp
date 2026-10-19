@@ -1,0 +1,5 @@
+# Che kubeadm bootstrap token (giu ID 6 ky tu, phan bi mat thay bang <REDACTED>) ngay 19/10/2026.
+# Token het han sau 24h va moi cluster lien quan da terminate; che de goi bang chung sach.
+# MANIFEST/SHA256SUMS goc KHONG sua: cac file duoi day se lech hash trong manifest, dung nhu ghi o day.
+# file | sha256 goc (khop manifest nao) | sha256 sau khi che
+k8s/kubeadm-install.log | fc3cca80a3e0bd99afd2206d53369ad8d97cb20bb0005fab457ff724c2858fa3 (MANIFEST.sha256: khop) | 067f90131e623fa8989239356d072a04f9e4fede7b7073e71adbbe30fa91e0ff
